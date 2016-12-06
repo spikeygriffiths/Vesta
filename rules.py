@@ -8,13 +8,14 @@ if __name__ == "__main__":
     hubapp.main()
 
 def EventHandler(eventId, arg):
+    if (eventId == ids.INIT):
+        # Ought to load existing set of rules so we know how to respond to events
     if (eventId == events.ids.TRIGGER):
-        devIndex = devices.find(arg[1]) # Lookup device from network address in arg[1]
+        devIndex = devices.FindAdd(arg[1]) # Lookup device from network address in arg[1]
         if int(arg[3], 16) & 1: # Bottom bit indicates alarm1
             print("Door", arg[1], "opened")
         else:
             print("Door", arg[1], "closed")
-    elif (eventId == events.ids.CHECKIN):
-        devIndex = devices.find(arg[1]) # Lookup device from network address in arg[1]
-        # device has just checked in, so mark it as present
-
+    elif (eventId == events.ids.BUTTON):
+        devIndex = devices.FindAdd(arg[1]) # Lookup device from network address in arg[1]
+        print ("Button toggled")

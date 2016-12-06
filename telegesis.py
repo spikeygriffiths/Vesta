@@ -40,9 +40,13 @@ def Parse(atLine):
     if atList[0] == 'OK':
         return
     elif atList[0] == 'CHECKIN':
-        events.Issue(events.ids.CHECKIN, atList) # Tell rules engine
+        events.Issue(events.ids.CHECKIN, atList) # Tell system
     elif atList[0] == 'TOGGLE':
         events.Issue(events.ids.BUTTON, atList) # Tell rules engine
     elif atList[0] == 'ZONESTATUS':
         events.Issue(events.ids.TRIGGER, atList) # Tell rules engine
     # end Parse
+
+def TxCmd(atCmd):
+    ser.writeLine(atCmd)
+    expRsp = "OK"
