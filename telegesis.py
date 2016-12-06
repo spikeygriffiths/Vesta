@@ -39,6 +39,8 @@ def Parse(atLine):
     # Not expecting any response, or it didn't match, so this must be spontaneous
     if atList[0] == 'OK':
         return
+    elif atList[0] == 'CHECKIN':
+        events.Issue(events.ids.CHECKIN, atList) # Tell rules engine
     elif atList[0] == 'TOGGLE':
         events.Issue(events.ids.BUTTON, atList) # Tell rules engine
     elif atList[0] == 'ZONESTATUS':
