@@ -39,14 +39,19 @@ def Parse(atLine):
     # Not expecting any response, or it didn't match, so this must be spontaneous
     if atList[0] == 'OK':
         return
+    elif atList[0] == "ERROR":
+        events.Issue(events.ids.RXERROR, int(atList[1],16)) # See if anyone cares about the error
     elif atList[0] == 'CHECKIN':
         events.Issue(events.ids.CHECKIN, atList) # Tell system
     elif atList[0] == 'TOGGLE':
         events.Issue(events.ids.BUTTON, atList) # Tell rules engine
     elif atList[0] == 'ZONESTATUS':
         events.Issue(events.ids.TRIGGER, atList) # Tell rules engine
+    else:
+        events.Issue(events.ids.RXMSG, atList)
     # end Parse
 
 def TxCmd(atCmd):
-    ser.writeLine(atCmd)
+    print("**Tx cmd>",atCmd)
+    ser.write(atCmd.encode())
     expRsp = "OK"
