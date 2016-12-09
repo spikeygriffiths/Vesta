@@ -2,23 +2,36 @@
 
 # Standard Python modules
 import serial
+from collections import deque
 # App-specific Python modules
 import events
 import hubapp
 ser = 0
 expRsp = ""
+txBuf = deque([])    # Nothing to transmit initially
 
 if __name__ == "__main__":
     hubapp.main()
 
 def EventHandler(eventId, arg):
-    global ser
+    global ser, expRsp
     if eventId == events.ids.INIT:
         ser = serial.Serial('/dev/ttyUSB0',19200, timeout=1)
+        expRsp = ""
     elif eventId == events.ids.SECONDS:
-        numChars = ser.inWaiting()
-        if numChars:
+        if ser.inWaiting():
             Parse(str(ser.readline(),'utf-8').rstrip('\r\n'))
+        elif expRsp == "" and len(txBuf):
+            atCmd, expRsp = txBuf.popleft()
+            print("Pop>",atCmd)
+            atCmd = atCmd + "\r\n"
+            ser.write(atCmd.encode())
+    elif eventId == events.ids.RXERROR:
+        # Ignore error for now, but should probably handle it at some point
+        expRsp = ""
+    elif eventId == events.ids.RXEXPRSP:
+        # Handle multi-line responses here, meaning expRsp might not be empty
+        expRsp = ""
     # end eventId handler
 
 
@@ -26,15 +39,16 @@ def Parse(atLine):
     global expRsp
     if atLine == "":
         return # Ignore blank lines
-    print ("Parsing:", atLine)
     if atLine[0:2] == 'AT':
         return # Exit immediately if line starts with AT, indicating an echo
+    print ("Parsing:", atLine)
     atLine = atLine.replace(':',',') # Replace colons with commas
     atList = atLine.split(',') # Split on commas
     #print("Processed line into ", atList)
     if expRsp != "":  # We're expecting a response, so see if this matches
-        if atList.find(expRsp):
+        if expRsp in atList:
             print("Found expected response of ", expRsp, " in ", atList)
+            events.Issue(events.ids.RXEXPRSP, atList)
         expRsp = ""
     # Not expecting any response, or it didn't match, so this must be spontaneous
     if atList[0] == 'OK':
@@ -51,7 +65,8 @@ def Parse(atLine):
         events.Issue(events.ids.RXMSG, atList)
     # end Parse
 
-def TxCmd(atCmd):
-    print("**Tx cmd>",atCmd)
-    ser.write(atCmd.encode())
-    expRsp = "OK"
+def TxCmd(atCmd, expRsp="OK"):
+    cmdRsp = (atCmd, expRsp)
+    txBuf.append(cmdRsp)
+    print("CmdList",txBuf)
+

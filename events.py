@@ -17,17 +17,12 @@ class ids:
     CHECKIN = 4 # Arg is list, including nodeId in arg[1]
     RXMSG = 5 # Arg is list, direct from Telegesis
     RXERROR = 6 # Arg is decimal number indicating error
+    RXEXPRSP = 7 # Arg is the whole response
 
 def Issue(eventId, arg=0):
     # Tell all interested parties about the new event
-    EventHandler(eventId, arg) # Local event handler
+    hubapp.EventHandler(eventId, arg)
     telegesis.EventHandler(eventId, arg)
     devices.EventHandler(eventId, arg)
     rules.EventHandler(eventId, arg)
 
-def EventHandler(eventId, arg):
-    if (eventId == ids.INIT):
-        print("Starting hubapp, v0.0.0.2")
-    elif (eventId == ids.TRIGGER):
-        print("Got trigger from ", arg)
-    # end event handler

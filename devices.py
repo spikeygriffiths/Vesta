@@ -10,7 +10,7 @@ import telegesis
 if __name__ == "__main__":
     hubapp.main()
 
-devFilename = "devices.json"
+devFilename = "devices_cache"
 dirty = False
 
 # Keep a track of known devices present in the system
@@ -21,7 +21,10 @@ def EventHandler(eventId, arg):
     if eventId == events.ids.INIT:
         try:
             with open(devFilename, "r") as f:
-                info = json.load(f) # Load previous cache of devices into info[]
+                try:
+                    info = json.load(f) # Load previous cache of devices into info[]
+                except:
+                    info = []
         except OSError:
             info = []
         dirty = False   # Info[] is initialised now
@@ -30,38 +33,44 @@ def EventHandler(eventId, arg):
         devIdx = GetIdx(arg[1])
         SetVal(devIdx, "LastSeen", datetime.now().strftime("%y/%m/%d %H:%M:%S"))  # Mark it as "recently seen"
         atCmd = Check(devIdx)   # Check to see if we want to know anything about the device
-        if atCmd != "":
-            telegesis.TxCmd(atCmd)  # And also ought to tell device to keep polling...
+        if atCmd != None:
+            telegesis.TxCmd("AT+FPSET:01,0028") # Tell device to enter Fast Poll for 40qs (==10s)
+            telegesis.TxCmd(atCmd)  # This will go out after the Fast Poll Set
+        else:
+            telegesis.TxCmd("AT+FPSET:00") # Tell device to stop Poll
     if eventId == events.ids.SECONDS:
         if dirty:
             with open(devFilename, "w") as f:
-                json.dump(info, f)
+                print(info, file=f) # was json.dump(info, f), but that converts tuples into lists
             dirty = False   # Don't save again until needed
     if eventId == events.ids.RXMSG:
         if arg[0] == "AddrResp" and arg[1] == "00":
-            devIdx = FindAdd(arg[2])
-            devices.SetVal(devIdx,"EUI",arg[3])
-        
+            devIdx = GetIdx(arg[2])
+            SetVal(devIdx,"EUI",arg[3])
+    # End event handler
         
 
 def GetIdx(devId):
-    global info, dirty
+    global info
     devIdx = 0
     for device in info:
         for item in device:
             if item == ("devId", devId):
+                print ("Found devId at index", devIdx)
                 return devIdx
         devIdx = devIdx + 1
-    info.append([("devId",devId)])  # If we didn't find it, then add it
-    dirty = True # Note that we need to serialize the device info soon
-    return len(info)-1 # -1 to convert number of elements in list to an index
+    print ("New devId:", devId,"added to list", info)
+    info.append([])  # If we didn't find it, then add empty device
+    devIdx = len(info)-1 # -1 to convert number of elements in list to an index
+    SetVal(devIdx,"devId",devId)
+    return devIdx
 
 def SetVal(devIdx, name, value):
     global info, dirty
     for item in info[devIdx]:
         if item[0] == name:
             info[devIdx].remove(item) # Remove old tuple if necessary
-    info[devIdx].append((name, value) ) # Add new one regardless
+    info[devIdx].append((name, value)) # Add new one regardless
     dirty = True # Note that we need to serialize the device info soon
     
 def GetVal(devIdx, name):

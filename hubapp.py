@@ -5,6 +5,9 @@ import time
 # App-specific Python modules
 import events
 
+if __name__ == "__main__":
+    main()
+
 def main():
     events.Issue(events.ids.INIT)
     sleepDelayS = 0.1
@@ -12,7 +15,8 @@ def main():
         time.sleep(sleepDelayS)
         events.Issue(events.ids.SECONDS, sleepDelayS)
     # end mainloop
-
-if __name__ == "__main__":
-    main()
  
+def EventHandler(eventId, arg):
+    if eventId == events.ids.INIT:
+        print("Starting hubapp, v0.0.0.3")
+    # end event handler
