@@ -22,22 +22,31 @@ def EventHandler(eventId, arg):
         try:
             with open(devFilename, "r") as f:
                 try:
-                    info = json.load(f) # Load previous cache of devices into info[]
+                    info = eval(f.read()) # Load previous cache of devices into info[]
+                    print("Loaded list from file")
                 except:
+                    print("Initialised empty device list")
                     info = []
         except OSError:
             info = []
         dirty = False   # Info[] is initialised now
-    if eventId == events.ids.CHECKIN:
-        # See if we have anything to ask the device...
-        devIdx = GetIdx(arg[1])
+    if eventId == events.ids.CHECKIN:   # See if we have anything to ask the device...
+        devId = arg[1]
+        endPoint = arg[2]
+        seq = arg[3]
+        rssi = arg[4]
+        lqi = arg[5]
+        devIdx = GetIdx(devId)
         SetVal(devIdx, "LastSeen", datetime.now().strftime("%y/%m/%d %H:%M:%S"))  # Mark it as "recently seen"
+        SetVal(devIdx, "EP", endPoint) # Note endpoint that CheckIn came from
+        SetVal(devIdx, "RSSI", rssi)
+        SetVal(devIdx, "LQI", lqi)
         atCmd = Check(devIdx)   # Check to see if we want to know anything about the device
         if atCmd != None:
-            telegesis.TxCmd("AT+FPSET:01,0028") # Tell device to enter Fast Poll for 40qs (==10s)
+            telegesis.TxCmd("AT+RAWZCL:"+devId+","+endPoint+",0020,00"+seq+"00010028") # Tell device to enter Fast Poll for 40qs (==10s)
             telegesis.TxCmd(atCmd)  # This will go out after the Fast Poll Set
         else:
-            telegesis.TxCmd("AT+FPSET:00") # Tell device to stop Poll
+            telegesis.TxCmd("AT+RAWZCL:"+devId+","+endPoint+",0020,00"+seq+"00") # Tell device to stop Poll
     if eventId == events.ids.SECONDS:
         if dirty:
             with open(devFilename, "w") as f:
@@ -49,7 +58,6 @@ def EventHandler(eventId, arg):
             SetVal(devIdx,"EUI",arg[3])
     # End event handler
         
-
 def GetIdx(devId):
     global info
     devIdx = 0
