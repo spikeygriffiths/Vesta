@@ -4,6 +4,7 @@
 import serial
 from collections import deque
 # App-specific Python modules
+import log
 import events
 import hubapp
 ser = 0
@@ -25,7 +26,7 @@ def EventHandler(eventId, arg):
             Parse(str(ser.readline(),'utf-8').rstrip('\r\n'))
         elif expRsp == "" and len(txBuf):
             atCmd, expRsp = txBuf.popleft()
-            print("Pop>",atCmd)
+            log.log("Pop>"+atCmd)
             atCmd = atCmd + "\r\n"
             ser.write(atCmd.encode())
     elif eventId == events.ids.RXERROR:
@@ -43,13 +44,13 @@ def Parse(atLine):
         return # Ignore blank lines
     if atLine[0:2] == 'AT':
         return # Exit immediately if line starts with AT, indicating an echo
-    print ("Parsing:", atLine)
+    log.log("Parsing:"+ atLine)
     atLine = atLine.replace(':',',') # Replace colons with commas
     atList = atLine.split(',') # Split on commas
-    #print("Processed line into ", atList)
+    #log.log("Processed line into "+ atList)
     if expRsp != "":  # We're expecting a response, so see if this matches
         if expRsp in atList:
-            print("Found expected response of ", expRsp, " in ", atList)
+            log.log("Found expected response of "+ expRsp+ " in "+ atList)
             events.Issue(events.ids.RXEXPRSP, atList)
         expRsp = ""
     # Not expecting any response, or it didn't match, so this must be spontaneous
@@ -70,5 +71,5 @@ def Parse(atLine):
 def TxCmd(atCmd, expRsp="OK"):
     cmdRsp = (atCmd, expRsp)
     txBuf.append(cmdRsp)
-    print("CmdList",txBuf)
+    log.log("Pushing Cmd:"+atCmd)
 

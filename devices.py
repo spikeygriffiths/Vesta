@@ -4,6 +4,7 @@ from datetime import datetime
 import json
 # App-specific modules
 import events
+import log
 import hubapp
 import telegesis
 
@@ -23,9 +24,9 @@ def EventHandler(eventId, arg):
             with open(devFilename, "r") as f:
                 try:
                     info = eval(f.read()) # Load previous cache of devices into info[]
-                    print("Loaded list from file")
+                    log.log("Loaded list from file")
                 except:
-                    print("Initialised empty device list")
+                    log.log("Initialised empty device list")
                     info = []
         except OSError:
             info = []
@@ -50,7 +51,7 @@ def EventHandler(eventId, arg):
     if eventId == events.ids.SECONDS:
         if dirty:
             with open(devFilename, "w") as f:
-                print(info, file=f) # was json.dump(info, f), but that converts tuples into lists
+                print(info, file=f) # Save devices list directly to file
             dirty = False   # Don't save again until needed
     if eventId == events.ids.RXMSG:
         if arg[0] == "AddrResp" and arg[1] == "00":
@@ -64,10 +65,10 @@ def GetIdx(devId):
     for device in info:
         for item in device:
             if item == ("devId", devId):
-                print ("Found devId at index", devIdx)
+                print ("Found devId at index"+ devIdx)
                 return devIdx
         devIdx = devIdx + 1
-    print ("New devId:", devId,"added to list", info)
+    log.log("New devId:"+ devId+"added to list"+ info)
     info.append([])  # If we didn't find it, then add empty device
     devIdx = len(info)-1 # -1 to convert number of elements in list to an index
     SetVal(devIdx,"devId",devId)

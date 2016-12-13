@@ -5,6 +5,7 @@ import telegesis
 import hubapp
 import devices
 import rules
+import commands
 
 if __name__ == "__main__":
     hubapp.main()
@@ -25,4 +26,5 @@ def Issue(eventId, arg=0):
     telegesis.EventHandler(eventId, arg)
     devices.EventHandler(eventId, arg)
     rules.EventHandler(eventId, arg)
+    #commands.EventHandler(eventId, arg) # Now in separate thread
 

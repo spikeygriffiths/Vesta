@@ -1,6 +1,7 @@
 # ./rules
 
 import events
+import log
 import hubapp
 import devices
 
@@ -15,13 +16,13 @@ def EventHandler(eventId, arg):
         devName = devices.GetVal(devIndex, "Name")
         if devName == "DWS003":
             if int(arg[3], 16) & 1: # Bottom bit indicates alarm1
-                print("Door", arg[1], "opened")
+                log.log("Door"+ arg[1]+ "opened")
             else:
-                print("Door", arg[1], "closed")
+                log.log("Door"+ arg[1]+ "closed")
         elif devName == "MOT003":
-            print("PIR", arg[1], "active")
+            log.log("PIR", arg[1]+ "active")
         else:
-            print("DevName:", devName, " id:", arg[1]," zonestatus", arg[3])
+            log.log("DevName:"+ devName+ " id:"+ arg[1]+" zonestatus "+ arg[3])
     elif (eventId == events.ids.BUTTON):
         devIndex = devices.GetIdx(arg[1]) # Lookup device from network address in arg[1]
-        print ("Button ", arg[1], " pressed")
+        log.log("Button "+ arg[1]+ " pressed")
