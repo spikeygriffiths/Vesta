@@ -4,7 +4,10 @@
 
 # Standard Python modules
 import cmd
-import threading
+import readline
+import sys
+import select
+#import threading
 # App-specific Python modules
 import devices
 import events
@@ -14,8 +17,14 @@ import hubapp
 if __name__ == "__main__":
     hubapp.main()
 
-#def EventHandler(eventId, arg):
-#    if eventId == events.ids.INIT:
+def EventHandler(eventId, arg):
+    if eventId == events.ids.SECONDS:
+        if select.select([sys.stdin], [], [], 0)[0]:
+            cmd = sys.stdin.readline()
+            if cmd:
+                Commands().onecmd(cmd)
+    # End of Command EventHandler
+
 #        commandThread = cliThread(1, "OSCLI", 1)
 #        commandThread.start()
 #

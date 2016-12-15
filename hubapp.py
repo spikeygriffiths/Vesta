@@ -2,8 +2,10 @@
 # For Raspberry Pi using Telegesis USB stick to talk to array of ZigBee devices
 
 import time
-import threading
-import readline
+#import threading
+#import readline
+#import sys
+#import select
 # App-specific Python modules
 import events
 import commands
@@ -18,24 +20,24 @@ import commands
 ##
 ##    def run(self):
         
-class cliThread(threading.Thread):
-    def __init__(self, threadId, name, counter):
-        threading.Thread.__init__(self)
-        self.threadID = threadId
-        self.name = name
-        self.counter = counter
-
-    def run(self):
-        while True:
-            cmd = raw_input('>')
-            commands.Commands(onecmd(cmd))
-        # was commands.Commands().cmdloop()
+##class cliThread(threading.Thread):
+##    def __init__(self, threadId, name, counter):
+##        threading.Thread.__init__(self)
+##        self.threadID = threadId
+##        self.name = name
+##        self.counter = counter
+##
+##    def run(self):
+##        while True:
+##            cmd = raw_input('>')
+##            commands.Commands(onecmd(cmd))
+##        # was commands.Commands().cmdloop()
 
 def main():
     #MainThread = mainThread(1, "Main", 1)
-    commandThread = cliThread(2, "OSCLI", 2)
+    #commandThread = cliThread(2, "OSCLI", 2)
     #mainThread.start()
-    commandThread.start()
+    #commandThread.start()
     events.Issue(events.ids.INIT)
     sleepDelayS = 0.1
     while True:

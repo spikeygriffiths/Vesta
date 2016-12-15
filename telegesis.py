@@ -50,7 +50,7 @@ def Parse(atLine):
     #log.log("Processed line into "+ atList)
     if expRsp != "":  # We're expecting a response, so see if this matches
         if expRsp in atList:
-            log.log("Found expected response of "+ expRsp+ " in "+ atList)
+            log.log("Found expected response of "+ expRsp+ " in "+ str(atList))
             events.Issue(events.ids.RXEXPRSP, atList)
         expRsp = ""
     # Not expecting any response, or it didn't match, so this must be spontaneous

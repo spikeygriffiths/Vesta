@@ -65,10 +65,10 @@ def GetIdx(devId):
     for device in info:
         for item in device:
             if item == ("devId", devId):
-                print ("Found devId at index"+ devIdx)
+                log.log ("Found devId at index"+ str(devIdx))
                 return devIdx
         devIdx = devIdx + 1
-    log.log("New devId:"+ devId+"added to list"+ info)
+    log.log("New devId:"+ str(devId)+"added to list"+ str(info))
     info.append([])  # If we didn't find it, then add empty device
     devIdx = len(info)-1 # -1 to convert number of elements in list to an index
     SetVal(devIdx,"devId",devId)

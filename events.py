@@ -26,5 +26,5 @@ def Issue(eventId, arg=0):
     telegesis.EventHandler(eventId, arg)
     devices.EventHandler(eventId, arg)
     rules.EventHandler(eventId, arg)
-    #commands.EventHandler(eventId, arg) # Now in separate thread
+    commands.EventHandler(eventId, arg)
 
