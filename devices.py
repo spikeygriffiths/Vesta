@@ -57,6 +57,14 @@ def EventHandler(eventId, arg):
         if arg[0] == "AddrResp" and arg[1] == "00":
             devIdx = GetIdx(arg[2])
             SetVal(devIdx,"EUI",arg[3])
+        if arg[0] == "RESPATTR":
+            devIdx = GetIdx(arg[1])
+            ep = arg[2]
+            clusterId = arg[3]
+            attrId = arg[4]
+            if "00" == arg[5]:
+                attrVal = arg[6]
+                SetAttrVal(devIdx, clusterId, attrId, attrVal)
     # End event handler
         
 def GetIdx(devId):
@@ -87,10 +95,16 @@ def GetVal(devIdx, name):
     for item in info[devIdx]:
         if item[0] == name:
             return item[1] # Just return value associated with name
-    return "" # Empty string to indicate item not found
+    return None # Indicate item not found
+
+def SetAttrVal(devIdx, clstrId, attrId, val)
+    # Continue here!
 
 def Check(devIdx):
     devId = GetVal(devIdx, "devId")
-    if "" == GetVal(devIdx, "EUI"):
+    ep = GetVal(devIdx, "EP")
+    if None == GetVal(devIdx, "EUI"):
         return "AT+EUIREQ:"+devId+","+devId
+    if None == GetVal(devIdx, "Name")
+        return "AT+READATR:"+devId+","+ep+",0,0000,0004" # Get Basic's Name
         
