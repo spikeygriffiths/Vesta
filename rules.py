@@ -22,7 +22,7 @@ def EventHandler(eventId, arg):
         elif devName == "MOT003":
             log.log("PIR", arg[1]+ "active")
         else:
-            log.log("DevName:"+ devName+ " id:"+ arg[1]+" zonestatus "+ arg[3])
+            log.log("DevId:"+ arg[1]+" zonestatus "+ arg[3])
     elif (eventId == events.ids.BUTTON):
         devIndex = devices.GetIdx(arg[1]) # Lookup device from network address in arg[1]
         log.log("Button "+ arg[1]+ " pressed")

@@ -7,7 +7,6 @@ import cmd
 import readline
 import sys
 import select
-#import threading
 # App-specific Python modules
 import devices
 import events
