@@ -25,19 +25,6 @@ def EventHandler(eventId, arg):
                 Commands().onecmd(cmd)
     # End of Command EventHandler
 
-#        commandThread = cliThread(1, "OSCLI", 1)
-#        commandThread.start()
-#
-#class cliThread(threading.Thread):
-#    def __init__(self, threadId, name, counter):
-#        threading.Thread.__init__(self)
-#        self.threadID = threadId
-#        self.name = name
-#        self.counter = counter
-#
-#    def run(self):
-#        Commands().cmdloop()
-
 class Commands(cmd.Cmd):
     
     def do_devs(self, line):

@@ -64,7 +64,7 @@ def EventHandler(eventId, arg):
             attrId = arg[4]
             if "00" == arg[5]:
                 attrVal = arg[6]
-                #SetAttrVal(devIdx, clusterId, attrId, attrVal)
+                SetAttrVal(devIdx, clusterId, attrId, attrVal)
     # End event handler
         
 def GetIdx(devId):
@@ -76,6 +76,9 @@ def GetIdx(devId):
                 log.log ("Found devId at index"+ str(devIdx))
                 return devIdx
         devIdx = devIdx + 1
+    return InitDev(devId) # Start a new device if requested one not found
+    
+def InitDev(devId):
     log.log("New devId:"+ str(devId)+"added to list"+ str(info))
     info.append([])  # If we didn't find it, then add empty device
     devIdx = len(info)-1 # -1 to convert number of elements in list to an index
@@ -97,8 +100,13 @@ def GetVal(devIdx, name):
             return item[1] # Just return value associated with name
     return None # Indicate item not found
 
-#def SetAttrVal(devIdx, clstrId, attrId, val)
-    # Continue here!
+def SetAttrVal(devIdx, clstrId, attrId, value):
+    name = "attr"+clstrId+":"+attrId # So that the id combines cluster as well as attribute
+    SetVal(devIdx, name, value) # Keep it simple
+
+def GetAttrVal(devIdx, clstrId, attrId):
+    name = "attr"+clstrId+":"+attrId # So that the id combines cluster as well as attribute
+    return GetVal(devIdx, name)
 
 def Check(devIdx):
     devId = GetVal(devIdx, "devId")
