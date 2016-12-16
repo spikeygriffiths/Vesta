@@ -44,10 +44,10 @@ def EventHandler(eventId, arg):
         SetVal(devIdx, "LQI", lqi)
         atCmd = Check(devIdx)   # Check to see if we want to know anything about the device
         if atCmd != None:
-            telegesis.TxCmd("AT+RAWZCL:"+devId+","+endPoint+",0020,00"+seq+"00010028") # Tell device to enter Fast Poll for 40qs (==10s)
+            telegesis.TxCmd("AT+RAWZCL:"+devId+","+endPoint+",0020,01"+seq+"00012800") # Tell device to enter Fast Poll for 40qs (==10s)
             telegesis.TxCmd(atCmd)  # This will go out after the Fast Poll Set
         else:
-            telegesis.TxCmd("AT+RAWZCL:"+devId+","+endPoint+",0020,00"+seq+"00") # Tell device to stop Poll
+            telegesis.TxCmd("AT+RAWZCL:"+devId+","+endPoint+",0020,01"+seq+"0000") # Tell device to stop Poll
     if eventId == events.ids.SECONDS:
         if dirty:
             with open(devFilename, "w") as f:
@@ -113,6 +113,8 @@ def Check(devIdx):
     ep = GetVal(devIdx, "EP")
     if None == GetVal(devIdx, "EUI"):
         return "AT+EUIREQ:"+devId+","+devId
-    if None == GetVal(devIdx, "Name"):
-        return "AT+READATR:"+devId+","+ep+",0,0000,0004" # Get Basic's Name
-        
+    if None == GetAttrVal(devIdx, "0000","0005"):
+        return "AT+READATR:"+devId+","+ep+",0,0000,0005" # Get Basic's Device Name
+    if None == GetAttrVal(devIdx, "0000","0004"):
+        return "AT+READATR:"+devId+","+ep+",0,0000,0004" # Get Basic's Manufacturer Name
+
