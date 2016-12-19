@@ -58,9 +58,11 @@ def Parse(atLine):
         return
     elif atList[0] == "ERROR":
         events.Issue(events.ids.RXERROR, int(atList[1],16)) # See if anyone cares about the error
+    elif atList[0] == "SED" or atList[0] == "FFD" or atList[0] == "ZED":
+        events.Issue(events.ids.NEWDEV, atList) # Tell system that new device has (re-)arrived        
     elif atList[0] == 'CHECKIN':
         events.Issue(events.ids.CHECKIN, atList) # Tell system
-    elif atList[0] == 'TOGGLE':
+    elif atList[0] == 'TOGGLE' or atList[0] == 'ON' or atList[0] == 'OFF':
         events.Issue(events.ids.BUTTON, atList) # Tell rules engine
     elif atList[0] == 'ZONESTATUS':
         events.Issue(events.ids.TRIGGER, atList) # Tell rules engine
