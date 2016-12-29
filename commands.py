@@ -1,4 +1,4 @@
-# ./commands
+#!commands.py
 
 # Command Line Interpreter module for hubapp
 

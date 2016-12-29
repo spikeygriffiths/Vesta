@@ -1,4 +1,4 @@
-# ./hubapp
+#!hubapp.py
 # For Raspberry Pi using Telegesis USB stick to talk to array of ZigBee devices
 
 import time

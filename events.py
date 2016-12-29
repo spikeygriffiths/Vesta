@@ -1,4 +1,4 @@
-# ./events
+#!events.py
 
 # App-specific Python modules
 import telegesis

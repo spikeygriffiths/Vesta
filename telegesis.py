@@ -1,4 +1,4 @@
-# ./telegesis
+#!telegesis.py
 
 # Standard Python modules
 import serial
@@ -18,6 +18,7 @@ def EventHandler(eventId, arg):
     global ser, expRsp
     if eventId == events.ids.INIT:
         ser = serial.Serial('/dev/ttyUSB0',19200, timeout=1)
+        ser.flushInput()
         expRsp = ""
         TxCmd("ATS63=0007") # Request RSSI & LQI on every received message, also disable automatic checkIn responses
         #TxCmd("AT+N") # Get network information, to see whether to start new network or use existing one

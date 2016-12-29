@@ -1,4 +1,4 @@
-# ./rules
+#!rules.py
 
 import events
 import log

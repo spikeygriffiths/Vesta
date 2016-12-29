@@ -1,0 +1,4 @@
+#!ToDoList.txt
+
+Prettily-formatted devices list, rather than raw Python list
+Downloadable rules
