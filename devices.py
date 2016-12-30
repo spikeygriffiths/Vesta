@@ -27,7 +27,7 @@ def EventHandler(eventId, arg):
                     info = eval(f.read()) # Load previous cache of devices into info[]
                     log.log("Loaded list from file")
                 except:
-                    log.log("Initialised empty device list")
+                    log.fault("Unusable device list from file - discarding!")
                     info = []
         except OSError:
             info = []
@@ -91,15 +91,24 @@ def EventHandler(eventId, arg):
     # End event handler
 
 def GetIdx(devId):
+    idx = GetIdxFromItem("devId", devId)
+    if idx:
+        return idx
+    else:
+        return InitDev(devId) # Special case of devId search automatically initialising a new device if necessary
+
+def GetIdxFromItem(item, value):
     global info
     devIdx = 0
     for device in info:
         for item in device:
-            if item == ("devId", devId):
-                log.log ("Found devId at index"+ str(devIdx))
+            if item == (item, value):
                 return devIdx
         devIdx = devIdx + 1
-    return InitDev(devId) # Start a new device if requested one not found
+    return None # Item not found
+
+def GetIdxFromUsername(userName):
+    return GetIdxFromItem("userName", userName)
     
 def InitDev(devId):
     log.log("New devId:"+ str(devId)+"added to list"+ str(info))
@@ -121,6 +130,15 @@ def GetVal(devIdx, name):
     for item in info[devIdx]:
         if item[0] == name:
             return item[1] # Just return value associated with name
+    return None # Indicate item not found
+
+def DelVal(devIdx, name):
+    global info
+    for item in info[devIdx]:
+        if item[0] == name:
+            oldValue = item[1]
+            info[devIdx].remove(item) # Remove old tuple if necessary
+            return oldValue # Just return old value associated with name before it was deleted
     return None # Indicate item not found
 
 def SetAttrVal(devIdx, clstrId, attrId, value):
@@ -148,6 +166,10 @@ def Check(devIdx):
         return "AT+READATR:"+devId+","+ep+",0,0000,0005" # Get Basic's Device Name
     if None == GetAttrVal(devIdx, "0000","0004"):
         return "AT+READATR:"+devId+","+ep+",0,0000,0004" # Get Basic's Manufacturer Name
+    pendingAtCmd = GetVal(devIdx, "AtCmd")
+    if pendingAtCmd:
+        DelVal(devIdx,"AtCmd") # Remove item now that we're actioning it
+        return pendingAtCmd
 
 def CheckAll():
     global info
@@ -171,3 +193,35 @@ def IsListening(devIdx):
         ##        log.log("Now:"+ str(datetime.now()))
         ##        return True
         return False
+
+def SwitchOn(devIdx, durationS):
+    devId = GetVal(devIdx, "devId")
+    ep = GetVal(devIdx, "EP")
+    if devId and ep:
+        telegesis.TxCmd("AtCmd", "AT+RONOFF:"+devId+","+ep+",0,1") # Assume FFD if it supports OnOff cluster
+        if durationS>0: # Duration of 0 means "Stay on forever"
+            SetVal(devIdx, "SwitchOff@", datetime.now()+timedelta(seconds=durationS))
+
+def SwitchOff(devIdx):
+    devId = GetVal(devIdx, "devId")
+    ep = GetVal(devIdx, "EP")
+    if devId and ep:
+        DelVal(devIdx,"SwitchOff@") # Remove any pending "Off" events if we're turning the device off directly
+        telegesis.TxCmd("AtCmd", "AT+RONOFF:"+devId+","+ep+",0,0") # Assume FFD if it supports OnOff cluster
+
+def Toggle(devIdx):
+    devId = GetVal(devIdx, "devId")
+    ep = GetVal(devIdx, "EP")
+    if devId and ep:
+        DelVal(devIdx,"SwitchOff@") # Remove any pending "Off" events if we're handling the device directly
+        telegesis.TxCmd("AtCmd", "AT+RONOFF:"+devId+","+ep+",0") # Assume FFD if it supports OnOff cluster
+
+def FadeOn(devIdx, levelPercent, durationS):
+    devId = GetVal(devIdx, "devId")
+    ep = GetVal(devIdx, "EP")
+    if devId and ep:
+        levelStr = format((levelPercent * 2.55), 'X')
+        telegesis.TxCmd("AtCmd", "AT+LCMVTOLEV:"+devId+","+ep+",0,0,"+levelStr+",0A00") # Fade over 1 sec (in 10ths)
+        if durationS>0: # Duration of 0 means "Stay on forever"
+            SetVal(devIdx, "SwitchOff@", datetime.now()+timedelta(seconds=durationS)) # Could be "FadeOff"
+

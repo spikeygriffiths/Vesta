@@ -38,7 +38,6 @@ def EventHandler(eventId, arg):
         expRsp = ""
     # end eventId handler
 
-
 def Parse(atLine):
     global expRsp
     if atLine == "":
