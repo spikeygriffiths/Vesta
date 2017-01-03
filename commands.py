@@ -29,7 +29,8 @@ class Commands(cmd.Cmd):
     def do_devs(self, line):
         """devs
         Show all devices"""
-        print (devices.info)
+        print (devices.info) # ToDo: Add formatting to improve layout.  Also use cmd args to show selected bits of devices, rather than whole list
+        print (devices.ephemera) # Clumsy, since it's not easy to tie each device to equivalent ephemeral index
 
     def do_open(self, line):
         """open

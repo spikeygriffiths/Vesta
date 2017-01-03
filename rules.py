@@ -7,6 +7,7 @@ import events
 import log
 import hubapp
 import devices
+import zcl
 
 if __name__ == "__main__":
     hubapp.main()
@@ -27,16 +28,15 @@ def EventHandler(eventId, arg):
     if eventId == events.ids.TRIGGER:
         devIdx = devices.GetIdx(arg[1]) # Lookup device from network address in arg[1]
         userName = devices.GetVal(devIdx, "UserName")
-        devName = devices.GetAttrVal(devIdx, "0000", "0005") # Device name
-        #devManuf = devices.GetAttrVal(devIdx, "0000", "0004") # Manufacturer name
-        if devName != None:
-            #log.log("DevId: "+arg[1]+" has name "+ devName)
-            if devName == "DWS003":
+        devType = devices.GetAttrVal(devIdx, zcl.Cluster.IAS_Zone, zcl.Attribute.Zone_Type) # Device type
+        if devType != None:
+            #log.log("DevId: "+arg[1]+" has type "+ devType)
+            if devType == zcl.Zone_Type.Contact:
                 if int(arg[3], 16) & 1: # Bottom bit indicates alarm1
                     log.log("Door "+ arg[1]+ " opened")
                 else:
                     log.log("Door "+ arg[1]+ " closed")
-            elif devName == "MOT003":
+            elif devType == zcl.Zone_Type.PIR:
                 log.log("PIR ", arg[1]+ " active")
             else:
                 log.log("DevId: "+ arg[1]+" zonestatus "+ arg[3])

@@ -17,7 +17,7 @@ if __name__ == "__main__":
 def EventHandler(eventId, arg):
     global ser, expRsp
     if eventId == events.ids.INIT:
-        ser = serial.Serial('/dev/ttyUSB0',19200, timeout=1)
+        ser = serial.Serial('/dev/ttyUSB0',19200, timeout=1) # Could get these TTY settings from a "settings.txt" file?
         ser.flushInput()
         expRsp = ""
         TxCmd("ATS63=0007") # Request RSSI & LQI on every received message, also disable automatic checkIn responses
@@ -34,7 +34,7 @@ def EventHandler(eventId, arg):
         # Ignore error for now, but should probably handle it at some point
         expRsp = ""
     elif eventId == events.ids.RXEXPRSP:
-        # Handle multi-line responses here, meaning expRsp might not be empty
+        # Could handle multi-line responses here, meaning expRsp might not be empty
         expRsp = ""
     # end eventId handler
 
@@ -72,6 +72,9 @@ def Parse(atLine):
 
 def TxCmd(atCmd, expRsp="OK"):
     cmdRsp = (atCmd, expRsp)
-    txBuf.append(cmdRsp)
+    txBuf.append(cmdRsp)  # Append command and associated response as one item
     log.log("Pushing Cmd:"+atCmd)
+
+def ReadAttr(devId, ep, clstrId, attrId): # NB All args as hex strings
+    return "AT+READATR:"+devId+","+ep+",0,"+clstrId+","+attrId
 
