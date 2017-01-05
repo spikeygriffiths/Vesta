@@ -35,11 +35,30 @@ class Commands(cmd.Cmd):
     def do_open(self, line):
         """open
         Opens network (for 60s) to allow new device to join"""
-        telegesis.TxCmd("AT+PJOIN")
+        telegesis.TxCmd(["AT+PJOIN", "OK"])
+
+    def do_new(self, devId):
+        """new devId
+        Add new device with devId of 4 hex digits to device list"""
+        if devId != None:
+            devices.InitDev(devId)
+
+    def do_name(self, line):
+        """name devId name
+        Allows user to associate friendly name with device Id"""
+        argList = line.split()
+        devId = argList[0]
+        name = argList[1]
+        if devId != None and name != None:
+            devIdx = devices.GetIdx(devId)
+            if devIdx != None:
+                devices.SetVal(devIdx, "UserName", name)
+        else:
+            log.fault("Need both args!")
 
     def do_at(self, line):
-        """at
+        """at cmd
         "Sends AT command to Telegesis stick"""
-        telegesis.TxCmd("AT"+line)
+        telegesis.TxCmd(["AT"+line, "OK"])
         
 

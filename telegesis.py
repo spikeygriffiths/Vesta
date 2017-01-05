@@ -8,7 +8,7 @@ import log
 import events
 import hubapp
 ser = 0
-expRsp = ""
+expRsp = None
 txBuf = deque([])    # Nothing to transmit initially
 
 if __name__ == "__main__":
@@ -20,8 +20,8 @@ def EventHandler(eventId, arg):
         ser = serial.Serial('/dev/ttyUSB0',19200, timeout=1) # Could get these TTY settings from a "settings.txt" file?
         ser.flushInput()
         expRsp = ""
-        TxCmd("ATS63=0007") # Request RSSI & LQI on every received message, also disable automatic checkIn responses
-        #TxCmd("AT+N") # Get network information, to see whether to start new network or use existing one
+        TxCmd(["ATS63=0007",  "OK"]) # Request RSSI & LQI on every received message, also disable automatic checkIn responses
+        #TxCmd(["AT+N", "OK"]) # Get network information, to see whether to start new network or use existing one
     elif eventId == events.ids.SECONDS:
         if ser.inWaiting():
             Parse(str(ser.readline(),'utf-8').rstrip('\r\n'))
@@ -35,7 +35,7 @@ def EventHandler(eventId, arg):
         expRsp = ""
     elif eventId == events.ids.RXEXPRSP:
         # Could handle multi-line responses here, meaning expRsp might not be empty
-        expRsp = ""
+        expRsp = None
     # end eventId handler
 
 def Parse(atLine):
@@ -70,11 +70,16 @@ def Parse(atLine):
         events.Issue(events.ids.RXMSG, atList)
     # end Parse
 
-def TxCmd(atCmd, expRsp="OK"):
-    cmdRsp = (atCmd, expRsp)
+def IsIdle():
+    if ser.inWaiting() == 0 and expRsp == None and len(txBuf) == 0:
+        return True
+    else:
+        return False
+
+def TxCmd(cmdRsp):  # Takes a list with two elements - command to send, and first word of last response to expect
     txBuf.append(cmdRsp)  # Append command and associated response as one item
-    log.log("Pushing Cmd:"+atCmd)
+    log.log("Pushing Cmd:"+str(cmdRsp))
 
 def ReadAttr(devId, ep, clstrId, attrId): # NB All args as hex strings
-    return "AT+READATR:"+devId+","+ep+",0,"+clstrId+","+attrId
+    return ("AT+READATR:"+devId+","+ep+",0,"+clstrId+","+attrId, "RESPATTR")
 

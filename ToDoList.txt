@@ -1,4 +1,8 @@
 #!ToDoList.txt
 
-Prettily-formatted devices list, rather than raw Python list
-Downloadable rules
+Features:
+* Prettily-formatted devices list, rather than raw Python list
+* Downloadable rules!
+* Implement timeout after 2(?) seconds for AT command sending
+
+Bugs
