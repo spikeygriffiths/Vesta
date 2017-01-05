@@ -2,7 +2,9 @@
 
 Features:
 * Prettily-formatted devices list, rather than raw Python list
-* Downloadable rules!
+* Finish off rules
 * Implement timeout after 2(?) seconds for AT command sending
+* Implement binding (esp. PollCtrl on old EM250) as well as OnOff cluster & PowerConfig (& temp!)
+* Setup reporting for Battery and temperature
 
 Bugs

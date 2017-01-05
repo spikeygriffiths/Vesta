@@ -105,7 +105,23 @@ def EventHandler(eventId, arg):
                 attrVal = arg[6]
                 NoteEphemera(devIdx, arg)
                 SetAttrVal(devIdx, clusterId, attrId, attrVal)
+        if arg[0] == "Bind":
+            devIdx = GetIdx(arg[1])
+            if devIdx != None:
+                if pendingBinding != None:
+                    bndg.add(pendingBinding)
+                    SetVal(devIdx, "Binding", bndg)
+                    pendingBinding = None
+        if arg[0] == "CFGRPTRP":
+            devIdx = GetIdx(arg[1])
+            status = arg[4]
+            if devIdx != None and status == "00":
+                newRpt = arg[3]+":"+arg[6]  # Arg[3] is cluster and arg[6] is attribute
+                reporting = GetVal(devIdx, "Reporting")
+                reporting = reporting + newRpt
+                SetVal(devIdx, "Reporting", reporting)
     if eventId == events.ids.SECONDS:
+                # Could see if we're expecting this report, and ask for the reporting details from the device otherwise
         SendPendingCommand()
         if dirty:
             with open(devFilename, "w") as f:
@@ -221,12 +237,37 @@ def Check(devIdx, consume):
         return ("AT+EUIREQ:"+devId+","+devId, "AddrResp")
     if None == GetVal(devIdx, "InCluster") or None == GetVal(devIdx, "OutCluster"):
         return ("AT+SIMPLEDESC:"+devId+","+devId+","+ep, "OutCluster")
-    if None == GetAttrVal(devIdx, zcl.Cluster.IAS_Zone, zcl.Attribute.Zone_Type) and zcl.Cluster.IAS_Zone in GetVal(devIdx, "InCluster"):
-        return telegesis.ReadAttr(devId, ep, zcl.Cluster.IAS_Zone, zcl.Attribute.Zone_Type)
-    if None == GetAttrVal(devIdx, zcl.Cluster.Basic, zcl.Attribute.Model_Name):
-        return telegesis.ReadAttr(devId, ep, zcl.Cluster.Basic, zcl.Attribute.Model_Name) # Get Basic's Device Name
-    if None == GetAttrVal(devIdx, zcl.Cluster.Basic, zcl.Attribute.Manuf_Name):
-        return telegesis.ReadAttr(devId, ep, zcl.Cluster.Basic, zcl.Attribute.Manuf_Name) # Get Basic's Manufacturer Name
+    inClstr = GetVal(devIdx, "InCluster") # Assume we have a list of clusters if we get this far
+    bdng = GetVal(devIdx, "Binding")
+    rprtg = GetVal(devIdx, "Reporting")
+    if inClstr != None:
+        if bndg != None:
+            eui = GetVal(devIdx, "EUI")
+            if zcl.Cluster.PollCtrl in inClstr and zcl.Cluster.PollCtrl not in bndg:
+                pendingBinding = zcl.Cluster.PollCtrl
+                return ("AT+BIND:"+devId+",3,"+eui+","+ep+","+zcl.Cluster.PollCtrl+","+telegesis.ourEui+",01", "Bind")
+            if zcl.Cluster.OnOff in inClstr and zcl.Cluster.OnOff not in bndg:
+                pendingBinding = zcl.Cluster.OnOff
+                return ("AT+BIND:"+devId+",3,"+eui+","+ep+","+zcl.Cluster.OnOff+","+telegesis.ourEui+",0A", "Bind")
+            if zcl.Cluster.OnOff in inClstr and zcl.Cluster.PowerConfig not in bndg:
+                pendingBinding = zcl.Cluster.PowerConfig
+                return ("AT+BIND:"+devId+",3,"+eui+","+ep+","+zcl.Cluster.PowerConfig+","+telegesis.ourEui+",01", "Bind")
+        else:
+            SetVal(devIdx, "Binding", "[]")
+        if zcl.Cluster.IAS_Zone in inClstr:
+            if None == GetAttrVal(devIdx, zcl.Cluster.IAS_Zone, zcl.Attribute.Zone_Type):
+                return telegesis.ReadAttr(devId, ep, zcl.Cluster.IAS_Zone, zcl.Attribute.Zone_Type)
+        if zcl.Cluster.Basic in inClstr:
+            if None == GetAttrVal(devIdx, zcl.Cluster.Basic, zcl.Attribute.Model_Name):
+                return telegesis.ReadAttr(devId, ep, zcl.Cluster.Basic, zcl.Attribute.Model_Name) # Get Basic's Device Name
+            if None == GetAttrVal(devIdx, zcl.Cluster.Basic, zcl.Attribute.Manuf_Name):
+                return telegesis.ReadAttr(devId, ep, zcl.Cluster.Basic, zcl.Attribute.Manuf_Name) # Get Basic's Manufacturer Name
+        if rprtg != None:
+            pwrRpt = zcl.Cluster.PowerConfig+":"+zcl.Attribute.Batt_Percentage
+            if zcl.Cluster.PowerConfig in inClstr and pwrRpt not in rprtg:
+                return ("AT+CFGRPT:"+devId+","+ep+",0,"+zcl.Cluster.PowerConfig+",0,"+zcl.Attribute.Batt_Percentage+",20,0E10,0E10,01", "CFGRPTRP")
+        else:
+            SetVal(devIdx, "Reporting", "[]")
     pendingAtCmd = GetTempVal(devIdx, "AtCmdRsp")
     if pendingAtCmd and consume:
         DelTempVal(devIdx,"AtCmdRsp") # Remove item if we're about to use it (presuming successful sending of command...)

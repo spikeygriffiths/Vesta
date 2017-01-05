@@ -2,11 +2,12 @@
 
 class Cluster():
     Basic = "0000"
-    Power_Config = "0001"
+    PowerConfig = "0001"
     Identify = "0003"
     OnOff = "0006"
-    Level_Ctrl = "0008"
-    Colour_Ctrl = "0300"
+    LevelCtrl = "0008"
+    PollCtrl = "0020"
+    ColourCtrl = "0300"
     Illuminance = "0400"
     Temperature = "0402"
     IAS_Zone = "0500"

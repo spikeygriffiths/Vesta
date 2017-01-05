@@ -9,7 +9,15 @@ import events
 import hubapp
 ser = 0
 expRsp = None
+expectOurEui = False
 txBuf = deque([])    # Nothing to transmit initially
+ourVersion = "Unknown"
+ourSoc = "Unknown"
+ourEui = "Unknown"
+ourChannel = "Unknown"
+ourPowLvl = "Unknown"
+ourPan = "Unknown"
+ourExtPan = "Unknown"
 
 if __name__ == "__main__":
     hubapp.main()
@@ -21,7 +29,8 @@ def EventHandler(eventId, arg):
         ser.flushInput()
         expRsp = ""
         TxCmd(["ATS63=0007",  "OK"]) # Request RSSI & LQI on every received message, also disable automatic checkIn responses
-        #TxCmd(["AT+N", "OK"]) # Get network information, to see whether to start new network or use existing one
+        TxCmd(["ATI",  "OK"]) # Request our EUI, as well as our Telegesis version
+        TxCmd(["AT+N", "OK"]) # Get network information, to see whether to start new network or use existing one
     elif eventId == events.ids.SECONDS:
         if ser.inWaiting():
             Parse(str(ser.readline(),'utf-8').rstrip('\r\n'))
@@ -39,7 +48,9 @@ def EventHandler(eventId, arg):
     # end eventId handler
 
 def Parse(atLine):
-    global expRsp
+    global expRsp, expectOurEui
+    global ourVersion, ourSoc, ourEui
+    global ourChannel, ourPowLvl, ourPan, ourExtPan
     if atLine == "":
         return # Ignore blank lines
     if atLine[0:2] == 'AT':
@@ -54,18 +65,33 @@ def Parse(atLine):
             events.Issue(events.ids.RXEXPRSP, atList)
         expRsp = ""
     # Not expecting any response, or it didn't match, so this must be spontaneous
+    if expectOurEui == True:
+        ourEui = atList[0]
+        log.log("Our EUI: "+ourEui)
+        expectOurEui = False
     if atList[0] == 'OK':
         return
     elif atList[0] == "ERROR":
         events.Issue(events.ids.RXERROR, int(atList[1],16)) # See if anyone cares about the error
     elif atList[0] == "SED" or atList[0] == "FFD" or atList[0] == "ZED":
-        events.Issue(events.ids.NEWDEV, atList) # Tell system that new device has (re-)arrived        
+        events.Issue(events.ids.NEWDEV, atList) # Tell system that device has (re-)joined        
     elif atList[0] == 'CHECKIN':
-        events.Issue(events.ids.CHECKIN, atList) # Tell system
+        events.Issue(events.ids.CHECKIN, atList) # Tell devices that device is about to poll for data
     elif atList[0] == 'TOGGLE' or atList[0] == 'ON' or atList[0] == 'OFF':
         events.Issue(events.ids.BUTTON, atList) # Tell rules engine
     elif atList[0] == 'ZONESTATUS':
         events.Issue(events.ids.TRIGGER, atList) # Tell rules engine
+    elif 0 == atList[0].find("Telegesis"):
+        ourSoc = atList[0]
+    elif 0 == atList[0].find("CICIE"):
+        ourVersion = atList[0]
+        log.log("Our version: "+ourVersion)
+        expectOurEui = True # Following EUI has no prefix - we just have to know that it follows the CICIE line
+    elif atList[0] == "+N=COO":
+        ourChannel = atList[1]
+        ourPowLvl = atList[2]
+        ourPan = atList[3]
+        ourExtPan = atList[4]
     else:
         events.Issue(events.ids.RXMSG, atList)
     # end Parse
