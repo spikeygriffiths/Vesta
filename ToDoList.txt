@@ -1,10 +1,12 @@
 #!ToDoList.txt
 
 Features:
-* Prettily-formatted devices list, rather than raw Python list
-* Finish off rules
+* Prettily-formatted devices list, rather than raw Python list for cmd "devs"
+* Finish off rules - make sure various actions work
+* Rename event.SECONDS to event.TICK to avoid confusion
 * Implement timeout after 2(?) seconds for AT command sending
-* Implement binding (esp. PollCtrl on old EM250) as well as OnOff cluster & PowerConfig (& temp!)
-* Setup reporting for Battery and temperature
+* Setup reporting for temperature
 
 Bugs
+* Get event.SECONDS for devices polling working - at the moment this doesn't work, so that new devices aren't properly setup while they're polling after join
+

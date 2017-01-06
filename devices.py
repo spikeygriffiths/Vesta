@@ -2,7 +2,6 @@
 
 from datetime import datetime
 from datetime import timedelta
-import json
 # App-specific modules
 import events
 import log
@@ -16,13 +15,15 @@ if __name__ == "__main__":
 devFilename = "devices_cache"
 dirty = False
 globalDevIdx = None
+pendingBinding = None # Needed because the BIND response doesn't include the cluster
+pendingRptAttrId = None # Needed because CFGRPTRSP only includes the cluster and not the attr
 
 # Keep a track of known devices present in the system
 info = []
 ephemera = [] # Don't bother saving this
 
 def EventHandler(eventId, arg):
-    global info, dirty, globalDevIdx
+    global info, dirty, globalDevIdx, pendingBinding, pendingRptAttrId
     if eventId == events.ids.INIT:
         try:
             with open(devFilename, "r") as f:
@@ -60,7 +61,7 @@ def EventHandler(eventId, arg):
             if cmdRsp != None:
                 telegesis.TxCmd(["AT+RAWZCL:"+devId+","+endPoint+",0020,11"+seq+"00012800", "OK"]) # Tell device to enter Fast Poll for 40qs (==10s)
                 SetTempVal(devIdx,"PollingUntil", datetime.now()+timedelta(seconds=10))
-                telegesis.TxCmd(cmdRsp)  # This will go out after the Fast Poll Set
+                telegesis.TxCmd(cmdRsp)  # This will go out after the Fast Poll Set - but possibly ought to go out as part of SECONDS handler..?
             else:
                 telegesis.TxCmd(["AT+RAWZCL:"+devId+","+endPoint+",0020,11"+seq+"0000", "OK"]) # Tell device to stop Poll
     if eventId == events.ids.RXMSG:
@@ -105,23 +106,31 @@ def EventHandler(eventId, arg):
                 attrVal = arg[6]
                 NoteEphemera(devIdx, arg)
                 SetAttrVal(devIdx, clusterId, attrId, attrVal)
-        if arg[0] == "Bind":
+                reporting = GetVal(devIdx, "Reporting") # See if we're expecting this report, and note it in the reporting table
+                newRpt = clusterId+":"+attrId
+                if newRpt not in reporting:
+                    reporting.append(newRpt)
+                    SetVal(devIdx, "Reporting", reporting)
+        if arg[0] == "Bind":    # Binding Response from device
             devIdx = GetIdx(arg[1])
             if devIdx != None:
                 if pendingBinding != None:
-                    bndg.add(pendingBinding)
-                    SetVal(devIdx, "Binding", bndg)
+                    binding = GetVal(devIdx, "Binding")
+                    binding.append(pendingBinding)
+                    SetVal(devIdx, "Binding", binding)
                     pendingBinding = None
-        if arg[0] == "CFGRPTRP":
+        if arg[0] == "CFGRPTRSP":   # Configure Report Response from device
             devIdx = GetIdx(arg[1])
             status = arg[4]
             if devIdx != None and status == "00":
-                newRpt = arg[3]+":"+arg[6]  # Arg[3] is cluster and arg[6] is attribute
+                clusterId = arg[3]
+                attrId = pendingRptAttrId # Need to remember this, since it doesn't appear in CFGRPTRSP
                 reporting = GetVal(devIdx, "Reporting")
-                reporting = reporting + newRpt
-                SetVal(devIdx, "Reporting", reporting)
+                newRpt = clusterId+":"+attrId
+                if newRpt not in reporting:
+                    reporting.append(newRpt)
+                    SetVal(devIdx, "Reporting", reporting)
     if eventId == events.ids.SECONDS:
-                # Could see if we're expecting this report, and ask for the reporting details from the device otherwise
         SendPendingCommand()
         if dirty:
             with open(devFilename, "w") as f:
@@ -229,6 +238,7 @@ def NoteEphemera(devIdx, arg):
         arg.remove(lqi)
 
 def Check(devIdx, consume):
+    global pendingBinding, pendingRptAttrId
     devId = GetVal(devIdx, "devId")
     ep = GetVal(devIdx, "EP")
     if None == ep:
@@ -238,22 +248,24 @@ def Check(devIdx, consume):
     if None == GetVal(devIdx, "InCluster") or None == GetVal(devIdx, "OutCluster"):
         return ("AT+SIMPLEDESC:"+devId+","+devId+","+ep, "OutCluster")
     inClstr = GetVal(devIdx, "InCluster") # Assume we have a list of clusters if we get this far
-    bdng = GetVal(devIdx, "Binding")
+    outClstr = GetVal(devIdx, "OutCluster")
+    binding = GetVal(devIdx, "Binding")
     rprtg = GetVal(devIdx, "Reporting")
     if inClstr != None:
-        if bndg != None:
+        if binding != None:
             eui = GetVal(devIdx, "EUI")
-            if zcl.Cluster.PollCtrl in inClstr and zcl.Cluster.PollCtrl not in bndg:
+            if zcl.Cluster.PollCtrl in inClstr and zcl.Cluster.PollCtrl not in binding:
                 pendingBinding = zcl.Cluster.PollCtrl
                 return ("AT+BIND:"+devId+",3,"+eui+","+ep+","+zcl.Cluster.PollCtrl+","+telegesis.ourEui+",01", "Bind")
-            if zcl.Cluster.OnOff in inClstr and zcl.Cluster.OnOff not in bndg:
+            if zcl.Cluster.OnOff in outClstr and zcl.Cluster.OnOff not in binding:
                 pendingBinding = zcl.Cluster.OnOff
                 return ("AT+BIND:"+devId+",3,"+eui+","+ep+","+zcl.Cluster.OnOff+","+telegesis.ourEui+",0A", "Bind")
-            if zcl.Cluster.OnOff in inClstr and zcl.Cluster.PowerConfig not in bndg:
+            if zcl.Cluster.PowerConfig in inClstr and zcl.Cluster.PowerConfig not in binding:
                 pendingBinding = zcl.Cluster.PowerConfig
                 return ("AT+BIND:"+devId+",3,"+eui+","+ep+","+zcl.Cluster.PowerConfig+","+telegesis.ourEui+",01", "Bind")
+            # Could add temperature binding here, if we also add temperature reporting
         else:
-            SetVal(devIdx, "Binding", "[]")
+            SetVal(devIdx, "Binding", [])
         if zcl.Cluster.IAS_Zone in inClstr:
             if None == GetAttrVal(devIdx, zcl.Cluster.IAS_Zone, zcl.Attribute.Zone_Type):
                 return telegesis.ReadAttr(devId, ep, zcl.Cluster.IAS_Zone, zcl.Attribute.Zone_Type)
@@ -265,9 +277,11 @@ def Check(devIdx, consume):
         if rprtg != None:
             pwrRpt = zcl.Cluster.PowerConfig+":"+zcl.Attribute.Batt_Percentage
             if zcl.Cluster.PowerConfig in inClstr and pwrRpt not in rprtg:
+                pendingRptAttrId = zcl.Attribute.Batt_Percentage
                 return ("AT+CFGRPT:"+devId+","+ep+",0,"+zcl.Cluster.PowerConfig+",0,"+zcl.Attribute.Batt_Percentage+",20,0E10,0E10,01", "CFGRPTRP")
+            # Could add temperature reporting here, assuming binding already set up
         else:
-            SetVal(devIdx, "Reporting", "[]")
+            SetVal(devIdx, "Reporting", [])
     pendingAtCmd = GetTempVal(devIdx, "AtCmdRsp")
     if pendingAtCmd and consume:
         DelTempVal(devIdx,"AtCmdRsp") # Remove item if we're about to use it (presuming successful sending of command...)
@@ -293,7 +307,7 @@ def IsListening(devIdx):
         pollTime = GetTempVal(devIdx, "PollingUntil")
         if pollTime != None:
             if datetime.now() < pollTime:
-                log.log("Now:"+ str(datetime.now()))
+                log.log("Now: "+ str(datetime.now()))
                 return True
         return False
 

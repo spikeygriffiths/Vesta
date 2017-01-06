@@ -13,6 +13,8 @@ import zcl
 if __name__ == "__main__":
     hubapp.main()
 
+rulesFilename = "rules.txt"
+
 # Example rules.txt
 # if HallwayPir==active do SwitchOn ["HallwayLight","120s"]
 # if HallwayBtn==on do Toggle ["HallwayLight"]
@@ -61,9 +63,9 @@ def EventHandler(eventId, arg):
 
 def Run(trigger, devIdx): # Run through the rules looking to see if we have a match for the trigger
     log.log("Running rule: "+ trigger)
-    rulesFile = Path("rules.txt")
+    rulesFile = Path(rulesFilename)
     if rulesFile.is_file():
-        with open("rules.txt") as rules:
+        with open(rulesFilename) as rules:
             for line in rules:
                 rule = ' '.join(line.split()) # Compact multiple spaces into single ones and make each line into a rule
                 ruleList = rule.split(" ") # Make each rule into a list
@@ -76,7 +78,7 @@ def Run(trigger, devIdx): # Run through the rules looking to see if we have a ma
                 # else assume the line is a comment and skip it
             # end of rules
     else:
-        log.fault("No rules.txt !")
+        log.fault("No " + rulesFilename+" !")
 
 def ParseCondition(ruleCondition, trigger):
     if ruleCondition == trigger: # Simple match for now
@@ -86,19 +88,20 @@ def ParseCondition(ruleCondition, trigger):
 
 def Action(actList):
     log.log("Action with: "+str(actList))
-    devIdx = devices.GetIdxFromUsername(actList[1]) # Second arg is username for device
     action = actList[0]
     if devIdx != None:
         if action == "Log":
-            log.log("Rule says Log event for ")
-        elif action == "SwitchOn":
+            log.log("Rule says Log event for "+actList[1])
+        else:
+            devIdx = devices.GetIdxFromUsername(actList[1]) # Second arg is username for device
+        if action == "SwitchOn":
             devices.SwitchOn(devIdx,int(actList[2],10)) # (Decimal) Duration in 2nd arg
         elif action == "SwitchOff":
             devices.SwitchOff(devIdx)
         elif action == "Toggle":
             devices.Toggle(devIdx)
         elif action == "FadeOn":
-            devices.FadeOn(devIdx,int(actList[1],10),int(actList[2],10)) # Level (as percentage) followed by Duration in args[2]
+            devices.FadeOn(devIdx,int(actList[2],10),int(actList[3],10)) # Level (as percentage) followed by Duration
         else:
             log.log("Unknown action: "+action)
     else:

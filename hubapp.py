@@ -5,6 +5,7 @@ import time
 # App-specific Python modules
 import events
 import commands
+import log
 
 def main():
     events.Issue(events.ids.INIT)
@@ -16,7 +17,7 @@ def main():
      
 def EventHandler(eventId, arg):
     if eventId == events.ids.INIT:
-        print("Starting hubapp, v0.0.0.6")
+        log.log("Starting hubapp, v0.0.0.7")
     # end event handler
     
 if __name__ == "__main__":

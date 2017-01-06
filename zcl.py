@@ -6,10 +6,12 @@ class Cluster():
     Identify = "0003"
     OnOff = "0006"
     LevelCtrl = "0008"
+    OTA = "0019"
     PollCtrl = "0020"
     ColourCtrl = "0300"
     Illuminance = "0400"
     Temperature = "0402"
+    Occupancy = "0406"
     IAS_Zone = "0500"
 
 class Attribute():
