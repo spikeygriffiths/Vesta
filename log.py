@@ -8,11 +8,11 @@ if __name__ == "__main__":
 
 def log(msg):
     timedMsg = "<" + str(datetime.now()) + ">"+ msg
-    open("debug.log", "a").write(timedMsg)
+    open("debug.log", "a").write(timedMsg+"\n")
     print(timedMsg)  # To stdout
 
 def fault(msg):
     timedMsg = "<" + str(datetime.now()) + ">"+ msg
-    open("fault.log", "a").write(timedMsg)
+    open("fault.log", "a").write(timedMsg+"\n")
     print("FAULT! "+ msg)  # To stdout
 

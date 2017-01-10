@@ -21,11 +21,11 @@ class ids:
     RXEXPRSP = 7 # Arg is the whole response
     NEWDEV = 8 # Arg is the whole response (devType, devEui, devNodeId)
 
-def Issue(eventId, arg=0):
+def Issue(eventId, eventArg=0):
     # Tell all interested parties about the new event
-    hubapp.EventHandler(eventId, arg)
-    telegesis.EventHandler(eventId, arg)
-    devices.EventHandler(eventId, arg)
-    rules.EventHandler(eventId, arg)
-    commands.EventHandler(eventId, arg)
+    hubapp.EventHandler(eventId, eventArg)
+    telegesis.EventHandler(eventId, eventArg)
+    devices.EventHandler(eventId, eventArg)
+    rules.EventHandler(eventId, eventArg)
+    commands.EventHandler(eventId, eventArg)
 

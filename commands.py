@@ -16,7 +16,7 @@ import hubapp
 if __name__ == "__main__":
     hubapp.main()
 
-def EventHandler(eventId, arg):
+def EventHandler(eventId, eventArg):
     if eventId == events.ids.SECONDS:
         if select.select([sys.stdin], [], [], 0)[0]:
             cmd = sys.stdin.readline()
@@ -55,6 +55,15 @@ class Commands(cmd.Cmd):
                 devices.SetVal(devIdx, "UserName", name)
         else:
             log.fault("Need both args!")
+
+    def do_toggle(self, name):
+        """toggle name
+        Sends toggle on/off command to named device"""
+        devIdx = devices.GetIdx(name)   # Try devId
+        if devIdx == None:
+            devIdx = devices.GetIdxFromUserName(name) # Try name if no match with devId
+        if devIdx != None:
+            devices.Toggle(devIdx)
 
     def do_at(self, line):
         """at cmd

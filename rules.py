@@ -27,7 +27,7 @@ rulesFilename = "rules.txt"
 # Note spaces used to separate each item.  Time wrapping around midnight is handled by adding 24, hence 25:00 being 1am
 # Syntax is "if <condition> do <action>"
 
-def EventHandler(eventId, arg):
+def EventHandler(eventId, eventArg):
     if eventId == events.ids.TRIGGER:
         devIdx = devices.GetIdx(arg[1]) # Lookup device from network address in arg[1]
         userName = devices.GetVal(devIdx, "UserName")

@@ -15,9 +15,9 @@ def main():
         events.Issue(events.ids.SECONDS, sleepDelayS)
     # end mainloop
      
-def EventHandler(eventId, arg):
+def EventHandler(eventId, eventArg):
     if eventId == events.ids.INIT:
-        log.log("Starting hubapp, v0.0.0.7")
+        log.log("Starting hubapp, v0.0.0.8")
     # end event handler
     
 if __name__ == "__main__":

@@ -22,7 +22,7 @@ pendingRptAttrId = None # Needed because CFGRPTRSP only includes the cluster and
 info = []
 ephemera = [] # Don't bother saving this
 
-def EventHandler(eventId, arg):
+def EventHandler(eventId, eventArg):
     global info, dirty, globalDevIdx, pendingBinding, pendingRptAttrId
     if eventId == events.ids.INIT:
         try:
@@ -65,65 +65,68 @@ def EventHandler(eventId, arg):
             else:
                 telegesis.TxCmd(["AT+RAWZCL:"+devId+","+endPoint+",0020,11"+seq+"0000", "OK"]) # Tell device to stop Poll
     if eventId == events.ids.RXMSG:
-        if arg[0] == "AddrResp" and arg[1] == "00":
-            devIdx = GetIdx(arg[2])
+        if eventArg[0] == "AddrResp" and eventArg[1] == "00":
+            devIdx = GetIdx(eventArg[2])
             if devIdx != None:
-                SetVal(devIdx,"EUI",arg[3])
-        elif arg[0] == "ActEpDesc":
-            if "00" == arg[2]:
-                devIdx = GetIdx(arg[1])
+                SetVal(devIdx,"EUI",eventArg[3])
+        elif eventArg[0] == "ActEpDesc":
+            if "00" == eventArg[2]:
+                devIdx = GetIdx(eventArg[1])
                 if devIdx != None:
-                    SetVal(devIdx, "EP", arg[2]) # Note first endpoint
-        elif arg[0] == "SimpleDesc":
-            if "00" == arg[2]:
-                globalDevIdx = GetIdx(arg[1]) # Is multi-line response, so expect rest of response and use this global index until it's all finished
-        elif arg[0] == "InCluster":
+                    SetVal(devIdx, "EP", eventArg[2]) # Note first endpoint
+        elif eventArg[0] == "SimpleDesc":
+            if "00" == eventArg[2]:
+                globalDevIdx = GetIdx(eventArg[1]) # Is multi-line response, so expect rest of response and use this global index until it's all finished
+        elif eventArg[0] == "InCluster":
            if globalDevIdx != None:
-             SetVal(globalDevIdx, "InCluster", arg[1:]) # Store whole list from arg[1] to arg[n]
-        elif arg[0] == "OutCluster":
+             SetVal(globalDevIdx, "InCluster", eventArg[1:]) # Store whole list from arg[1] to arg[n]
+        elif eventArg[0] == "OutCluster":
             if globalDevIdx != None:
-                NoteEphemera(globalDevIdx, arg)
-                SetVal(globalDevIdx, "OutCluster", arg[1:]) # Store whole list from arg[1] to arg[n]
+                NoteEphemera(globalDevIdx, eventArg)
+                SetVal(globalDevIdx, "OutCluster", eventArg[1:]) # Store whole list from arg[1] to arg[n]
             globalDevIdx = None # We've finished with this global for now
-        if arg[0] == "RESPATTR":
-            devIdx = GetIdx(arg[1])
+        if eventArg[0] == "RESPATTR":
+            devIdx = GetIdx(eventArg[1])
             if devIdx != None:
-                ep = arg[2]
-                clusterId = arg[3]
-                attrId = arg[4]
-                if "00" == arg[5]:
-                    attrVal = arg[6]
+                ep = eventArg[2]
+                clusterId = eventArg[3]
+                attrId = eventArg[4]
+                if "00" == eventArg[5]:
+                    attrVal = eventArg[6]
                 else:
-                    attrVal = "Error:"+arg[5]   # So that we don't ask for the same attribute again later
+                    attrVal = "Error:"+eventArg[5]   # So that we don't ask for the same attribute again later
                 SetAttrVal(devIdx, clusterId, attrId, attrVal)
-        if arg[0] == "REPORTATTR":
-            devIdx = GetIdx(arg[1])
+        if eventArg[0] == "REPORTATTR":
+            devIdx = GetIdx(eventArg[1])
             if devIdx != None:
-                ep = arg[2]
-                clusterId = arg[3]
-                attrId = arg[4]
-                attrType = arg[5]
-                attrVal = arg[6]
-                NoteEphemera(devIdx, arg)
+                ep = eventArg[2]
+                clusterId = eventArg[3]
+                attrId = eventArg[4]
+                attrType = eventArg[5]
+                attrVal = eventArg[6]
+                NoteEphemera(devIdx, eventArg)
                 SetAttrVal(devIdx, clusterId, attrId, attrVal)
                 reporting = GetVal(devIdx, "Reporting") # See if we're expecting this report, and note it in the reporting table
-                newRpt = clusterId+":"+attrId
-                if newRpt not in reporting:
-                    reporting.append(newRpt)
-                    SetVal(devIdx, "Reporting", reporting)
-        if arg[0] == "Bind":    # Binding Response from device
-            devIdx = GetIdx(arg[1])
+                if reporting != None:
+                    newRpt = clusterId+":"+attrId
+                    if newRpt not in reporting:
+                        reporting.append(newRpt)
+                        SetVal(devIdx, "Reporting", reporting)
+                else:
+                    SetVal(devIdx, "Reporting", []) # Ready for next time
+        if eventArg[0] == "Bind":    # Binding Response from device
+            devIdx = GetIdx(eventArg[1])
             if devIdx != None:
                 if pendingBinding != None:
                     binding = GetVal(devIdx, "Binding")
                     binding.append(pendingBinding)
                     SetVal(devIdx, "Binding", binding)
                     pendingBinding = None
-        if arg[0] == "CFGRPTRSP":   # Configure Report Response from device
-            devIdx = GetIdx(arg[1])
-            status = arg[4]
+        if eventArg[0] == "CFGRPTRSP":   # Configure Report Response from device
+            devIdx = GetIdx(eventArg[1])
+            status = eventArg[4]
             if devIdx != None and status == "00":
-                clusterId = arg[3]
+                clusterId = eventArg[3]
                 attrId = pendingRptAttrId # Need to remember this, since it doesn't appear in CFGRPTRSP
                 reporting = GetVal(devIdx, "Reporting")
                 newRpt = clusterId+":"+attrId
@@ -160,8 +163,8 @@ def GetIdxFromItem(name, value):
         devIdx = devIdx + 1
     return None # Item not found
 
-def GetIdxFromUsername(userName):
-    return GetIdxFromItem("userName", userName)
+def GetIdxFromUserName(userName):
+    return GetIdxFromItem("UserName", userName)
     
 def InitDev(devId):
     global info
@@ -290,13 +293,14 @@ def Check(devIdx, consume):
 def SendPendingCommand():
     global info
     if telegesis.IsIdle() == True:
+        log.log("Telegesis idle")
         devIdx = 0
         for device in info:
-            for item in device:
-                if IsListening(devIdx):# True if FFD, ZED or Polling
-                    cmdRsp = Check(devIdx, True) # Automatically consume any pending command
-                    if cmdRsp != None:
-                        telegesis.TxCmd(cmdRsp)  # Send command directly
+            if IsListening(devIdx):# True if FFD, ZED or Polling
+                cmdRsp = Check(devIdx, True) # Automatically consume any pending command
+                if cmdRsp != None:
+                    log.log("Sending "+str(cmdRsp))
+                    telegesis.TxCmd(cmdRsp)  # Send command directly
             devIdx = devIdx + 1
 
 def IsListening(devIdx):

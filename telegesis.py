@@ -9,6 +9,7 @@ import events
 import hubapp
 ser = 0
 expRsp = None
+expRspTimeoutS = 0
 expectOurEui = False
 txBuf = deque([])    # Nothing to transmit initially
 ourVersion = "Unknown"
@@ -22,8 +23,8 @@ ourExtPan = "Unknown"
 if __name__ == "__main__":
     hubapp.main()
 
-def EventHandler(eventId, arg):
-    global ser, expRsp
+def EventHandler(eventId, eventArg):
+    global ser, expRsp, expRspTimeoutS
     if eventId == events.ids.INIT:
         ser = serial.Serial('/dev/ttyUSB0',19200, timeout=1) # Could get these TTY settings from a "settings.txt" file?
         ser.flushInput()
@@ -37,14 +38,18 @@ def EventHandler(eventId, arg):
         elif expRsp == "" and len(txBuf):
             atCmd, expRsp = txBuf.popleft()
             log.log("Pop>"+atCmd)
+            expRspTimeoutS = 10
             atCmd = atCmd + "\r\n"
             ser.write(atCmd.encode())
+        if expRsp != "" and expRspTimeoutS > 0:
+            expRspTimeoutS = expRspTimeoutS - eventArg  # Expect eventArg to be 0.1
+            if expRspTimeoutS == 0:
+                expRsp = ""
     elif eventId == events.ids.RXERROR:
         # Ignore error for now, but should probably handle it at some point
         expRsp = ""
     elif eventId == events.ids.RXEXPRSP:
-        # Could handle multi-line responses here, meaning expRsp might not be empty
-        expRsp = None
+        expRsp = ""
     # end eventId handler
 
 def Parse(atLine):
@@ -63,7 +68,6 @@ def Parse(atLine):
         if expRsp in atList:
             log.log("Found expected response of "+ expRsp+ " in "+ str(atList))
             events.Issue(events.ids.RXEXPRSP, atList)
-        expRsp = ""
     # Not expecting any response, or it didn't match, so this must be spontaneous
     if expectOurEui == True:
         ourEui = atList[0]
@@ -97,7 +101,7 @@ def Parse(atLine):
     # end Parse
 
 def IsIdle():
-    if ser.inWaiting() == 0 and expRsp == None and len(txBuf) == 0:
+    if ser.inWaiting() == 0 and expRsp == "" and len(txBuf) == 0:
         return True
     else:
         return False
