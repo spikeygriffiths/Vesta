@@ -43,13 +43,21 @@ def EventHandler(eventId, eventArg):
             ser.write(atCmd.encode())
         if expRsp != "" and expRspTimeoutS > 0:
             expRspTimeoutS = expRspTimeoutS - eventArg  # Expect eventArg to be 0.1
-            if expRspTimeoutS == 0:
+            if expRspTimeoutS <= 0:
                 expRsp = ""
     elif eventId == events.ids.RXERROR:
-        # Ignore error for now, but should probably handle it at some point
         expRsp = ""
     elif eventId == events.ids.RXEXPRSP:
         expRsp = ""
+    elif eventId == events.ids.INFO:
+        if IsIdle == False:
+            print("Telegesis: Not idle, waiting for expRsp:", expRsp)
+        else:
+            print("Telegesis: IsIdle")
+            print("TxBuf: ", str(txBuf))
+            print("expRsp: \""+ expRsp + "\"")
+            if expRsp != "":
+                print("expRspTimeoutS: ", expRspTimeoutS)
     # end eventId handler
 
 def Parse(atLine):

@@ -20,6 +20,7 @@ class ids:
     RXERROR = 6 # Arg is decimal number indicating error
     RXEXPRSP = 7 # Arg is the whole response
     NEWDEV = 8 # Arg is the whole response (devType, devEui, devNodeId)
+    INFO = 9 # No arg, just print any useful info
 
 def Issue(eventId, eventArg=0):
     # Tell all interested parties about the new event

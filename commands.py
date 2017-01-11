@@ -26,6 +26,11 @@ def EventHandler(eventId, eventArg):
 
 class Commands(cmd.Cmd):
     
+    def do_info(self, line):
+        """info
+        Displays useful information"""
+        events.Issue(events.ids.INFO)
+
     def do_devs(self, line):
         """devs
         Show all devices"""
@@ -64,6 +69,18 @@ class Commands(cmd.Cmd):
             devIdx = devices.GetIdxFromUserName(name) # Try name if no match with devId
         if devIdx != None:
             devices.Toggle(devIdx)
+
+    def do_dim(self, line):
+        """dim name fraction
+        Sends level command to named device"""
+        argList = line.split()
+        devId = argList[0]
+        fraction = float(argList[1])
+        devIdx = devices.GetIdx(devId)   # Try devId
+        if devIdx == None:
+            devIdx = devices.GetIdxFromUserName(devId) # Try name if no match with devId
+        if devIdx != None:
+            devices.Dim(devIdx, fraction)
 
     def do_at(self, line):
         """at cmd

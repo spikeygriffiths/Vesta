@@ -39,21 +39,21 @@ def EventHandler(eventId, eventArg):
             info = []
         dirty = False   # Info[] is initialised now
     if eventId == events.ids.NEWDEV:
-        devId = arg[2]
+        devId = eventArg[2]
         devIdx = GetIdx(devId)
         if devIdx == None:  # Which ought to be the case
             devIdx = InitDev(devId)
-        NoteEphemera(devIdx, arg)
-        SetVal(devIdx,"DevType",arg[0])    # SED, FFD or ZED
-        SetVal(devIdx,"EUI",arg[1])
-        if arg[0] == "SED":
+        NoteEphemera(devIdx, eventArg)
+        SetVal(devIdx,"DevType",eventArg[0])    # SED, FFD or ZED
+        SetVal(devIdx,"EUI",eventArg[1])
+        if eventArg[0] == "SED":
             SetTempVal(devIdx,"PollingUntil", datetime.now()+timedelta(seconds=300))
     if eventId == events.ids.CHECKIN:   # See if we have anything to ask the device...
-        endPoint = arg[2]
-        seq = arg[3]
-        devIdx = GetIdx(arg[1])
+        endPoint = eventArg[2]
+        seq = eventArg[3]
+        devIdx = GetIdx(eventArg[1])
         if devIdx != None:
-            NoteEphemera(devIdx, arg)
+            NoteEphemera(devIdx, eventArg)
             if GetVal(devIdx, "EP") == None:
                 SetVal(devIdx, "EP", endPoint) # Note endpoint that CheckIn came from, unless we already know this
             devId = GetVal(devIdx, "devId")
@@ -73,10 +73,14 @@ def EventHandler(eventId, eventArg):
             if "00" == eventArg[2]:
                 devIdx = GetIdx(eventArg[1])
                 if devIdx != None:
-                    SetVal(devIdx, "EP", eventArg[2]) # Note first endpoint
+                    SetVal(devIdx, "EP", eventArg[3]) # Note first endpoint
         elif eventArg[0] == "SimpleDesc":
             if "00" == eventArg[2]:
                 globalDevIdx = GetIdx(eventArg[1]) # Is multi-line response, so expect rest of response and use this global index until it's all finished
+            elif "82" == eventArg[2]:   # 82 == Invalid endpoint
+                devIdx = GetIdx(eventArg[1])
+                DelVal(devIdx, "EP")
+                events.Issue(events.ids.RXERROR, int(eventArg[2],16)) # Tell system that we're aborting this command
         elif eventArg[0] == "InCluster":
            if globalDevIdx != None:
              SetVal(globalDevIdx, "InCluster", eventArg[1:]) # Store whole list from arg[1] to arg[n]
@@ -133,6 +137,8 @@ def EventHandler(eventId, eventArg):
                 if newRpt not in reporting:
                     reporting.append(newRpt)
                     SetVal(devIdx, "Reporting", reporting)
+    if eventId == events.ids.RXERROR:
+        globalDevIdx = None # We've finished with this global if we get an error
     if eventId == events.ids.SECONDS:
         SendPendingCommand()
         if dirty:
@@ -293,35 +299,38 @@ def Check(devIdx, consume):
 def SendPendingCommand():
     global info
     if telegesis.IsIdle() == True:
-        log.log("Telegesis idle")
         devIdx = 0
         for device in info:
             if IsListening(devIdx):# True if FFD, ZED or Polling
-                cmdRsp = Check(devIdx, True) # Automatically consume any pending command
-                if cmdRsp != None:
-                    log.log("Sending "+str(cmdRsp))
-                    telegesis.TxCmd(cmdRsp)  # Send command directly
+                offTime = GetTempVal(devIdx, "SwitchOff@")
+                if offTime != None:
+                    if datetime.now() > offTime:
+                        SwitchOff(devIdx)
+                else:
+                    cmdRsp = Check(devIdx, True) # Automatically consume any pending command
+                    if cmdRsp != None:
+                        log.log("Sending "+str(cmdRsp))
+                        telegesis.TxCmd(cmdRsp)  # Send command directly
             devIdx = devIdx + 1
 
 def IsListening(devIdx):
     type = GetVal(devIdx, "DevType")
     if type == "FFD" or type == "ZED":
-        return True # These devices are always awake and listening
+        return True
     else: # Assume sleepy (even if None), so check if we think it is polling
+        return True # These devices are always awake and listening
         pollTime = GetTempVal(devIdx, "PollingUntil")
         if pollTime != None:
             if datetime.now() < pollTime:
-                log.log("Now: "+ str(datetime.now()))
+                #log.log("Now: "+ str(datetime.now()))
                 return True
         return False
 
-def SwitchOn(devIdx, durationS):
+def SwitchOn(devIdx):
     devId = GetVal(devIdx, "devId")
     ep = GetVal(devIdx, "EP")
     if devId and ep:
         telegesis.TxCmd(["AT+RONOFF:"+devId+","+ep+",0,1", "OK"]) # Assume FFD if it supports OnOff cluster
-        if durationS>0: # Duration of 0 means "Stay on forever"
-            SetTempVal(devIdx, "SwitchOff@", datetime.now()+timedelta(seconds=durationS))
 
 def SwitchOff(devIdx):
     devId = GetVal(devIdx, "devId")
@@ -337,12 +346,10 @@ def Toggle(devIdx):
         DelTempVal(devIdx,"SwitchOff@") # Remove any pending "Off" events if we're handling the device directly
         telegesis.TxCmd(["AT+RONOFF:"+devId+","+ep+",0", "OK"]) # Assume FFD if it supports OnOff cluster
 
-def FadeOn(devIdx, levelPercent, durationS):
+def Dim(devIdx, levelFraction):
     devId = GetVal(devIdx, "devId")
     ep = GetVal(devIdx, "EP")
     if devId and ep:
-        levelStr = format((levelPercent * 2.55), 'X')
+        levelStr = format(int(levelFraction * 255), 'X')
         telegesis.TxCmd(["AT+LCMVTOLEV:"+devId+","+ep+",0,0,"+levelStr+",0A00", "OK"]) # Fade over 1 sec (in 10ths)
-        if durationS>0: # Duration of 0 means "Stay on forever"
-            SetTempVal(devIdx, "SwitchOff@", datetime.now()+timedelta(seconds=durationS)) # Could be "FadeOff"
 
