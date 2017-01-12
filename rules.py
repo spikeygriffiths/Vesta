@@ -19,11 +19,10 @@ rulesFilename = "rules.txt"
 # if HallwayPir==active do SwitchOn HallwayLight for 120
 # if HallwayBtn==TOGGLE do Toggle HallwayLight
 # Later on might have:
-# if HallwayPir==active do {
-#   if time>sunset and time<=25:00 do SwitchOn ["HallwayLight","120s"]
-#   if time>sunset and time<=20:00 do SwitchOn ["StairLight","120s"]
-#   if time>20:00 and time<=25:00 do FadeOn ["StairLight","120s","25%"]
-# }
+# if HallwayPir==active and 16:00 < time < 25:00 do SwitchOn HallwayLight for 120
+# if StairPir==active and 16:00 < time < 20:00 do SwitchOn StairLight for 120
+# if StairPir==active and 20:00 < time < 25:00 do Dim StairLight to 0.15 for 120
+
 # Note spaces used to separate each item.  Time wrapping around midnight is handled by adding 24, hence 25:00 being 1am
 # Syntax is "if <condition> do <action>[ for <duration>]"
 

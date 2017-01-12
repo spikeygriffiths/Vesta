@@ -74,13 +74,16 @@ class Commands(cmd.Cmd):
         """dim name fraction
         Sends level command to named device"""
         argList = line.split()
-        devId = argList[0]
-        fraction = float(argList[1])
-        devIdx = devices.GetIdx(devId)   # Try devId
-        if devIdx == None:
-            devIdx = devices.GetIdxFromUserName(devId) # Try name if no match with devId
-        if devIdx != None:
-            devices.Dim(devIdx, fraction)
+        if len(argList) >= 2:
+            devId = argList[0]
+            fraction = float(argList[1])
+            devIdx = devices.GetIdx(devId)   # Try devId
+            if devIdx == None:
+                devIdx = devices.GetIdxFromUserName(devId) # Try name if no match with devId
+            if devIdx != None:
+                devices.Dim(devIdx, fraction)
+        else:
+            log.fault("Insufficient Args")
 
     def do_at(self, line):
         """at cmd

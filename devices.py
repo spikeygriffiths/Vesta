@@ -50,7 +50,7 @@ def EventHandler(eventId, eventArg):
             SetTempVal(devIdx,"PollingUntil", datetime.now()+timedelta(seconds=300))
     if eventId == events.ids.CHECKIN:   # See if we have anything to ask the device...
         endPoint = eventArg[2]
-        seq = eventArg[3]
+        seq = "00" # was seq = eventArg[3], but that's the RSSI
         devIdx = GetIdx(eventArg[1])
         if devIdx != None:
             NoteEphemera(devIdx, eventArg)
@@ -337,6 +337,7 @@ def SwitchOff(devIdx):
     ep = GetVal(devIdx, "EP")
     if devId and ep:
         DelTempVal(devIdx,"SwitchOff@") # Remove any pending "Off" events if we're turning the device off directly
+        telegesis.TxCmd(["AT+LCMVTOLEV:"+devId+","+ep+",0,0,FE,0001", "OK"]) # Ensure fully bright ready to be turned on later
         telegesis.TxCmd(["AT+RONOFF:"+devId+","+ep+",0,0", "OK"]) # Assume FFD if it supports OnOff cluster
 
 def Toggle(devIdx):
@@ -350,6 +351,6 @@ def Dim(devIdx, levelFraction):
     devId = GetVal(devIdx, "devId")
     ep = GetVal(devIdx, "EP")
     if devId and ep:
-        levelStr = format(int(levelFraction * 255), 'X')
-        telegesis.TxCmd(["AT+LCMVTOLEV:"+devId+","+ep+",0,0,"+levelStr+",0A00", "OK"]) # Fade over 1 sec (in 10ths)
+        levelStr = format(int(levelFraction * 254), 'X')
+        telegesis.TxCmd(["AT+LCMVTOLEV:"+devId+","+ep+",0,1,"+levelStr+",000A", "OK"]) # Fade over 1 sec (in 10ths)
 
