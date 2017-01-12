@@ -19,11 +19,12 @@ rulesFilename = "rules.txt"
 # Example rules.txt
 # if HallwayPir==active do SwitchOn HallwayLight for 120
 # if HallwayBtn==TOGGLE do Toggle HallwayLight
-# Later on might have:
 # if HallwayPir==active and 16:00<time<23:59 do SwitchOn HallwayLight for 120
 # if HallwayPir==active and 0:00<time<1:00 do SwitchOn HallwayLight for 120
 # if StairPir==active and 16:00<time<20:00 do SwitchOn StairLight for 120
 # if StairPir==active and 20:00<time<23:00 do Dim StairLight to 0.15 for 120
+#if DoorBell==TOGGLE and 7:00<time<20:59 do Play Westminster-chimes.mp3
+#if DoorBell==TOGGLE and 21:00<time<23:59 do email spikey@rosepip.com Out of hours doorbell
 
 # Note spaces used to separate each item.
 # Syntax is "if <condition> do <action>[ for <duration>]"
