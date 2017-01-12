@@ -19,11 +19,12 @@ rulesFilename = "rules.txt"
 # if HallwayPir==active do SwitchOn HallwayLight for 120
 # if HallwayBtn==TOGGLE do Toggle HallwayLight
 # Later on might have:
-# if HallwayPir==active and 16:00 < time < 25:00 do SwitchOn HallwayLight for 120
-# if StairPir==active and 16:00 < time < 20:00 do SwitchOn StairLight for 120
-# if StairPir==active and 20:00 < time < 25:00 do Dim StairLight to 0.15 for 120
+# if HallwayPir==active and 16:00<time<23:59 do SwitchOn HallwayLight for 120
+# if HallwayPir==active and 0:00<time<1:00 do SwitchOn HallwayLight for 120
+# if StairPir==active and 16:00<time<20:00 do SwitchOn StairLight for 120
+# if StairPir==active and 20:00<time<23:00 do Dim StairLight to 0.15 for 120
 
-# Note spaces used to separate each item.  Time wrapping around midnight is handled by adding 24, hence 25:00 being 1am
+# Note spaces used to separate each item.
 # Syntax is "if <condition> do <action>[ for <duration>]"
 
 def EventHandler(eventId, eventArg):
@@ -68,9 +69,11 @@ def Run(trigger, devIdx): # Run through the rules looking to see if we have a ma
             for line in rules:
                 rule = ' '.join(line.split()) # Compact multiple spaces into single ones and make each line into a rule
                 ruleList = rule.split(" ") # Make each rule into a list
-                if ruleList[0] == "if" and ruleList[2] == "do":
-                    if ParseCondition(ruleList[1], trigger) == True: # Parse condition from element 1 
-                        Action(ruleList[3:]) # Do action from element 3 onwards
+                if ruleList[0] == "if":
+                    doIndex = FindItemInList("do", ruleList) # Safely look for "do"
+                    if doIndex != None:
+                        if ParseCondition(ruleList[1:doIndex], trigger) == True: # Parse condition from element 1 to "do" 
+                            Action(ruleList[doIndex+1:]) # Do action
                     # else skip rest of line
                 elif ruleList[0] == "do":
                     Action(ruleList[1:])
@@ -79,8 +82,34 @@ def Run(trigger, devIdx): # Run through the rules looking to see if we have a ma
     else:
         log.fault("No " + rulesFilename+" !")
 
-def ParseCondition(ruleCondition, trigger):
-    if ruleCondition == trigger: # Simple match for now
+def FindItemInList(item, listToCheck):
+    try:
+        return listToCheck.index(item)
+    except ValueError:
+        return None
+
+def ParseCondition(ruleConditionList, trigger):
+    subAnswers = ""
+    for condition in ruleConditionList:
+        if condition == "and":
+            subAnswers = subAnswers+" and "
+        elif condition == "or":
+            subAnswers = subAnswers+" or "
+        elif "<time<" in condition:
+            sep = condition.index("<time<") # Handle time here
+            nowTime = datetime.strptime(datetime.now().strftime("%H:%M"), "%H:%M")
+            startTime = datetime.strptime(condition[:sep], "%H:%M")
+            endTime = datetime.strptime(condition[sep+6:], "%H:%M")
+            if startTime <= nowTime <= endTime:
+               subAnswers = subAnswers + "True"
+            else:
+               subAnswers = subAnswers + "False"
+        elif condition == trigger: # Simple match for now
+           subAnswers = subAnswers + "True"
+        else:
+           subAnswers = subAnswers + "False"
+    # End of loop
+    if eval(subAnswers) == True:
         return True
     else:
         return False
