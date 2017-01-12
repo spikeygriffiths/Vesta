@@ -2,10 +2,11 @@
 
 Features:
 * Prettily-formatted devices list, rather than raw Python list for cmd "devs"
-* Finish off rules - make sure various actions work
 * Rename event.SECONDS to event.TICK to avoid confusion
-* Setup reporting for temperature
-* Multiple endpoints, esp for bulbs, which appear to have 00,01, but ignore anything sent to 00
+* Setup reporting for temperature, if it exists
+* Set On/Off reporting, if it exists
+* Multiple endpoints?
+* Web interface(!)
 
 Bugs
-* Get event.SECONDS for devices polling working - at the moment this doesn't work, so that new devices aren't properly setup while they're polling after join
+

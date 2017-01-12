@@ -3,6 +3,7 @@
 from datetime import datetime
 from datetime import timedelta
 from pathlib import Path
+from subprocess import call
 # App-specific Python modules
 import events
 import log
@@ -33,17 +34,20 @@ def EventHandler(eventId, eventArg):
         userName = devices.GetVal(devIdx, "UserName")
         zoneType = devices.GetAttrVal(devIdx, zcl.Cluster.IAS_Zone, zcl.Attribute.Zone_Type) # Device type
         if zoneType != None:
-            #log.log("DevId: "+arg[1]+" has type "+ zoneType)
+            #log.log("DevId: "+eventArg[1]+" has type "+ zoneType)
             if zoneType == zcl.Zone_Type.Contact:
-                if int(arg[3], 16) & 1: # Bottom bit indicates alarm1
+                if int(eventArg[3], 16) & 1: # Bottom bit indicates alarm1
+                    if userName:
+                        Run(userName+"==opened", devIdx) # See if rule exists
                     log.log("Door "+ eventArg[1]+ " opened")
                 else:
+                    if userName:
+                        Run(userName+"==closed", devIdx) # See if rule exists
                     log.log("Door "+ eventArg[1]+ " closed")
             elif zoneType == zcl.Zone_Type.PIR:
                 if userName:
                     Run(userName+"==active", devIdx) # See if rule exists
-                else:
-                    log.log("PIR "+ eventArg[1]+ " active")
+                log.log("PIR "+ eventArg[1]+ " active")
             else:
                 log.log("DevId: "+ eventArg[1]+" zonestatus "+ eventArg[3])
         else:
@@ -119,7 +123,10 @@ def Action(actList):
     action = actList[0]
     if action == "Log":
         log.log("Rule says Log event for "+actList[1])
-    else:
+    elif action == "Play":
+        filename = "Sfx/"+actList[1]
+        call(["omxplayer", "-o", "local", filename])
+    else: # Must be a command for a device
         devIdx = devices.GetIdxFromUserName(actList[1]) # Second arg is username for device
         if devIdx == None:
             log.fault("Device "+actList[0]+" from rules.txt not found in devices")
