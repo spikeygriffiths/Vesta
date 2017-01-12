@@ -122,10 +122,14 @@ def Action(actList):
     log.log("Action with: "+str(actList))
     action = actList[0]
     if action == "Log":
-        log.log("Rule says Log event for "+actList[1])
+        log.log("Rule says Log event for "+' '.join(actList[1:]))
     elif action == "Play":
         filename = "Sfx/"+actList[1]
         call(["omxplayer", "-o", "local", filename])
+    elif action == "email": # First arg is recipient, remainder are body of the text.  Fixed subject
+        cmdList = ["echo", "\""+' '.join(actList[2:])+"\"", "|", "mail", "-s", "\"Alert from IoT-Hub\"", actList[1]]
+        cmdStr = " ".join(cmdList)
+        call(cmdStr, shell=True)
     else: # Must be a command for a device
         devIdx = devices.GetIdxFromUserName(actList[1]) # Second arg is username for device
         if devIdx == None:
