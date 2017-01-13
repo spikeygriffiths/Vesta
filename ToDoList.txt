@@ -1,9 +1,12 @@
 #!ToDoList.txt
 
 Features:
-* Prettily-formatted devices list, rather than raw Python list for cmd "devs"
-* Multiple endpoints?
+* Multiple device ZigBee endpoints?
 * Web interface(!)
+* Battery checking on a daily basis.  Ought to email if too low
+* Ask for battery percentage once/day, rather than use reporting?
+* Need a timed event (eg midday every day) to remove cached battery percentage, thus forcing re-request at next CheckIn
+* Timed rules for Smartplugs, etc.
 # *** Burglar alarm? ***
 # Need variable for "armed" state
 # Allow for grace period after arming

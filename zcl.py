@@ -24,6 +24,21 @@ class Attribute():
     Celsius = "0000" # Temperature cluster, 16-bit in 0.01'C steps
     Zone_Type = "0001" # IAS Zone cluster, enum list - see below
 
+class AttributeTypes():
+    Boolean = "10"
+    BitMap8 = "18"
+    Uint8 = "20"
+    Uint16 = "21"
+    Uint32 = "23"
+    Sint8 = "28"
+    Sint16 = "29"
+    Sint32 = "2B"
+    Enum8 = "30"
+    Enum16 = "31"
+    OctStr = "41"
+    ChrStr = "42"
+    LChrStr = "43"
+
 class Zone_Type():
     PIR = "000D"
     Contact = "0015"

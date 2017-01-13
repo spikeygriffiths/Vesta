@@ -37,7 +37,7 @@ def EventHandler(eventId, eventArg):
             Parse(str(ser.readline(),'utf-8').rstrip('\r\n'))
         elif expRsp == "" and len(txBuf):
             atCmd, expRsp = txBuf.popleft()
-            log.log("Pop>"+atCmd)
+            #log.log("Pop>"+atCmd)
             expRspTimeoutS = 10
             atCmd = atCmd + "\r\n"
             ser.write(atCmd.encode())
@@ -116,7 +116,7 @@ def IsIdle():
 
 def TxCmd(cmdRsp):  # Takes a list with two elements - command to send, and first word of last response to expect
     txBuf.append(cmdRsp)  # Append command and associated response as one item
-    log.log("Pushing Cmd:"+str(cmdRsp))
+    #log.log("Pushing Cmd:"+str(cmdRsp))
 
 def ReadAttr(devId, ep, clstrId, attrId): # NB All args as hex strings
     return ("AT+READATR:"+devId+","+ep+",0,"+clstrId+","+attrId, "RESPATTR")

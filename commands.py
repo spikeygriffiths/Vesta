@@ -7,6 +7,7 @@ import cmd
 import readline
 import sys
 import select
+from pprint import pprint # Pretty print for devs list
 # App-specific Python modules
 import devices
 import events
@@ -34,7 +35,7 @@ class Commands(cmd.Cmd):
     def do_devs(self, line):
         """devs
         Show all devices"""
-        print (devices.info) # ToDo: Add formatting to improve layout.  Also use cmd args to show selected bits of devices, rather than whole list
+        pprint (devices.info) # ToDo: Add formatting to improve layout.  Also use cmd args to show selected bits of devices, rather than whole list
         print (devices.ephemera) # Clumsy, since it's not easy to tie each device to equivalent ephemeral index
 
     def do_open(self, line):

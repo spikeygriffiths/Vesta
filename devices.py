@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from datetime import timedelta
+from pprint import pprint # Pretty print for devs list
 # App-specific modules
 import events
 import log
@@ -142,8 +143,9 @@ def EventHandler(eventId, eventArg):
     if eventId == events.ids.SECONDS:
         SendPendingCommand()
         if dirty:
-            with open(devFilename, "w") as f:
-                print(info, file=f) # Save devices list directly to file
+            with open(devFilename, 'wt') as f:
+                pprint(info, stream=f)
+                # Was print(info, file=f) # Save devices list directly to file
             dirty = False   # Don't save again until needed
     # End event handler
 
@@ -250,16 +252,10 @@ def Check(devIdx, consume):
     global pendingBinding, pendingRptAttrId
     devId = GetVal(devIdx, "devId")
     ep = GetVal(devIdx, "EP")
-<<<<<<< HEAD
     eui = GetVal(devIdx, "EUI")
     if None == ep:
         return ("AT+ACTEPDESC:"+devId+","+devId, "ActEpDesc")
     if None == eui:
-=======
-    if None == ep:
-        return ("AT+ACTEPDESC:"+devId+","+devId, "ActEpDesc")
-    if None == GetVal(devIdx, "EUI"):
->>>>>>> bbcf29e1cbc56af5be2113d7dad93eedadbb8081
         return ("AT+EUIREQ:"+devId+","+devId, "AddrResp")
     if None == GetVal(devIdx, "InCluster") or None == GetVal(devIdx, "OutCluster"):
         return ("AT+SIMPLEDESC:"+devId+","+devId+","+ep, "OutCluster")
@@ -269,7 +265,6 @@ def Check(devIdx, consume):
     rprtg = GetVal(devIdx, "Reporting")
     if inClstr != None:
         if binding != None:
-<<<<<<< HEAD
             if zcl.Cluster.PollCtrl in inClstr and zcl.Cluster.PollCtrl not in binding:
                 return SetBinding(devIdx, zcl.Cluster.PollCtrl, "01") # 01 is our endpoint we want messages to come to
             if zcl.Cluster.OnOff in outClstr and zcl.Cluster.OnOff not in binding: # If device sends OnOff commands...
@@ -280,49 +275,35 @@ def Check(devIdx, consume):
                 return SetBinding(devIdx, zcl.Cluster.PowerConfig, "01") # 01 is our endpoint we want messages to come to
             if zcl.Cluster.Temperature in inClstr and zcl.Cluster.Temperature not in binding:
                 return SetBinding(devIdx, zcl.Cluster.Temperature, "01") # 01 is our endpoint we want messages to come to
-=======
-            eui = GetVal(devIdx, "EUI")
-            if zcl.Cluster.PollCtrl in inClstr and zcl.Cluster.PollCtrl not in binding:
-                pendingBinding = zcl.Cluster.PollCtrl
-                return ("AT+BIND:"+devId+",3,"+eui+","+ep+","+zcl.Cluster.PollCtrl+","+telegesis.ourEui+",01", "Bind")
-            if zcl.Cluster.OnOff in outClstr and zcl.Cluster.OnOff not in binding:
-                pendingBinding = zcl.Cluster.OnOff
-                return ("AT+BIND:"+devId+",3,"+eui+","+ep+","+zcl.Cluster.OnOff+","+telegesis.ourEui+",0A", "Bind")
-            if zcl.Cluster.PowerConfig in inClstr and zcl.Cluster.PowerConfig not in binding:
-                pendingBinding = zcl.Cluster.PowerConfig
-                return ("AT+BIND:"+devId+",3,"+eui+","+ep+","+zcl.Cluster.PowerConfig+","+telegesis.ourEui+",01", "Bind")
-            # Could add temperature binding here, if we also add temperature reporting
->>>>>>> bbcf29e1cbc56af5be2113d7dad93eedadbb8081
         else:
             SetVal(devIdx, "Binding", [])
         if zcl.Cluster.IAS_Zone in inClstr:
             if None == GetAttrVal(devIdx, zcl.Cluster.IAS_Zone, zcl.Attribute.Zone_Type):
-                return telegesis.ReadAttr(devId, ep, zcl.Cluster.IAS_Zone, zcl.Attribute.Zone_Type)
+                return telegesis.ReadAttr(devId, ep, zcl.Cluster.IAS_Zone, zcl.Attribute.Zone_Type) # Get IAS device type (PIR or contact, etc.)
         if zcl.Cluster.Basic in inClstr:
             if None == GetAttrVal(devIdx, zcl.Cluster.Basic, zcl.Attribute.Model_Name):
                 return telegesis.ReadAttr(devId, ep, zcl.Cluster.Basic, zcl.Attribute.Model_Name) # Get Basic's Device Name
             if None == GetAttrVal(devIdx, zcl.Cluster.Basic, zcl.Attribute.Manuf_Name):
                 return telegesis.ReadAttr(devId, ep, zcl.Cluster.Basic, zcl.Attribute.Manuf_Name) # Get Basic's Manufacturer Name
+        if zcl.Cluster.PowerConfig in inClstr and "SED"== GetVal(devIdx, "DevType"):
+            if None == GetAttrVal(devIdx, zcl.Cluster.PowerConfig, zcl.Attribute.Batt_Percentage):
+                return telegesis.ReadAttr(devId, ep, zcl.Cluster.PowerConfig, zcl.Attribute.Batt_Percentage) # Get Battery percentage
         if rprtg != None:
-            pwrRpt = zcl.Cluster.PowerConfig+":"+zcl.Attribute.Batt_Percentage
-<<<<<<< HEAD
-            if zcl.Cluster.PowerConfig in binding and pwrRpt not in rprtg:
-                pendingRptAttrId = zcl.Attribute.Batt_Percentage
-                return ("AT+CFGRPT:"+devId+","+ep+",0,"+zcl.Cluster.PowerConfig+",0,"+zcl.Attribute.Batt_Percentage+",20,0E10,0E10,01", "CFGRPTRP") # 0E10 is 3600==1 hour
-            tmpRpt = zcl.Cluster.Temperature+":"+zcl.Attribute.Celsius
-            if zcl.Cluster.Temperature in binding and tmpRpt not in rprtg:
-                pendingRptAttrId = zcl.Attribute.Celsius
-                return ("AT+CFGRPT:"+devId+","+ep+",0,"+zcl.Cluster.Temperature+",0,"+zcl.Attribute.Celsius+",20,0E10,0E10,01", "CFGRPTRP") # 0E10 is 3600==1 hour
-            onOffRpt = zcl.Cluster.OnOff+":"+zcl.Attribute.OnOffState
-            if zcl.Cluster.OnOff in binding and zcl.Cluster.OnOff in inClstr and OnOffRpt not in rprtg:
-                pendingRptAttrId = zcl.Attribute.OnOffState
-                return ("AT+CFGRPT:"+devId+","+ep+",0,"+zcl.Cluster.OnOff+",0,"+zcl.Attribute.OnOffState+",20,0001,0E10,01", "CFGRPTRP") # 0E10 is 3600==1 hour, 01 is "reportable change"
-=======
-            if zcl.Cluster.PowerConfig in inClstr and pwrRpt not in rprtg:
-                pendingRptAttrId = zcl.Attribute.Batt_Percentage
-                return ("AT+CFGRPT:"+devId+","+ep+",0,"+zcl.Cluster.PowerConfig+",0,"+zcl.Attribute.Batt_Percentage+",20,0E10,0E10,01", "CFGRPTRP")
-            # Could add temperature reporting here, assuming binding already set up
->>>>>>> bbcf29e1cbc56af5be2113d7dad93eedadbb8081
+            if zcl.Cluster.PowerConfig in inClstr:
+                pwrRpt = zcl.Cluster.PowerConfig+":"+zcl.Attribute.Batt_Percentage
+                if zcl.Cluster.PowerConfig in binding and pwrRpt not in rprtg:
+                    pendingRptAttrId = zcl.Attribute.Batt_Percentage
+                    return ("AT+CFGRPT:"+devId+","+ep+",0,"+zcl.Cluster.PowerConfig+",0,"+zcl.Attribute.Batt_Percentage+","+zcl.AttributeTypes.Uint8+",0E10,0E10,0A", "CFGRPTRP") # 0E10 is 3600==1 hour, 0A is 5%
+            if zcl.Cluster.Temperature in inClstr:
+                tmpRpt = zcl.Cluster.Temperature+":"+zcl.Attribute.Celsius
+                if zcl.Cluster.Temperature in binding and tmpRpt not in rprtg:
+                    pendingRptAttrId = zcl.Attribute.Celsius
+                    return ("AT+CFGRPT:"+devId+","+ep+",0,"+zcl.Cluster.Temperature+",0,"+zcl.Attribute.Celsius+","+zcl.AttributeTypes.Uint16+",0E10,0E10,0032", "CFGRPTRP") # 0E10 is 3600==1 hour, 0032 is 50, being 0.5'C
+#            if zcl.Cluster.OnOff in inClstr: # Commented out because TG won't let me set up reports for booleans
+#                onOffRpt = zcl.Cluster.OnOff+":"+zcl.Attribute.OnOffState
+#                if zcl.Cluster.OnOff in binding and onOffRpt not in rprtg:
+#                    pendingRptAttrId = zcl.Attribute.OnOffState
+#                    return ("AT+CFGRPT:"+devId+","+ep+",0,"+zcl.Cluster.OnOff+",0,"+zcl.Attribute.OnOffState+","+zcl.AttributeTypes.Boolean+",0005,0E10,01", "CFGRPTRP") # 0E10 is 3600==1 hour, 01 is "reportable change"
         else:
             SetVal(devIdx, "Reporting", [])
     pendingAtCmd = GetTempVal(devIdx, "AtCmdRsp")
@@ -360,8 +341,7 @@ def IsListening(devIdx):
                 return True
         return False
 
-<<<<<<< HEAD
-def SetBinding(devIdx, cluster, ourEp)
+def SetBinding(devIdx, cluster, ourEp):
     global pendingBinding
     devId = GetVal(devIdx, "devId")
     ep = GetVal(devIdx, "EP")
@@ -370,8 +350,6 @@ def SetBinding(devIdx, cluster, ourEp)
         pendingBinding = cluster
         return ("AT+BIND:"+devId+",3,"+eui+","+ep+","+cluster+","+telegesis.ourEui+","+ourEp, "Bind")
 
-=======
->>>>>>> bbcf29e1cbc56af5be2113d7dad93eedadbb8081
 def SwitchOn(devIdx):
     devId = GetVal(devIdx, "devId")
     ep = GetVal(devIdx, "EP")
