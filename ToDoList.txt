@@ -1,0 +1,15 @@
+#!ToDoList.txt
+
+Features:
+* Prettily-formatted devices list, rather than raw Python list for cmd "devs"
+* Multiple endpoints?
+* Web interface(!)
+# *** Burglar alarm? ***
+# Need variable for "armed" state
+# Allow for grace period after arming
+# Need to see if 2nd sensor has fired shortly after first sensor to avoid false alarms
+# Need easy means of going into Armed / Disarmed mode (keyfob, smartphone
+# Probably need multi-line code blocks, { ... }
+
+Bugs
+
