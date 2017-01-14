@@ -39,15 +39,15 @@ def EventHandler(eventId, eventArg):
             if zoneType == zcl.Zone_Type.Contact:
                 if int(eventArg[3], 16) & 1: # Bottom bit indicates alarm1
                     if userName:
-                        Run(userName+"==opened", devIdx) # See if rule exists
+                        Run(userName+"==opened") # See if rule exists
                     log.log("Door "+ eventArg[1]+ " opened")
                 else:
                     if userName:
-                        Run(userName+"==closed", devIdx) # See if rule exists
+                        Run(userName+"==closed") # See if rule exists
                     log.log("Door "+ eventArg[1]+ " closed")
             elif zoneType == zcl.Zone_Type.PIR:
                 if userName:
-                    Run(userName+"==active", devIdx) # See if rule exists
+                    Run(userName+"==active") # See if rule exists
                 log.log("PIR "+ eventArg[1]+ " active")
             else:
                 log.log("DevId: "+ eventArg[1]+" zonestatus "+ eventArg[3])
@@ -58,15 +58,19 @@ def EventHandler(eventId, eventArg):
         userName = devices.GetVal(devIdx, "UserName")
         log.log("Button "+ eventArg[1]+ " "+eventArg[0]) # Arg[0] holds "ON", "OFF" or "TOGGLE" (Case might be wrong)
         if userName:
-            Run(userName+"=="+eventArg[0], devIdx) # See if rule exists
-    elif eventId == events.ids.SECONDS: # See if any devices are timing out, and turn them off if necessary
-        for devIdx, devInfo in enumerate(devices.info): # Go through all devices
+            Run(userName+"=="+eventArg[0]) # See if rule exists
+    elif eventId == events.ids.SECONDS:
+        now = datetime.now()
+        if now.minute != oldMins:
+            oldMins = now.minute # Ready for next time
+            Run("time=="+now.strftime("%H:%M")) # Run timed rules once per minute with time of date
+        for devIdx, devInfo in enumerate(devices.info):  # See if any devices are timing out, and turn them off if necessary
             offAt = devices.GetVal(devIdx, "SwitchOff@")
             if offAt:
-                if datetime.now() >= offAt:
+                if now >= offAt:
                     devices.SwitchOff(devIdx)
 
-def Run(trigger, devIdx): # Run through the rules looking to see if we have a match for the trigger
+def Run(trigger): # Run through the rules looking to see if we have a match for the trigger
     log.log("Running rule: "+ trigger)
     rulesFile = Path(rulesFilename)
     if rulesFile.is_file():
@@ -131,6 +135,15 @@ def Action(actList):
         cmdList = ["echo", "\""+' '.join(actList[2:])+"\"", "|", "mail", "-s", "\"Alert from IoT-Hub\"", actList[1]]
         cmdStr = " ".join(cmdList)
         call(cmdStr, shell=True)
+#    elif action == "Read":
+#        # Force a read of a specified attribute as "device.attr"
+#        devVar = actList[1]
+#        sep = "." in devVar
+#        if sep != None:
+#            devName = devVar[:sep] # Everything before the separator
+#            varName = devVar[sep+1:] # Everything after the (1-character) separator
+#            devIdx = devices.GetIdxFromUserName(devName)
+#            varItem = # ToDo: Need device attributes converted into device variables (eg batt%, celsius, etc.)
     else: # Must be a command for a device
         devIdx = devices.GetIdxFromUserName(actList[1]) # Second arg is username for device
         if devIdx == None:

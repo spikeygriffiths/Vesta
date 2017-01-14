@@ -321,19 +321,17 @@ def SendPendingCommand():
                 if offTime != None:
                     if datetime.now() > offTime:
                         SwitchOff(devIdx)
-                else:
-                    cmdRsp = Check(devIdx, True) # Automatically consume any pending command
-                    if cmdRsp != None:
-                        log.log("Sending "+str(cmdRsp))
-                        telegesis.TxCmd(cmdRsp)  # Send command directly
+                cmdRsp = Check(devIdx, True) # Automatically consume any pending command
+                if cmdRsp != None:
+                    log.log("Sending "+str(cmdRsp))
+                    telegesis.TxCmd(cmdRsp)  # Send command directly
             devIdx = devIdx + 1
 
 def IsListening(devIdx):
     type = GetVal(devIdx, "DevType")
     if type == "FFD" or type == "ZED":
-        return True
-    else: # Assume sleepy (even if None), so check if we think it is polling
         return True # These devices are always awake and listening
+    else: # Assume sleepy (even if None), so check if we think it is polling
         pollTime = GetTempVal(devIdx, "PollingUntil")
         if pollTime != None:
             if datetime.now() < pollTime:
