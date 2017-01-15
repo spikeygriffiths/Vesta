@@ -8,18 +8,11 @@ import log
 import events
 
 varList = []
-oldMins = 0
 
 if __name__ == "__main__":
     hubapp.main()
 
-def EventHandler(eventId, eventArg):
-    global oldMins
-    if eventId == events.ids.SECONDS:
-        now = datetime.now()
-        if now.minute != oldMins:
-            oldMins = now.minute # Ready for next time
-            rules.Run("time=="+now.strftime("%H:%M")) # Run timed rules once per minute with time of date
+#def EventHandler(eventId, eventArg):
 
 def Set(name, value):
     global varList

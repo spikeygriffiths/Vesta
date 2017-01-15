@@ -11,6 +11,7 @@ import hubapp
 import devices
 import zcl
 import variables
+import iottime
 
 if __name__ == "__main__":
     hubapp.main()
@@ -97,39 +98,47 @@ def FindItemInList(item, listToCheck):
 def ParseCondition(ruleConditionList, trigger):
     #log.log("Parsing: "+" ".join(ruleConditionList))
     subAnswers = ""
-    for condition in ruleConditionList:
-        if condition == "and":
-            subAnswers = subAnswers+" and " # Note surrounding spaces, for python eval()
-        elif condition == "or":
-            subAnswers = subAnswers+" or "
-        elif "<time<" in condition:
-            sep = condition.index("<time<") # Handle time here
-            nowTime = datetime.strptime(datetime.now().strftime("%H:%M"), "%H:%M")
-            startTime = datetime.strptime(condition[:sep], "%H:%M")
-            endTime = datetime.strptime(condition[sep+6:], "%H:%M")
-            if startTime <= nowTime <= endTime:
-               subAnswers = subAnswers + "True"
-            else:
-               subAnswers = subAnswers + "False"
-        elif "<=" in condition:
-            subAnswers = subAnswers + str(GetConditionResult("<=", condition))
-        elif ">=" in condition:
-            subAnswers = subAnswers + str(GetConditionResult(">=", condition))
-        elif "<" in condition:
-            subAnswers = subAnswers + str(GetConditionResult("<", condition))
-        elif ">" in condition:
-            subAnswers = subAnswers + str(GetConditionResult(">", condition))
-        elif "==" in condition:
-            subAnswers = subAnswers + str(GetConditionResult("==", condition))
-        #elif condition == trigger: # Simple match for now
-        #    log.log("condition: "+condition+ " = trigger: "+trigger)
-        #    subAnswers = subAnswers + "True"
-        #else:
-        #    subAnswers = subAnswers + "False"
-    # End of loop
+    if ruleConditionList[0] == trigger: # If first condition (must be trigger) matches, then check rest
+        log.log("condition: "+ruleConditionList[0]+ " = trigger: "+trigger)
+        subAnswers = subAnswers + "True"
+        if len(ruleConditionList) > 0: # Only parse rest of condition if first item is true
+            for condition in ruleConditionList[1:]:
+                if condition == "and":
+                    subAnswers = subAnswers+" and " # Note surrounding spaces, for python eval()
+                elif condition == "or":
+                    subAnswers = subAnswers+" or "
+                elif "<time<" in condition:
+                    sep = condition.index("<time<") # Handle time here
+                    nowTime = datetime.strptime(datetime.now().strftime("%H:%M"), "%H:%M")
+                    startTime = iottime.Get(condition[:sep])
+                    endTime = iottime.Get(condition[sep+6:])
+                    if startTime <= nowTime <= endTime:
+                       subAnswers = subAnswers + "True"
+                    else:
+                       subAnswers = subAnswers + "False"
+                elif "<=" in condition:
+                    subAnswers = subAnswers + str(GetConditionResult("<=", condition))
+                elif ">=" in condition:
+                    subAnswers = subAnswers + str(GetConditionResult(">=", condition))
+                elif "<" in condition:
+                    subAnswers = subAnswers + str(GetConditionResult("<", condition))
+                elif ">" in condition:
+                    subAnswers = subAnswers + str(GetConditionResult(">", condition))
+                elif "==" in condition:
+                    subAnswers = subAnswers + str(GetConditionResult("==", condition))
+            # End of loop
+    else: # Initial condition failed
+        subAnswers = subAnswers + "False"
     if eval(subAnswers) == True:
         return True
     else:
+        return False
+
+def isNumber(s):
+    try:
+        float(s)
+        return True
+    except:
         return False
 
 def GetConditionResult(test, condition):
@@ -138,10 +147,10 @@ def GetConditionResult(test, condition):
     tstVal = condition[sep+len(test):] # Simple value must be on right
     varVal = variables.Get(varName)
     if varVal != None:
-        if test == "==":
-            varVal = "\""+ str(varVal) + "\""
-            tstVal = "\"" + str(tstVal) + "\""
-            #log.log("Comparing strs "+varVal+test+tstVal)
+        if isNumber(tstVal):
+            varVal = str(varVal)
+            tstVal = str(tstVal)
+        log.log("Comparing strs "+varVal+test+tstVal)
         return eval(varVal + test + tstVal)
     else:
         return False # If we couldn't find the item requested, assume the condition fails(?)

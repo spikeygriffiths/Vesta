@@ -33,6 +33,7 @@ def EventHandler(eventId, eventArg):
                     info = eval(f.read()) # Load previous cache of devices into info[]
                     for devices in info:
                         ephemera.append([]) # Initialise parallel ephemeral device list
+                    CheckAllAttrs() #  Set up any useful variables for the loaded devices
                     log.log("Loaded list from file")
                 except:
                     log.fault("Unusable device list from file - discarding!")
@@ -218,14 +219,32 @@ def DelVal(devIdx, name):
 def SetAttrVal(devIdx, clstrId, attrId, value):
     name = "attr"+clstrId+":"+attrId # So that the id combines cluster as well as attribute
     SetVal(devIdx, name, value) # Keep it simple
-    if clstrId==zcl.Cluster.PowerConfig and attrId==zcl.Attribute.Batt_Percentage:
+    SetVarFromAttr(devIdx, name, value)
+
+def CheckAllAttrs():
+    global info
+    devIdx = 0
+    for device in info:
+        for item in device:
+            if "attr" in item[0]:
+                SetVarFromAttr(devIdx, item[0], item[1])
+        devIdx = devIdx + 1
+    
+def SetVarFromAttr(devIdx, name, value): # See if this attribute has an associated variable for user & rules
+    if name == "attr"+zcl.Cluster.PowerConfig+":"+zcl.Attribute.Batt_Percentage:
         varName = GetVal(devIdx, "UserName")+"_BatteryPercentage"
-        varVal = int(value, 16) / 2 # Arrives in 0.5% increments 
-        variables.Set(varName, varVal)
-    if clstrId==zcl.Cluster.Temperature and attrId==zcl.Attribute.Celsius:
+        if value != "FF":
+            varVal = int(value, 16) / 2 # Arrives in 0.5% increments 
+            variables.Set(varName, varVal)
+        else:
+            variables.Del(varName)
+    if name == "attr"+zcl.Cluster.Temperature+":"+zcl.Attribute.Celsius:
         varName = GetVal(devIdx, "UserName")+"_TemperatureC"
-        varVal = int(value, 16) / 100 # Arrives in 0.01'C increments 
-        variables.Set(varName, varVal)
+        if value != "FF9C": # Don't know where this value comes from - should be "FFFF"
+            varVal = int(value, 16) / 100 # Arrives in 0.01'C increments 
+            variables.Set(varName, varVal)
+        else:
+            variables.Del(varName)
 
 def GetAttrVal(devIdx, clstrId, attrId):
     name = "attr"+clstrId+":"+attrId # So that the id combines cluster as well as attribute
@@ -274,6 +293,7 @@ def Check(devIdx, consume):
     if None == eui:
         return ("AT+EUIREQ:"+devId+","+devId, "AddrResp")
     if None == GetVal(devIdx, "InCluster") or None == GetVal(devIdx, "OutCluster"):
+        SetVal(devIdx, "OutCluster", []) # Some devices have no outclusters...
         return ("AT+SIMPLEDESC:"+devId+","+devId+","+ep, "OutCluster")
     inClstr = GetVal(devIdx, "InCluster") # Assume we have a list of clusters if we get this far
     outClstr = GetVal(devIdx, "OutCluster")

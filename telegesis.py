@@ -46,6 +46,8 @@ def EventHandler(eventId, eventArg):
             if expRspTimeoutS <= 0:
                 expRsp = ""
     elif eventId == events.ids.RXERROR:
+        if ourEui == "Unknown":
+            TxCmd(["ATI",  "OK"]) # Request our EUI, as well as our Telegesis version
         expRsp = ""
     elif eventId == events.ids.RXEXPRSP:
         expRsp = ""
@@ -77,7 +79,7 @@ def Parse(atLine):
             log.log("Found expected response of "+ expRsp+ " in "+ str(atList))
             events.Issue(events.ids.RXEXPRSP, atList)
     # Not expecting any response, or it didn't match, so this must be spontaneous
-    if expectOurEui == True:
+    if expectOurEui == True and len(atList[0])==16: # If we're expecting an EUI and it looks plausible length
         ourEui = atList[0]
         log.log("Our EUI: "+ourEui)
         expectOurEui = False
@@ -95,6 +97,7 @@ def Parse(atLine):
         events.Issue(events.ids.TRIGGER, atList) # Tell rules engine
     elif 0 == atList[0].find("Telegesis"):
         ourSoc = atList[0]
+        expectOurEui = True # Sometimes EUI follows Telegesis line directly
     elif 0 == atList[0].find("CICIE"):
         ourVersion = atList[0]
         log.log("Our version: "+ourVersion)

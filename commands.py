@@ -44,24 +44,27 @@ class Commands(cmd.Cmd):
     def do_vars(self, item):
         """vars [item]
         Show all variables, or just variables that contain [item]"""
-        if item != None:
+        if item == "":
             pprint (variables.varList)
         else:
+            itemisedList = []
             for v in variables.varList:
-                if item in v:
-                    print(v)
+                if item.lower() in v[0].lower():
+                    itemisedList.append(v)
+            # end for loop
+            pprint(sorted(itemisedList, key = lambda val: val[1]))
+            #print(itemisedList)
 
     def do_set(self, line):
         """set name value
         Set named variable to value"""
-        if line != None:
-            if " " in line:
-                argList = line.split(" ")
-                name = argList[0]
-                val = argList[1]
-                variables.Set(name, val)
-            else:
-                variables.Del(line)
+        if " " in line:
+            argList = line.split(" ")
+            name = argList[0]
+            val = argList[1]
+            variables.Set(name, val)
+        else:
+            variables.Del(line)
 
     def do_rules(self, item):
         """rules [item]

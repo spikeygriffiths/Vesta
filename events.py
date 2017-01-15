@@ -7,6 +7,7 @@ import devices
 import rules
 import commands
 import variables
+import iottime
 
 if __name__ == "__main__":
     hubapp.main()
@@ -30,4 +31,5 @@ def Issue(eventId, eventArg=0):
     devices.EventHandler(eventId, eventArg)
     rules.EventHandler(eventId, eventArg)
     commands.EventHandler(eventId, eventArg)
-    variables.EventHandler(eventId, eventArg)
+    iottime.EventHandler(eventId, eventArg)
+    #variables.EventHandler(eventId, eventArg) # Not used yet
