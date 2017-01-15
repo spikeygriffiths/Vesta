@@ -8,6 +8,7 @@ import events
 import log
 import hubapp
 import telegesis
+import variables
 import zcl
 
 if __name__ == "__main__":
@@ -60,10 +61,12 @@ def EventHandler(eventId, eventArg):
             devId = GetVal(devIdx, "devId")
             cmdRsp = Check(devIdx, False)   # Check to see if we want to know anything about the device
             if cmdRsp != None:
+                log.log("Want to know "+str(cmdRsp))
                 telegesis.TxCmd(["AT+RAWZCL:"+devId+","+endPoint+",0020,11"+seq+"00012800", "OK"]) # Tell device to enter Fast Poll for 40qs (==10s)
                 SetTempVal(devIdx,"PollingUntil", datetime.now()+timedelta(seconds=10))
                 telegesis.TxCmd(cmdRsp)  # This will go out after the Fast Poll Set - but possibly ought to go out as part of SECONDS handler..?
             else:
+                log.log("Don't want to know anything about "+GetVal(devIdx, "UserName"))
                 telegesis.TxCmd(["AT+RAWZCL:"+devId+","+endPoint+",0020,11"+seq+"0000", "OK"]) # Tell device to stop Poll
     if eventId == events.ids.RXMSG:
         if eventArg[0] == "AddrResp" and eventArg[1] == "00":
@@ -142,6 +145,11 @@ def EventHandler(eventId, eventArg):
         globalDevIdx = None # We've finished with this global if we get an error
     if eventId == events.ids.SECONDS:
         SendPendingCommand()
+        for devIdx, devInfo in enumerate(info):  # See if any devices are timing out, and turn them off if necessary
+            offAt = GetVal(devIdx, "SwitchOff@")
+            if offAt:
+                if now >= offAt:
+                    SwitchOff(devIdx)
         if dirty:
             with open(devFilename, 'wt') as f:
                 pprint(info, stream=f)
@@ -210,6 +218,14 @@ def DelVal(devIdx, name):
 def SetAttrVal(devIdx, clstrId, attrId, value):
     name = "attr"+clstrId+":"+attrId # So that the id combines cluster as well as attribute
     SetVal(devIdx, name, value) # Keep it simple
+    if clstrId==zcl.Cluster.PowerConfig and attrId==zcl.Attribute.Batt_Percentage:
+        varName = GetVal(devIdx, "UserName")+"_BatteryPercentage"
+        varVal = int(value, 16) / 2 # Arrives in 0.5% increments 
+        variables.Set(varName, varVal)
+    if clstrId==zcl.Cluster.Temperature and attrId==zcl.Attribute.Celsius:
+        varName = GetVal(devIdx, "UserName")+"_TemperatureC"
+        varVal = int(value, 16) / 100 # Arrives in 0.01'C increments 
+        variables.Set(varName, varVal)
 
 def GetAttrVal(devIdx, clstrId, attrId):
     name = "attr"+clstrId+":"+attrId # So that the id combines cluster as well as attribute

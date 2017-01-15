@@ -7,11 +7,14 @@ import cmd
 import readline
 import sys
 import select
+from pathlib import Path
 from pprint import pprint # Pretty print for devs list
 # App-specific Python modules
 import devices
 import events
 import telegesis
+import variables
+import rules
 import hubapp
 
 if __name__ == "__main__":
@@ -35,8 +38,41 @@ class Commands(cmd.Cmd):
     def do_devs(self, line):
         """devs
         Show all devices"""
-        pprint (devices.info) # ToDo: Add formatting to improve layout.  Also use cmd args to show selected bits of devices, rather than whole list
-        print (devices.ephemera) # Clumsy, since it's not easy to tie each device to equivalent ephemeral index
+        pprint (devices.info)
+        pprint (devices.ephemera) # Clumsy, since it's not easy to tie each device to equivalent ephemeral index
+
+    def do_vars(self, item):
+        """vars [item]
+        Show all variables, or just variables that contain [item]"""
+        if item != None:
+            pprint (variables.varList)
+        else:
+            for v in variables.varList:
+                if item in v:
+                    print(v)
+
+    def do_set(self, line):
+        """set name value
+        Set named variable to value"""
+        if line != None:
+            if " " in line:
+                argList = line.split(" ")
+                name = argList[0]
+                val = argList[1]
+                variables.Set(name, val)
+            else:
+                variables.Del(line)
+
+    def do_rules(self, item):
+        """rules [item]
+        Show all rules, or just rules that contain [item]"""
+        filename = rules.rulesFilename
+        rulesFile = Path(filename)
+        if rulesFile.is_file():
+            with open(filename) as rulesTxt:
+                for line in rulesTxt:
+                    if item != None and item.lower() in line.lower():
+                        print(line, end="")
 
     def do_open(self, line):
         """open

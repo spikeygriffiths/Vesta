@@ -10,6 +10,7 @@ import log
 import hubapp
 import devices
 import zcl
+import variables
 
 if __name__ == "__main__":
     hubapp.main()
@@ -59,16 +60,6 @@ def EventHandler(eventId, eventArg):
         log.log("Button "+ eventArg[1]+ " "+eventArg[0]) # Arg[0] holds "ON", "OFF" or "TOGGLE" (Case might be wrong)
         if userName:
             Run(userName+"=="+eventArg[0]) # See if rule exists
-    elif eventId == events.ids.SECONDS:
-        now = datetime.now()
-        if now.minute != oldMins:
-            oldMins = now.minute # Ready for next time
-            Run("time=="+now.strftime("%H:%M")) # Run timed rules once per minute with time of date
-        for devIdx, devInfo in enumerate(devices.info):  # See if any devices are timing out, and turn them off if necessary
-            offAt = devices.GetVal(devIdx, "SwitchOff@")
-            if offAt:
-                if now >= offAt:
-                    devices.SwitchOff(devIdx)
 
 def Run(trigger): # Run through the rules looking to see if we have a match for the trigger
     log.log("Running rule: "+ trigger)
@@ -113,6 +104,16 @@ def ParseCondition(ruleConditionList, trigger):
                subAnswers = subAnswers + "True"
             else:
                subAnswers = subAnswers + "False"
+        elif "<=" in condition:
+            subAnswers = subAnswers + str(GetConditionResult("<=", condition))
+        elif ">=" in condition:
+            subAnswers = subAnswers + str(GetConditionResult(">=", condition))
+        elif "<" in condition:
+            subAnswers = subAnswers + str(GetConditionResult("<", condition))
+        elif ">" in condition:
+            subAnswers = subAnswers + str(GetConditionResult(">", condition))
+        #elif "==" in condition: # Causes confusion with "Pir==active"
+        #    subAnswers = subAnswers + str(GetConditionResult("==", condition))
         elif condition == trigger: # Simple match for now
            subAnswers = subAnswers + "True"
         else:
@@ -122,6 +123,16 @@ def ParseCondition(ruleConditionList, trigger):
         return True
     else:
         return False
+
+def GetConditionResult(test, condition):
+    sep = test in condition # Assume this has already been shown to return a valid answer
+    varName = condition[:sep] # Variable must be on the left of the expression
+    tstVal = condition[sep+len(test):] # Simple value must be on right
+    varVal = variables.Get(varName)
+    if varVal != None:
+        return eval(varVal + test + tstVal)
+    else:
+        return False # If we couldn't find the item requested, assume the condition fails(?)
 
 def Action(actList):
     log.log("Action with: "+str(actList))
@@ -135,15 +146,6 @@ def Action(actList):
         cmdList = ["echo", "\""+' '.join(actList[2:])+"\"", "|", "mail", "-s", "\"Alert from IoT-Hub\"", actList[1]]
         cmdStr = " ".join(cmdList)
         call(cmdStr, shell=True)
-#    elif action == "Read":
-#        # Force a read of a specified attribute as "device.attr"
-#        devVar = actList[1]
-#        sep = "." in devVar
-#        if sep != None:
-#            devName = devVar[:sep] # Everything before the separator
-#            varName = devVar[sep+1:] # Everything after the (1-character) separator
-#            devIdx = devices.GetIdxFromUserName(devName)
-#            varItem = # ToDo: Need device attributes converted into device variables (eg batt%, celsius, etc.)
     else: # Must be a command for a device
         devIdx = devices.GetIdxFromUserName(actList[1]) # Second arg is username for device
         if devIdx == None:
