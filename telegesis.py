@@ -37,7 +37,7 @@ def EventHandler(eventId, eventArg):
             Parse(str(ser.readline(),'utf-8').rstrip('\r\n'))
         elif expRsp == "" and len(txBuf):
             atCmd, expRsp = txBuf.popleft()
-            #log.log("Pop>"+atCmd)
+            log.log("Tx>"+atCmd)
             expRspTimeoutS = 10
             atCmd = atCmd + "\r\n"
             ser.write(atCmd.encode())

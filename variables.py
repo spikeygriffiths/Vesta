@@ -4,6 +4,7 @@ from datetime import datetime
 # App-specific Python modules
 import hubapp
 import rules
+import log
 import events
 
 varList = []
@@ -23,6 +24,7 @@ def EventHandler(eventId, eventArg):
 def Set(name, value):
     global varList
     Del(name) # Remove old tuple if necessary
+    #log.log("Variable "+name+" gets "+value)
     varList.append((name, value)) # Add new one regardless
 
 def Del(name):

@@ -62,10 +62,15 @@ def EventHandler(eventId, eventArg):
             Run(userName+"=="+eventArg[0]) # See if rule exists
 
 def Run(trigger): # Run through the rules looking to see if we have a match for the trigger
-    log.log("Running rule: "+ trigger)
     rulesFile = Path(rulesFilename)
     if rulesFile.is_file():
         with open(rulesFilename) as rules:
+            log.log("Running rule: "+ trigger)
+            if "==" in trigger:
+                sep = trigger.index("==")
+                triggerType = trigger[:sep]
+                triggerVal = trigger[sep+2:]
+                variables.Set(triggerType, triggerVal)
             for line in rules:
                 rule = ' '.join(line.split()) # Compact multiple spaces into single ones and make each line into a rule
                 ruleList = rule.split(" ") # Make each rule into a list
@@ -79,6 +84,7 @@ def Run(trigger): # Run through the rules looking to see if we have a match for 
                     Action(ruleList[1:])
                 # else assume the line is a comment and skip it
             # end of rules
+            variables.Del(triggerType) # Make sure we don't re-run the same trigger
     else:
         log.fault("No " + rulesFilename+" !")
 
@@ -89,10 +95,11 @@ def FindItemInList(item, listToCheck):
         return None
 
 def ParseCondition(ruleConditionList, trigger):
+    #log.log("Parsing: "+" ".join(ruleConditionList))
     subAnswers = ""
     for condition in ruleConditionList:
         if condition == "and":
-            subAnswers = subAnswers+" and "
+            subAnswers = subAnswers+" and " # Note surrounding spaces, for python eval()
         elif condition == "or":
             subAnswers = subAnswers+" or "
         elif "<time<" in condition:
@@ -112,12 +119,13 @@ def ParseCondition(ruleConditionList, trigger):
             subAnswers = subAnswers + str(GetConditionResult("<", condition))
         elif ">" in condition:
             subAnswers = subAnswers + str(GetConditionResult(">", condition))
-        #elif "==" in condition: # Causes confusion with "Pir==active"
-        #    subAnswers = subAnswers + str(GetConditionResult("==", condition))
-        elif condition == trigger: # Simple match for now
-           subAnswers = subAnswers + "True"
-        else:
-           subAnswers = subAnswers + "False"
+        elif "==" in condition:
+            subAnswers = subAnswers + str(GetConditionResult("==", condition))
+        #elif condition == trigger: # Simple match for now
+        #    log.log("condition: "+condition+ " = trigger: "+trigger)
+        #    subAnswers = subAnswers + "True"
+        #else:
+        #    subAnswers = subAnswers + "False"
     # End of loop
     if eval(subAnswers) == True:
         return True
@@ -125,11 +133,15 @@ def ParseCondition(ruleConditionList, trigger):
         return False
 
 def GetConditionResult(test, condition):
-    sep = test in condition # Assume this has already been shown to return a valid answer
+    sep = condition.index(test) # Assume this has already been shown to return a valid answer
     varName = condition[:sep] # Variable must be on the left of the expression
     tstVal = condition[sep+len(test):] # Simple value must be on right
     varVal = variables.Get(varName)
     if varVal != None:
+        if test == "==":
+            varVal = "\""+ str(varVal) + "\""
+            tstVal = "\"" + str(tstVal) + "\""
+            #log.log("Comparing strs "+varVal+test+tstVal)
         return eval(varVal + test + tstVal)
     else:
         return False # If we couldn't find the item requested, assume the condition fails(?)
@@ -149,7 +161,7 @@ def Action(actList):
     else: # Must be a command for a device
         devIdx = devices.GetIdxFromUserName(actList[1]) # Second arg is username for device
         if devIdx == None:
-            log.fault("Device "+actList[0]+" from rules.txt not found in devices")
+            log.fault("Device "+actList[1]+" from rules.txt not found in devices")
         else:
             if action == "SwitchOn":
                 devices.SwitchOn(devIdx)
