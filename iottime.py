@@ -29,6 +29,7 @@ def EventHandler(eventId, eventArg):
             CheckTimedRule("dusk", now)
             if now.minute == 0 and now.hour == 1: # 1am, time to calculate sunrise and sunset for new day 
                 SetSunTimes()
+                log.NewLog() # Roll the logs, to avoid running out of disc space
                 
 def SetSunTimes():
     cityName = "London"

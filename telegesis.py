@@ -7,6 +7,7 @@ from collections import deque
 import log
 import events
 import hubapp
+
 ser = 0
 expRsp = None
 expRspTimeoutS = 0

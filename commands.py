@@ -52,8 +52,10 @@ class Commands(cmd.Cmd):
                 if item.lower() in v[0].lower():
                     itemisedList.append(v)
             # end for loop
-            pprint(sorted(itemisedList, key = lambda val: val[1]))
-            #print(itemisedList)
+            try:
+                pprint(sorted(itemisedList, key = lambda val: val[1]))
+            except:
+                pprint(itemisedList)    # If it's not sortable (mix of floats and strs), then just print it in any order
 
     def do_set(self, line):
         """set name value

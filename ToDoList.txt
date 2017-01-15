@@ -3,14 +3,15 @@
 Features:
 * Multiple device ZigBee endpoints?
 * Web interface(!)
-* Battery checking on a daily basis.  Ought to email if too low
-* Need device attributes converted into device variables (eg batt%, celsius, etc.)
+* Rolling logs
+* Ought to panic about missing devices
 # *** Burglar alarm? ***
-# Need variable for "armed" state
-# Allow for grace period after arming
-# Need to see if 2nd sensor has fired shortly after first sensor to avoid false alarms
-# Need easy means of going into Armed / Disarmed mode (keyfob, smartphone
-# Probably need multi-line code blocks, { ... }
+# if keyfob=arm do Arming Alarm for 30
+# if Pir==active and Alarm==Armed do Elevate Alarm for 60
+# if Pir==active and Alarm==Elevated do Alarm
+# if Contact==opened and Alarm==Armed do Elevate Alarm for 60
+# if Contact==opened and Alarm==Elevated do Alarm
+# if keyfob=disarm do Disarm Alarm
 
 Bugs
 

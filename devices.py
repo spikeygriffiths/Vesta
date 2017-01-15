@@ -14,7 +14,7 @@ import zcl
 if __name__ == "__main__":
     hubapp.main()
 
-devFilename = "devices_cache"
+devFilename = "devices.txt"
 dirty = False
 globalDevIdx = None
 pendingBinding = None # Needed because the BIND response doesn't include the cluster
@@ -49,6 +49,7 @@ def EventHandler(eventId, eventArg):
         NoteEphemera(devIdx, eventArg)
         SetVal(devIdx,"DevType",eventArg[0])    # SED, FFD or ZED
         SetVal(devIdx,"EUI",eventArg[1])
+        SetVal(devIdx, "UserName", devId)   # Default username of network ID, since that's unique
         if eventArg[0] == "SED":
             SetTempVal(devIdx,"PollingUntil", datetime.now()+timedelta(seconds=300))
     if eventId == events.ids.CHECKIN:   # See if we have anything to ask the device...
@@ -274,7 +275,7 @@ def DelTempVal(devIdx, name):
     return None # Indicate item not found
 
 def NoteEphemera(devIdx, arg):
-    SetTempVal(devIdx, "LastSeen", datetime.now().strftime("%y/%m/%d %H:%M:%S"))  # Mark it as "recently seen"
+    variables.Set(GetVal(devIdx, "UserName")+"_LastSeen", datetime.now().strftime("%y/%m/%d %H:%M:%S"))  # Mark it as "recently seen"
     if int(arg[-2]) < 0: # Assume penultimate item is RSSI, and thus that ultimate one is LQI
         rssi = arg[-2]
         lqi = arg[-1]
