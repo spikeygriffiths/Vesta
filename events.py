@@ -21,7 +21,7 @@ class ids:
     RXMSG = 5 # Arg is list, direct from Telegesis
     RXERROR = 6 # Arg is decimal number indicating error
     RXEXPRSP = 7 # Arg is the whole response
-    NEWDEV = 8 # Arg is the whole response (devType, devEui, devNodeId)
+    DEVICE_ANNOUNCE = 8 # Arg is the whole response (devType, devEui, devNodeId)
     INFO = 9 # No arg, just print any useful info
 
 def Issue(eventId, eventArg=0):

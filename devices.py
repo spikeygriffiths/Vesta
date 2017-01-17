@@ -41,17 +41,17 @@ def EventHandler(eventId, eventArg):
         except OSError:
             info = []
         dirty = False   # Info[] is initialised now
-    if eventId == events.ids.NEWDEV:
+    if eventId == events.ids.DEVICE_ANNOUNCE:
         devId = eventArg[2]
         devIdx = GetIdx(devId)
-        if devIdx == None:  # Which ought to be the case
+        if devIdx == None:  # Which will only be the case if this device is actually new, but it may have just reset and announced
             devIdx = InitDev(devId)
+            SetVal(devIdx,"DevType",eventArg[0])    # SED, FFD or ZED
+            SetVal(devIdx,"EUI",eventArg[1])
+            SetVal(devIdx, "UserName", devId)   # Default username of network ID, since that's unique
+            if eventArg[0] == "SED":
+                SetTempVal(devIdx,"PollingUntil", datetime.now()+timedelta(seconds=300))
         NoteEphemera(devIdx, eventArg)
-        SetVal(devIdx,"DevType",eventArg[0])    # SED, FFD or ZED
-        SetVal(devIdx,"EUI",eventArg[1])
-        SetVal(devIdx, "UserName", devId)   # Default username of network ID, since that's unique
-        if eventArg[0] == "SED":
-            SetTempVal(devIdx,"PollingUntil", datetime.now()+timedelta(seconds=300))
     if eventId == events.ids.CHECKIN:   # See if we have anything to ask the device...
         endPoint = eventArg[2]
         seq = "00" # was seq = eventArg[3], but that's the RSSI
@@ -233,10 +233,14 @@ def CheckAllAttrs():
     
 def SetVarFromAttr(devIdx, name, value): # See if this attribute has an associated variable for user & rules
     if name == "attr"+zcl.Cluster.PowerConfig+":"+zcl.Attribute.Batt_Percentage:
+        SetTempVal("GetNextBatteryAfter", datetime.now()+timedelta(seconds=86400))    # Ask for battery every day
         varName = GetVal(devIdx, "UserName")+"_BatteryPercentage"
         if value != "FF":
             varVal = int(value, 16) / 2 # Arrives in 0.5% increments 
             variables.Set(varName, varVal)
+            if varVal < 20:
+                variables.Set("LowBatteryDevice", GetVal(devIdx, "UserName"))
+                rules.Run("Battery==Low")
         else:
             variables.Del(varName)
     if name == "attr"+zcl.Cluster.Temperature+":"+zcl.Attribute.Celsius:
@@ -276,6 +280,8 @@ def DelTempVal(devIdx, name):
 
 def NoteEphemera(devIdx, arg):
     variables.Set(GetVal(devIdx, "UserName")+"_LastSeen", datetime.now().strftime("%y/%m/%d %H:%M:%S"))  # Mark it as "recently seen"
+    DelTempVal(devIdx, "ReportedMissing") # ToDo Could only remove this once per day? to avoid spamming
+    SetTempVal(devIdx, "LastSeen", datetime.now().strftime("%y/%m/%d %H:%M:%S"))  # Mark it as "recently seen"
     if int(arg[-2]) < 0: # Assume penultimate item is RSSI, and thus that ultimate one is LQI
         rssi = arg[-2]
         lqi = arg[-1]
@@ -306,10 +312,6 @@ def Check(devIdx, consume):
                 return SetBinding(devIdx, zcl.Cluster.PollCtrl, "01") # 01 is our endpoint we want messages to come to
             if zcl.Cluster.OnOff in outClstr and zcl.Cluster.OnOff not in binding: # If device sends OnOff commands...
                 return SetBinding(devIdx, zcl.Cluster.OnOff, "0A") # 0A is our endpoint we want messages to come to
-            if zcl.Cluster.OnOff in inClstr and zcl.Cluster.OnOff not in binding: # If device receives OnOff commands...
-                return SetBinding(devIdx, zcl.Cluster.OnOff, "01") # 01 is our endpoint we want messages to come to
-            if zcl.Cluster.PowerConfig in inClstr and zcl.Cluster.PowerConfig not in binding:
-                return SetBinding(devIdx, zcl.Cluster.PowerConfig, "01") # 01 is our endpoint we want messages to come to
             if zcl.Cluster.Temperature in inClstr and zcl.Cluster.Temperature not in binding:
                 return SetBinding(devIdx, zcl.Cluster.Temperature, "01") # 01 is our endpoint we want messages to come to
         else:
@@ -323,19 +325,14 @@ def Check(devIdx, consume):
             if None == GetAttrVal(devIdx, zcl.Cluster.Basic, zcl.Attribute.Manuf_Name):
                 return telegesis.ReadAttr(devId, ep, zcl.Cluster.Basic, zcl.Attribute.Manuf_Name) # Get Basic's Manufacturer Name
         if zcl.Cluster.PowerConfig in inClstr and "SED"== GetVal(devIdx, "DevType"):
-            if None == GetAttrVal(devIdx, zcl.Cluster.PowerConfig, zcl.Attribute.Batt_Percentage):
+            if None == GetAttrVal(devIdx, zcl.Cluster.PowerConfig, zcl.Attribute.Batt_Percentage) or datetime.now() > GetTempVal("GetNextBatteryAfter"):
                 return telegesis.ReadAttr(devId, ep, zcl.Cluster.PowerConfig, zcl.Attribute.Batt_Percentage) # Get Battery percentage
         if rprtg != None:
-            if zcl.Cluster.PowerConfig in inClstr:
-                pwrRpt = zcl.Cluster.PowerConfig+":"+zcl.Attribute.Batt_Percentage
-                if zcl.Cluster.PowerConfig in binding and pwrRpt not in rprtg:
-                    pendingRptAttrId = zcl.Attribute.Batt_Percentage
-                    return ("AT+CFGRPT:"+devId+","+ep+",0,"+zcl.Cluster.PowerConfig+",0,"+zcl.Attribute.Batt_Percentage+","+zcl.AttributeTypes.Uint8+",0E10,0E10,0A", "CFGRPTRP") # 0E10 is 3600==1 hour, 0A is 5%
             if zcl.Cluster.Temperature in inClstr:
                 tmpRpt = zcl.Cluster.Temperature+":"+zcl.Attribute.Celsius
                 if zcl.Cluster.Temperature in binding and tmpRpt not in rprtg:
                     pendingRptAttrId = zcl.Attribute.Celsius
-                    return ("AT+CFGRPT:"+devId+","+ep+",0,"+zcl.Cluster.Temperature+",0,"+zcl.Attribute.Celsius+","+zcl.AttributeTypes.Uint16+",0E10,0E10,0032", "CFGRPTRP") # 0E10 is 3600==1 hour, 0032 is 50, being 0.5'C
+                    return ("AT+CFGRPT:"+devId+","+ep+",0,"+zcl.Cluster.Temperature+",0,"+zcl.Attribute.Celsius+","+zcl.AttributeTypes.Uint16+",012C,0E10,0064", "CFGRPTRP") # 012C is 300==5 mins, 0E10 is 3600==1 hour, 0064 is 100, being 1.00'C
 #            if zcl.Cluster.OnOff in inClstr: # Commented out because TG won't let me set up reports for booleans
 #                onOffRpt = zcl.Cluster.OnOff+":"+zcl.Attribute.OnOffState
 #                if zcl.Cluster.OnOff in binding and onOffRpt not in rprtg:
@@ -344,8 +341,13 @@ def Check(devIdx, consume):
         else:
             SetVal(devIdx, "Reporting", [])
     pendingAtCmd = GetTempVal(devIdx, "AtCmdRsp")
-    if pendingAtCmd and consume:
-        DelTempVal(devIdx,"AtCmdRsp") # Remove item if we're about to use it (presuming successful sending of command...)
+    if pendingAtCmd:
+        if consume:
+            DelTempVal(devIdx,"AtCmdRsp") # Remove item if we're about to use it (presuming successful sending of command...)
+    else: # No pending command, so check whether device has said anything for a while...
+        if GetTempVal(devIdx, "LastSeen")+timedelta(900) > timedate.now(): # 15 minutes since we 
+            if zcl.Cluster.Basic in inClstr: # Ask for Basic's Name, since everything must support this
+                pendingAtCmd = telegesis.ReadAttr(devId, ep, zcl.Cluster.Basic, zcl.Attribute.Model_Name) # Get Basic's Device Name
     return pendingAtCmd
 
 def SendPendingCommand():
@@ -375,6 +377,17 @@ def IsListening(devIdx):
                 #log.log("Now: "+ str(datetime.now()))
                 return True
         return False
+
+def CheckMissing():
+    global info
+    devIdx = 0
+    for device in info:
+        if GetTempVal(devIdx, "ReportedMissing") == None:
+            if GetTempVal(devIdx, "LastSeen")+timedelta(1800) > timedate.now(): # 30 minutes
+                variables.Set("MissingDevice", GetVal("UserName"))
+                rules.Run("Missing==True") # Trigger is "missing"
+                SetTempVal(devIdx, "ReportedMissing", timedate.now())   # To avoid re-reporting
+        devIdx = devIdx + 1
 
 def SetBinding(devIdx, cluster, ourEp):
     global pendingBinding

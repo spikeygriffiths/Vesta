@@ -89,7 +89,7 @@ def Parse(atLine):
     elif atList[0] == "ERROR":
         events.Issue(events.ids.RXERROR, int(atList[1],16)) # See if anyone cares about the error
     elif atList[0] == "SED" or atList[0] == "FFD" or atList[0] == "ZED":
-        events.Issue(events.ids.NEWDEV, atList) # Tell system that device has (re-)joined        
+        events.Issue(events.ids.DEVICE_ANNOUNCE, atList) # Tell system that device has (re-)joined        
     elif atList[0] == 'CHECKIN':
         events.Issue(events.ids.CHECKIN, atList) # Tell devices that device is about to poll for data
     elif atList[0] == 'TOGGLE' or atList[0] == 'ON' or atList[0] == 'OFF':

@@ -3,8 +3,7 @@
 Features:
 * Multiple device ZigBee endpoints?
 * Web interface(!)
-* Rolling logs
-* Ought to panic about missing devices
+* 
 # *** Burglar alarm? ***
 # if keyfob=arm do Arming Alarm for 30
 # if Pir==active and Alarm==Armed do Elevate Alarm for 60
@@ -14,4 +13,4 @@ Features:
 # if keyfob=disarm do Disarm Alarm
 
 Bugs
-
+* Named devices can lose their name!

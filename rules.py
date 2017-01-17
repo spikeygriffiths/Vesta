@@ -164,7 +164,13 @@ def Action(actList):
         filename = "Sfx/"+actList[1]
         call(["omxplayer", "-o", "local", filename])
     elif action == "email": # First arg is recipient, remainder are body of the text.  Fixed subject
-        cmdList = ["echo", "\""+' '.join(actList[2:])+"\"", "|", "mail", "-s", "\"Alert from IoT-Hub\"", actList[1]]
+        emailBody = []
+        for items in actList[2:]:
+            if item.index("[")==0 and item.index("]")==len(item)-2:
+                emailBody.append = varablesGet(item[1:len(item)-2])
+            else:
+                emailBody.append = item
+        cmdList = ["echo", "\""+' '.join(emailBody)+"\"", "|", "mail", "-s", "\"Alert from IoT-Hub\"", actList[1]]
         cmdStr = " ".join(cmdList)
         call(cmdStr, shell=True)
     else: # Must be a command for a device
