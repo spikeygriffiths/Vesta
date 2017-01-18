@@ -165,11 +165,14 @@ def Action(actList):
         call(["omxplayer", "-o", "local", filename])
     elif action == "email": # First arg is recipient, remainder are body of the text.  Fixed subject
         emailBody = []
-        for items in actList[2:]:
-            if item.index("[")==0 and item.index("]")==len(item)-2:
-                emailBody.append = varablesGet(item[1:len(item)-2])
+        for item in actList[2:]:
+            li = len(item) # Useful variable
+            if li > 2 and "{" in item and "}" in item:
+                if item.index("{")==0 and item.index("}")==li-1: # True if item is surrounded by {...}
+                    varName = item[1:li-1]
+                    emailBody.append(variables.Get(varName))
             else:
-                emailBody.append = item
+                emailBody.append(item)
         cmdList = ["echo", "\""+' '.join(emailBody)+"\"", "|", "mail", "-s", "\"Alert from IoT-Hub\"", actList[1]]
         cmdStr = " ".join(cmdList)
         call(cmdStr, shell=True)

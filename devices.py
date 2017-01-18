@@ -8,6 +8,7 @@ import events
 import log
 import hubapp
 import telegesis
+import rules
 import variables
 import zcl
 
@@ -31,9 +32,6 @@ def EventHandler(eventId, eventArg):
             with open(devFilename, "r") as f:
                 try:
                     info = eval(f.read()) # Load previous cache of devices into info[]
-                    for devices in info:
-                        ephemera.append([]) # Initialise parallel ephemeral device list
-                    CheckAllAttrs() #  Set up any useful variables for the loaded devices
                     log.log("Loaded list from file")
                 except:
                     log.fault("Unusable device list from file - discarding!")
@@ -41,6 +39,9 @@ def EventHandler(eventId, eventArg):
         except OSError:
             info = []
         dirty = False   # Info[] is initialised now
+        for devices in info:
+            ephemera.append([]) # Initialise parallel ephemeral device list
+        CheckAllAttrs() #  Set up any useful variables for the loaded devices
     if eventId == events.ids.DEVICE_ANNOUNCE:
         devId = eventArg[2]
         devIdx = GetIdx(devId)
@@ -233,7 +234,7 @@ def CheckAllAttrs():
     
 def SetVarFromAttr(devIdx, name, value): # See if this attribute has an associated variable for user & rules
     if name == "attr"+zcl.Cluster.PowerConfig+":"+zcl.Attribute.Batt_Percentage:
-        SetTempVal("GetNextBatteryAfter", datetime.now()+timedelta(seconds=86400))    # Ask for battery every day
+        SetTempVal(devIdx, "GetNextBatteryAfter", datetime.now()+timedelta(seconds=86400))    # Ask for battery every day
         varName = GetVal(devIdx, "UserName")+"_BatteryPercentage"
         if value != "FF":
             varVal = int(value, 16) / 2 # Arrives in 0.5% increments 
@@ -281,7 +282,8 @@ def DelTempVal(devIdx, name):
 def NoteEphemera(devIdx, arg):
     variables.Set(GetVal(devIdx, "UserName")+"_LastSeen", datetime.now().strftime("%y/%m/%d %H:%M:%S"))  # Mark it as "recently seen"
     DelTempVal(devIdx, "ReportedMissing") # ToDo Could only remove this once per day? to avoid spamming
-    SetTempVal(devIdx, "LastSeen", datetime.now().strftime("%y/%m/%d %H:%M:%S"))  # Mark it as "recently seen"
+    SetTempVal(devIdx, "LastSeen", datetime.now())  # Mark it as "recently seen"
+    SetTempVal(devIdx, "ReportMissingAfter", datetime.now()+timedelta(seconds=1800))
     if int(arg[-2]) < 0: # Assume penultimate item is RSSI, and thus that ultimate one is LQI
         rssi = arg[-2]
         lqi = arg[-1]
@@ -325,7 +327,7 @@ def Check(devIdx, consume):
             if None == GetAttrVal(devIdx, zcl.Cluster.Basic, zcl.Attribute.Manuf_Name):
                 return telegesis.ReadAttr(devId, ep, zcl.Cluster.Basic, zcl.Attribute.Manuf_Name) # Get Basic's Manufacturer Name
         if zcl.Cluster.PowerConfig in inClstr and "SED"== GetVal(devIdx, "DevType"):
-            if None == GetAttrVal(devIdx, zcl.Cluster.PowerConfig, zcl.Attribute.Batt_Percentage) or datetime.now() > GetTempVal("GetNextBatteryAfter"):
+            if None == GetAttrVal(devIdx, zcl.Cluster.PowerConfig, zcl.Attribute.Batt_Percentage) or datetime.now() > GetTempVal(devIdx, "GetNextBatteryAfter"):
                 return telegesis.ReadAttr(devId, ep, zcl.Cluster.PowerConfig, zcl.Attribute.Batt_Percentage) # Get Battery percentage
         if rprtg != None:
             if zcl.Cluster.Temperature in inClstr:
@@ -345,9 +347,10 @@ def Check(devIdx, consume):
         if consume:
             DelTempVal(devIdx,"AtCmdRsp") # Remove item if we're about to use it (presuming successful sending of command...)
     else: # No pending command, so check whether device has said anything for a while...
-        if GetTempVal(devIdx, "LastSeen")+timedelta(900) > timedate.now(): # 15 minutes since we 
-            if zcl.Cluster.Basic in inClstr: # Ask for Basic's Name, since everything must support this
-                pendingAtCmd = telegesis.ReadAttr(devId, ep, zcl.Cluster.Basic, zcl.Attribute.Model_Name) # Get Basic's Device Name
+        if GetTempVal(devIdx, "LastSeen") != None:
+            if GetTempVal(devIdx, "LastSeen")+timedelta(seconds=900) < datetime.now(): # 15 minutes since we last heard from device 
+                if zcl.Cluster.Basic in inClstr: # Ask for Basic's Name, since everything must support this
+                    pendingAtCmd = telegesis.ReadAttr(devId, ep, zcl.Cluster.Basic, zcl.Attribute.Model_Name) # Get Basic's Device Name
     return pendingAtCmd
 
 def SendPendingCommand():
@@ -383,10 +386,11 @@ def CheckMissing():
     devIdx = 0
     for device in info:
         if GetTempVal(devIdx, "ReportedMissing") == None:
-            if GetTempVal(devIdx, "LastSeen")+timedelta(1800) > timedate.now(): # 30 minutes
-                variables.Set("MissingDevice", GetVal("UserName"))
-                rules.Run("Missing==True") # Trigger is "missing"
-                SetTempVal(devIdx, "ReportedMissing", timedate.now())   # To avoid re-reporting
+            if GetTempVal(devIdx, "ReportMissingAfter") != None:
+                if GetTempVal(devIdx, "ReportMissingAfter") > timedate.now(): # 30 minutes
+                    variables.Set("MissingDevice", GetVal("UserName"))
+                    rules.Run("Missing==True") # Trigger is "missing"
+                    SetTempVal(devIdx, "ReportedMissing", timedate.now())   # To avoid re-reporting
         devIdx = devIdx + 1
 
 def SetBinding(devIdx, cluster, ourEp):
