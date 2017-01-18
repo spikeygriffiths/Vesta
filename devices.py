@@ -99,6 +99,7 @@ def EventHandler(eventId, eventArg):
         if eventArg[0] == "RESPATTR":
             devIdx = GetIdx(eventArg[1])
             if devIdx != None:
+                NoteEphemera(devIdx, eventArg)
                 ep = eventArg[2]
                 clusterId = eventArg[3]
                 attrId = eventArg[4]

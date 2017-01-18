@@ -1,16 +1,29 @@
 #!ToDoList.txt
 
 Features:
+* Auto-start network ("AT+EN") if ATN shows none available at start up
+* Cope with unusable debug.log at start - "sudo rm debug.log" if unusable 
 * Multiple device ZigBee endpoints?
 * Web interface(!)
+* Toggle commands should trigger a "get on/off attr" so that we know what the state is, then we can have rules like;
+* "if Pir==active and DiningRoomLamp_OnOff==off do SwitchOn DiningRoomLamp for 300"
+
 * 
 # *** Burglar alarm? ***
 # if keyfob=arm do Arming Alarm for 30
 # if Pir==active and Alarm==Armed do Elevate Alarm for 60
-# if Pir==active and Alarm==Elevated do Alarm
+# if Pir==active and Alarm==Elevated do Activate Alarm
 # if Contact==opened and Alarm==Armed do Elevate Alarm for 60
-# if Contact==opened and Alarm==Elevated do Alarm
+# if Contact==opened and Alarm==Elevated do Activate Alarm
+# if Alarm==Arming do play ArmingAlarm.mp3
+# if Alarm==Activated do play IntruderAlert.mp3
+# if Alarm==Activated do email spikey@rosepip.com Intruder Alert!
 # if keyfob=disarm do Disarm Alarm
 
+# *** Activity Pretence ***
+# if Alarm==Armed and sunset<time<23:59 do SwitchOn SpikeyLampPlug
+# if time==00:30 and Alarm==Armed do SwitchOff SpikeyLampPlug
+# if house==unoccupied and 0:00<time<sunset and HallLight_OnOff==off and rand(30)==0 do SwitchOn HallLight for 300
+
 Bugs
-* Named devices can lose their name!
+
