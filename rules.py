@@ -32,6 +32,8 @@ rulesFilename = "rules.txt"
 # Syntax is "if <condition> do <action>[ for <duration>]"
 
 def EventHandler(eventId, eventArg):
+    if eventId == eventa.ids.INIT:
+        Run("trigger==hubstart")
     if eventId == events.ids.TRIGGER:
         devIdx = devices.GetIdx(eventArg[1]) # Lookup device from network address in eventArg[1]
         userName = devices.GetVal(devIdx, "UserName")
