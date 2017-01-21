@@ -99,7 +99,7 @@ def ParseCondition(ruleConditionList, trigger):
     #log.log("Parsing: "+" ".join(ruleConditionList))
     subAnswers = ""
     if ruleConditionList[0] == trigger: # If first condition (must be trigger) matches, then check rest
-        log.log("condition: "+ruleConditionList[0]+ " = trigger: "+trigger)
+        #log.log("condition: "+ruleConditionList[0]+ " = trigger: "+trigger)
         subAnswers = subAnswers + "True"
         if len(ruleConditionList) > 0: # Only parse rest of condition if first item is true
             for condition in ruleConditionList[1:]:
@@ -150,7 +150,7 @@ def GetConditionResult(test, condition):
         if isNumber(tstVal):
             varVal = str(varVal)
             tstVal = str(tstVal)
-        log.log("Comparing strs "+varVal+test+tstVal)
+        #log.log("Comparing strs "+varVal+test+tstVal)
         return eval(varVal + test + tstVal)
     else:
         return False # If we couldn't find the item requested, assume the condition fails(?)
@@ -163,6 +163,14 @@ def Action(actList):
     elif action == "Play":
         filename = "Sfx/"+actList[1]
         call(["omxplayer", "-o", "local", filename])
+    elif action == "synopsis": # First arg is email recipient
+        emailBody = []
+        for items in devices.synopsis:
+            emailBody.append = ' '.join(items)  # Tuples are joined by spaces
+        cmdList = ["echo", "\""+'\n'.join(emailBody)+"\"", "|", "mail", "-s", "\"Update from IoT-Hub\"", actList[1]]
+        cmdStr = " ".join(cmdList)
+        call(cmdStr, shell=True)
+        devices.synopsis = []   # Ready to start a new synopsis mail now
     elif action == "email": # First arg is recipient, remainder are body of the text.  Fixed subject
         emailBody = []
         for item in actList[2:]:

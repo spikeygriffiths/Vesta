@@ -24,6 +24,7 @@ pendingRptAttrId = None # Needed because CFGRPTRSP only includes the cluster and
 # Keep a track of known devices present in the system
 info = []
 ephemera = [] # Don't bother saving this
+synopsis = []
 
 def EventHandler(eventId, eventArg):
     global info, dirty, globalDevIdx, pendingBinding, pendingRptAttrId
@@ -209,6 +210,13 @@ def GetVal(devIdx, name):
         if item[0] == name:
             return item[1] # Just return value associated with name
     return None # Indicate item not found
+    
+def SetSynopsis(name, value): # Ready for the synopsis email
+    global synopsis
+    for item in synopsis:
+        if item[0] == name:
+            synopsis.remove(item) # Remove old tuple if necessary
+    synopsis.append((name, value)) # Add new one regardless
 
 def DelVal(devIdx, name):
     global info
@@ -240,9 +248,7 @@ def SetVarFromAttr(devIdx, name, value): # See if this attribute has an associat
         if value != "FF":
             varVal = int(value, 16) / 2 # Arrives in 0.5% increments 
             variables.Set(varName, varVal)
-            if varVal < 20:
-                variables.Set("LowBatteryDevice", GetVal(devIdx, "UserName"))
-                rules.Run("Battery==Low")
+            SetSynopsis(varName, varVal) # Ready for the synopsis email
         else:
             variables.Del(varName)
     if name == "attr"+zcl.Cluster.Temperature+":"+zcl.Attribute.Celsius:

@@ -4,9 +4,9 @@ Features:
 * Auto-start network ("AT+EN") if ATN shows none available at start up
 * Multiple device ZigBee endpoints?
 * Web interface(!)
-* Toggle commands should trigger a "get on/off attr" so that we know what the state is, then we can have rules like;
-* "if Pir==active and DiningRoomLamp_OnOff==off do SwitchOn DiningRoomLamp for 300"
+* Toggle commands should trigger a "get on/off attr" so that we know what the state is
 * Colour lamp control
+* Daily synopsis - Any problems, device battery levels (done?) & voltages, if missing or not
 * 
 # *** Burglar alarm? ***
 # if keyfob=arm do Arming Alarm for 30
@@ -25,4 +25,4 @@ Features:
 # if house==unoccupied and 0:00<time<sunset and HallLight_OnOff==off and rand(30)==0 do SwitchOn HallLight for 300
 
 Bugs
-
+Occasionally stalls!  :-(
