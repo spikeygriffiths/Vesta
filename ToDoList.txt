@@ -2,12 +2,11 @@
 
 Features:
 * Auto-start network ("AT+EN") if ATN shows none available at start up
-* Cope with unusable debug.log at start - "sudo rm debug.log" if unusable 
 * Multiple device ZigBee endpoints?
 * Web interface(!)
 * Toggle commands should trigger a "get on/off attr" so that we know what the state is, then we can have rules like;
 * "if Pir==active and DiningRoomLamp_OnOff==off do SwitchOn DiningRoomLamp for 300"
-
+* Colour lamp control
 * 
 # *** Burglar alarm? ***
 # if keyfob=arm do Arming Alarm for 30

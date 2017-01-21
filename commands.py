@@ -35,15 +35,27 @@ class Commands(cmd.Cmd):
         Displays useful information"""
         events.Issue(events.ids.INFO)
 
-    def do_devs(self, line):
-        """devs
-        Show all devices"""
-        pprint (devices.info)
-        pprint (devices.ephemera) # Clumsy, since it's not easy to tie each device to equivalent ephemeral index
+    def do_devs(self, term):
+        """devs [<term>]
+        Show all devices, or just fragments that contain <term>"""
+        if term == "":
+            pprint (devices.info)
+            pprint (devices.ephemera) # Clumsy, since it's not easy to tie each device to equivalent ephemeral index
+        else:
+            itemisedList = []
+            for device in devices.info:
+                for item in device:
+                    if term.lower() in item[0].lower():
+                        itemisedList.append(item)
+            for device in devices.ephemera:
+                for item in device:
+                    if term.lower() in item[0].lower():
+                        itemisedList.append(item)
+            pprint (itemisedList)
 
     def do_vars(self, item):
         """vars [item]
-        Show all variables, or just variables that contain [item]"""
+        Show all variables, or just variables that contain item"""
         if item == "":
             pprint (variables.varList)
         else:
@@ -106,9 +118,9 @@ class Commands(cmd.Cmd):
     def do_toggle(self, name):
         """toggle name
         Sends toggle on/off command to named device"""
-        devIdx = devices.GetIdx(name)   # Try devId
+        devIdx = devices.GetIdxFromUserName(name) # Try name first
         if devIdx == None:
-            devIdx = devices.GetIdxFromUserName(name) # Try name if no match with devId
+            devIdx = devices.GetIdx(name)   # Try devId if no name match
         if devIdx != None:
             devices.Toggle(devIdx)
 
@@ -119,9 +131,9 @@ class Commands(cmd.Cmd):
         if len(argList) >= 2:
             devId = argList[0]
             fraction = float(argList[1])
-            devIdx = devices.GetIdx(devId)   # Try devId
+            devIdx = devices.GetIdxFromUserName(name) # Try name first
             if devIdx == None:
-                devIdx = devices.GetIdxFromUserName(devId) # Try name if no match with devId
+                devIdx = devices.GetIdx(name)   # Try devId if no name match
             if devIdx != None:
                 devices.Dim(devIdx, fraction)
         else:

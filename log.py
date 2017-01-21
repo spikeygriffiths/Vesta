@@ -3,6 +3,12 @@
 from datetime import datetime
 from subprocess import call
 
+def Init(msg):
+    try:
+        log(msg)
+    except:
+        call("sudo rm debug.log", shell=True) # Remove unusable log if necessary (we may be recovering from a power cut in the middle of writing the log)
+        
 def log(msg):
     timedMsg = "<" + str(datetime.now()) + ">"+ msg
     open("debug.log", "a").write(timedMsg+"\n")
