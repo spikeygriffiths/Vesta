@@ -4,6 +4,7 @@ from datetime import datetime
 from astral import Astral
 # App-specific modules
 import events
+import devices
 import log
 import hubapp
 import rules
@@ -19,6 +20,7 @@ def EventHandler(eventId, eventArg):
     if eventId == events.ids.INIT:
         SetSunTimes()
         rules.Run("trigger==hubstart")
+        devices.SetSynopsis("IoT Hub started at", str(datetime.now()))
     if eventId == events.ids.SECONDS:
         now = datetime.now()
         if now.minute != oldMins:
