@@ -18,6 +18,7 @@ def EventHandler(eventId, eventArg):
     global oldMins
     if eventId == events.ids.INIT:
         SetSunTimes()
+        rules.Run("trigger==hubstart")
     if eventId == events.ids.SECONDS:
         now = datetime.now()
         if now.minute != oldMins:

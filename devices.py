@@ -248,7 +248,7 @@ def SetVarFromAttr(devIdx, name, value): # See if this attribute has an associat
         if value != "FF":
             varVal = int(value, 16) / 2 # Arrives in 0.5% increments 
             variables.Set(varName, varVal)
-            SetSynopsis(varName, varVal) # Ready for the synopsis email
+            SetSynopsis(varName, str(varVal)) # Ready for the synopsis email
         else:
             variables.Del(varName)
     if name == "attr"+zcl.Cluster.Temperature+":"+zcl.Attribute.Celsius:
