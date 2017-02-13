@@ -34,7 +34,12 @@ def EventHandler(eventId, eventArg):
         TxCmd(["ATI",  "OK"]) # Request our EUI, as well as our Telegesis version
         TxCmd(["AT+N", "OK"]) # Get network information, to see whether to start new network or use existing one
     elif eventId == events.ids.SECONDS:
-        if ser.inWaiting():
+        try:
+            inWait = ser.inWaiting() # Has given   File "/usr/lib/python3/dist-packages/serial/serialposix.py", line 435, in inWaiting, s = fcntl.ioctl(self.fd, TIOCINQ, TIOCM_zero_str), OSError: [Errno 5] Input/output error
+        except:
+            inWait = false
+            log.fault("ser.inWaiting() has failed")
+        if inWait:
             Parse(str(ser.readline(),'utf-8').rstrip('\r\n'))
         elif expRsp == "" and len(txBuf):
             atCmd, expRsp = txBuf.popleft()

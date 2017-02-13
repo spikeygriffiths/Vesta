@@ -1,15 +1,28 @@
 <?php 
+error_reporting(E_ALL); 
+
+echo "<html><head>";
+echo "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js\"></script>";
+echo "<script type=\"text/javascript\">";
+echo "function myAjax() {";
+echo "$.ajax( {type : 'POST', data : { }, url : 'open.php', success: function(data) { alert(data); }, error: function(xhr) { alert(\"error!\"); } }); }";
+echo "</script></head><body>";
 echo "<center><h1>IoT Hub</h1> ";
 echo "Now: ", date('Y-m-d H:i:s'); // Add UpTime for hubapp
 echo "</center>";
 $ps = shell_exec("ps ax");
 $iotHubRunning = (strpos($ps, "hubapp.py") !== false);
 if ($iotHubRunning) {
-    //echo "<button type=\"button\">Add new devices</button><br>";
-    echo "<button type=\"button\" onclick=\"alert('Not working yet...')\">Add new devices</button><br>";
+    //echo "<button type=\"button\" onclick=\"alert('Not working yet...')\">Add new devices</button><br>";
+    echo "<button type=\"button\" onclick=\"myAjax()\">Add new devices</button><br>";
     ShowDevices("/home/pi/hubapp/devices.txt", "UserName");
     ShowRules("/home/pi/hubapp/rules.txt", "if");
- } else echo "<center><h2>IoT Hub stopped</h2></center>"; 
+ } else {
+    echo "<center><h2>IoT Hub stopped</h2></center>"; 
+    $reason = shell_exec("tail --lines=15 /home/pi/hubapp/error_log");
+    echo "<b>Last lines of error log;</b><br>",nl2br($reason);
+}
+echo "</body></html>";
 
 function ShowDevices($filename, $key)
 {

@@ -2,20 +2,17 @@
 
 from datetime import datetime
 from datetime import timedelta
-from pprint import pprint # Pretty print for devs list
 # App-specific modules
 import events
 import log
 import hubapp
 import telegesis
-import rules
-import variables
 import zcl
 
 if __name__ == "__main__":
     hubapp.main()
 
-devFilename = "devices.txt"
+devFilename = "devices_cache"
 dirty = False
 globalDevIdx = None
 pendingBinding = None # Needed because the BIND response doesn't include the cluster
@@ -24,7 +21,6 @@ pendingRptAttrId = None # Needed because CFGRPTRSP only includes the cluster and
 # Keep a track of known devices present in the system
 info = []
 ephemera = [] # Don't bother saving this
-synopsis = []
 
 def EventHandler(eventId, eventArg):
     global info, dirty, globalDevIdx, pendingBinding, pendingRptAttrId
@@ -33,6 +29,8 @@ def EventHandler(eventId, eventArg):
             with open(devFilename, "r") as f:
                 try:
                     info = eval(f.read()) # Load previous cache of devices into info[]
+                    for devices in info:
+                        ephemera.append([]) # Initialise parallel ephemeral device list
                     log.log("Loaded list from file")
                 except:
                     log.fault("Unusable device list from file - discarding!")
@@ -40,20 +38,16 @@ def EventHandler(eventId, eventArg):
         except OSError:
             info = []
         dirty = False   # Info[] is initialised now
-        for devices in info:
-            ephemera.append([]) # Initialise parallel ephemeral device list
-        CheckAllAttrs() #  Set up any useful variables for the loaded devices
-    if eventId == events.ids.DEVICE_ANNOUNCE:
+    if eventId == events.ids.NEWDEV:
         devId = eventArg[2]
         devIdx = GetIdx(devId)
-        if devIdx == None:  # Which will only be the case if this device is actually new, but it may have just reset and announced
+        if devIdx == None:  # Which ought to be the case
             devIdx = InitDev(devId)
-            SetVal(devIdx,"DevType",eventArg[0])    # SED, FFD or ZED
-            SetVal(devIdx,"EUI",eventArg[1])
-            SetVal(devIdx, "UserName", devId)   # Default username of network ID, since that's unique
-            if eventArg[0] == "SED":
-                SetTempVal(devIdx,"PollingUntil", datetime.now()+timedelta(seconds=300))
         NoteEphemera(devIdx, eventArg)
+        SetVal(devIdx,"DevType",eventArg[0])    # SED, FFD or ZED
+        SetVal(devIdx,"EUI",eventArg[1])
+        if eventArg[0] == "SED":
+            SetTempVal(devIdx,"PollingUntil", datetime.now()+timedelta(seconds=300))
     if eventId == events.ids.CHECKIN:   # See if we have anything to ask the device...
         endPoint = eventArg[2]
         seq = "00" # was seq = eventArg[3], but that's the RSSI
@@ -65,12 +59,10 @@ def EventHandler(eventId, eventArg):
             devId = GetVal(devIdx, "devId")
             cmdRsp = Check(devIdx, False)   # Check to see if we want to know anything about the device
             if cmdRsp != None:
-                log.log("Want to know "+str(cmdRsp))
                 telegesis.TxCmd(["AT+RAWZCL:"+devId+","+endPoint+",0020,11"+seq+"00012800", "OK"]) # Tell device to enter Fast Poll for 40qs (==10s)
                 SetTempVal(devIdx,"PollingUntil", datetime.now()+timedelta(seconds=10))
                 telegesis.TxCmd(cmdRsp)  # This will go out after the Fast Poll Set - but possibly ought to go out as part of SECONDS handler..?
             else:
-                log.log("Don't want to know anything about "+GetVal(devIdx, "UserName"))
                 telegesis.TxCmd(["AT+RAWZCL:"+devId+","+endPoint+",0020,11"+seq+"0000", "OK"]) # Tell device to stop Poll
     if eventId == events.ids.RXMSG:
         if eventArg[0] == "AddrResp" and eventArg[1] == "00":
@@ -100,7 +92,6 @@ def EventHandler(eventId, eventArg):
         if eventArg[0] == "RESPATTR":
             devIdx = GetIdx(eventArg[1])
             if devIdx != None:
-                NoteEphemera(devIdx, eventArg)
                 ep = eventArg[2]
                 clusterId = eventArg[3]
                 attrId = eventArg[4]
@@ -150,15 +141,9 @@ def EventHandler(eventId, eventArg):
         globalDevIdx = None # We've finished with this global if we get an error
     if eventId == events.ids.SECONDS:
         SendPendingCommand()
-        for devIdx, devInfo in enumerate(info):  # See if any devices are timing out, and turn them off if necessary
-            offAt = GetVal(devIdx, "SwitchOff@")
-            if offAt:
-                if now >= offAt:
-                    SwitchOff(devIdx)
         if dirty:
-            with open(devFilename, 'wt') as f:
-                pprint(info, stream=f)
-                # Was print(info, file=f) # Save devices list directly to file
+            with open(devFilename, "w") as f:
+                print(info, file=f) # Save devices list directly to file
             dirty = False   # Don't save again until needed
     # End event handler
 
@@ -210,13 +195,6 @@ def GetVal(devIdx, name):
         if item[0] == name:
             return item[1] # Just return value associated with name
     return None # Indicate item not found
-    
-def SetSynopsis(name, value): # Ready for the synopsis email
-    global synopsis
-    for item in synopsis:
-        if item[0] == name:
-            synopsis.remove(item) # Remove old tuple if necessary
-    synopsis.append((name, value)) # Add new one regardless
 
 def DelVal(devIdx, name):
     global info
@@ -230,34 +208,6 @@ def DelVal(devIdx, name):
 def SetAttrVal(devIdx, clstrId, attrId, value):
     name = "attr"+clstrId+":"+attrId # So that the id combines cluster as well as attribute
     SetVal(devIdx, name, value) # Keep it simple
-    SetVarFromAttr(devIdx, name, value)
-
-def CheckAllAttrs():
-    global info
-    devIdx = 0
-    for device in info:
-        for item in device:
-            if "attr" in item[0]:
-                SetVarFromAttr(devIdx, item[0], item[1])
-        devIdx = devIdx + 1
-    
-def SetVarFromAttr(devIdx, name, value): # See if this attribute has an associated variable for user & rules
-    if name == "attr"+zcl.Cluster.PowerConfig+":"+zcl.Attribute.Batt_Percentage:
-        SetTempVal(devIdx, "GetNextBatteryAfter", datetime.now()+timedelta(seconds=86400))    # Ask for battery every day
-        varName = GetVal(devIdx, "UserName")+"_BatteryPercentage"
-        if value != "FF":
-            varVal = int(value, 16) / 2 # Arrives in 0.5% increments 
-            variables.Set(varName, varVal)
-            SetSynopsis(varName, str(varVal)) # Ready for the synopsis email
-        else:
-            variables.Del(varName)
-    if name == "attr"+zcl.Cluster.Temperature+":"+zcl.Attribute.Celsius:
-        varName = GetVal(devIdx, "UserName")+"_TemperatureC"
-        if value != "FF9C": # Don't know where this value comes from - should be "FFFF"
-            varVal = int(value, 16) / 100 # Arrives in 0.01'C increments 
-            variables.Set(varName, varVal)
-        else:
-            variables.Del(varName)
 
 def GetAttrVal(devIdx, clstrId, attrId):
     name = "attr"+clstrId+":"+attrId # So that the id combines cluster as well as attribute
@@ -287,10 +237,7 @@ def DelTempVal(devIdx, name):
     return None # Indicate item not found
 
 def NoteEphemera(devIdx, arg):
-    variables.Set(GetVal(devIdx, "UserName")+"_LastSeen", datetime.now().strftime("%y/%m/%d %H:%M:%S"))  # Mark it as "recently seen"
-    DelTempVal(devIdx, "ReportedMissing") # ToDo Could only remove this once per day? to avoid spamming
-    SetTempVal(devIdx, "LastSeen", datetime.now())  # Mark it as "recently seen"
-    SetTempVal(devIdx, "ReportMissingAfter", datetime.now()+timedelta(seconds=1800))
+    SetTempVal(devIdx, "LastSeen", datetime.now().strftime("%y/%m/%d %H:%M:%S"))  # Mark it as "recently seen"
     if int(arg[-2]) < 0: # Assume penultimate item is RSSI, and thus that ultimate one is LQI
         rssi = arg[-2]
         lqi = arg[-1]
@@ -309,7 +256,6 @@ def Check(devIdx, consume):
     if None == eui:
         return ("AT+EUIREQ:"+devId+","+devId, "AddrResp")
     if None == GetVal(devIdx, "InCluster") or None == GetVal(devIdx, "OutCluster"):
-        SetVal(devIdx, "OutCluster", []) # Some devices have no outclusters...
         return ("AT+SIMPLEDESC:"+devId+","+devId+","+ep, "OutCluster")
     inClstr = GetVal(devIdx, "InCluster") # Assume we have a list of clusters if we get this far
     outClstr = GetVal(devIdx, "OutCluster")
@@ -321,43 +267,40 @@ def Check(devIdx, consume):
                 return SetBinding(devIdx, zcl.Cluster.PollCtrl, "01") # 01 is our endpoint we want messages to come to
             if zcl.Cluster.OnOff in outClstr and zcl.Cluster.OnOff not in binding: # If device sends OnOff commands...
                 return SetBinding(devIdx, zcl.Cluster.OnOff, "0A") # 0A is our endpoint we want messages to come to
+            if zcl.Cluster.OnOff in inClstr and zcl.Cluster.OnOff not in binding: # If device receives OnOff commands...
+                return SetBinding(devIdx, zcl.Cluster.OnOff, "01") # 01 is our endpoint we want messages to come to
+            if zcl.Cluster.PowerConfig in inClstr and zcl.Cluster.PowerConfig not in binding:
+                return SetBinding(devIdx, zcl.Cluster.PowerConfig, "01") # 01 is our endpoint we want messages to come to
             if zcl.Cluster.Temperature in inClstr and zcl.Cluster.Temperature not in binding:
                 return SetBinding(devIdx, zcl.Cluster.Temperature, "01") # 01 is our endpoint we want messages to come to
         else:
             SetVal(devIdx, "Binding", [])
         if zcl.Cluster.IAS_Zone in inClstr:
             if None == GetAttrVal(devIdx, zcl.Cluster.IAS_Zone, zcl.Attribute.Zone_Type):
-                return telegesis.ReadAttr(devId, ep, zcl.Cluster.IAS_Zone, zcl.Attribute.Zone_Type) # Get IAS device type (PIR or contact, etc.)
+                return telegesis.ReadAttr(devId, ep, zcl.Cluster.IAS_Zone, zcl.Attribute.Zone_Type)
         if zcl.Cluster.Basic in inClstr:
             if None == GetAttrVal(devIdx, zcl.Cluster.Basic, zcl.Attribute.Model_Name):
                 return telegesis.ReadAttr(devId, ep, zcl.Cluster.Basic, zcl.Attribute.Model_Name) # Get Basic's Device Name
             if None == GetAttrVal(devIdx, zcl.Cluster.Basic, zcl.Attribute.Manuf_Name):
                 return telegesis.ReadAttr(devId, ep, zcl.Cluster.Basic, zcl.Attribute.Manuf_Name) # Get Basic's Manufacturer Name
-        if zcl.Cluster.PowerConfig in inClstr and "SED"== GetVal(devIdx, "DevType"):
-            if None == GetAttrVal(devIdx, zcl.Cluster.PowerConfig, zcl.Attribute.Batt_Percentage) or datetime.now() > GetTempVal(devIdx, "GetNextBatteryAfter"):
-                return telegesis.ReadAttr(devId, ep, zcl.Cluster.PowerConfig, zcl.Attribute.Batt_Percentage) # Get Battery percentage
         if rprtg != None:
-            if zcl.Cluster.Temperature in inClstr:
-                tmpRpt = zcl.Cluster.Temperature+":"+zcl.Attribute.Celsius
-                if zcl.Cluster.Temperature in binding and tmpRpt not in rprtg:
-                    pendingRptAttrId = zcl.Attribute.Celsius
-                    return ("AT+CFGRPT:"+devId+","+ep+",0,"+zcl.Cluster.Temperature+",0,"+zcl.Attribute.Celsius+","+zcl.AttributeTypes.Uint16+",012C,0E10,0064", "CFGRPTRP") # 012C is 300==5 mins, 0E10 is 3600==1 hour, 0064 is 100, being 1.00'C
-#            if zcl.Cluster.OnOff in inClstr: # Commented out because TG won't let me set up reports for booleans
-#                onOffRpt = zcl.Cluster.OnOff+":"+zcl.Attribute.OnOffState
-#                if zcl.Cluster.OnOff in binding and onOffRpt not in rprtg:
-#                    pendingRptAttrId = zcl.Attribute.OnOffState
-#                    return ("AT+CFGRPT:"+devId+","+ep+",0,"+zcl.Cluster.OnOff+",0,"+zcl.Attribute.OnOffState+","+zcl.AttributeTypes.Boolean+",0005,0E10,01", "CFGRPTRP") # 0E10 is 3600==1 hour, 01 is "reportable change"
+            pwrRpt = zcl.Cluster.PowerConfig+":"+zcl.Attribute.Batt_Percentage
+            if zcl.Cluster.PowerConfig in binding and pwrRpt not in rprtg:
+                pendingRptAttrId = zcl.Attribute.Batt_Percentage
+                return ("AT+CFGRPT:"+devId+","+ep+",0,"+zcl.Cluster.PowerConfig+",0,"+zcl.Attribute.Batt_Percentage+",20,0E10,0E10,01", "CFGRPTRP") # 0E10 is 3600==1 hour
+            tmpRpt = zcl.Cluster.Temperature+":"+zcl.Attribute.Celsius
+            if zcl.Cluster.Temperature in binding and tmpRpt not in rprtg:
+                pendingRptAttrId = zcl.Attribute.Celsius
+                return ("AT+CFGRPT:"+devId+","+ep+",0,"+zcl.Cluster.Temperature+",0,"+zcl.Attribute.Celsius+",20,0E10,0E10,01", "CFGRPTRP") # 0E10 is 3600==1 hour
+            onOffRpt = zcl.Cluster.OnOff+":"+zcl.Attribute.OnOffState
+            if zcl.Cluster.OnOff in binding and zcl.Cluster.OnOff in inClstr and OnOffRpt not in rprtg:
+                pendingRptAttrId = zcl.Attribute.OnOffState
+                return ("AT+CFGRPT:"+devId+","+ep+",0,"+zcl.Cluster.OnOff+",0,"+zcl.Attribute.OnOffState+",20,0001,0E10,01", "CFGRPTRP") # 0E10 is 3600==1 hour, 01 is "reportable change"
         else:
             SetVal(devIdx, "Reporting", [])
     pendingAtCmd = GetTempVal(devIdx, "AtCmdRsp")
-    if pendingAtCmd:
-        if consume:
-            DelTempVal(devIdx,"AtCmdRsp") # Remove item if we're about to use it (presuming successful sending of command...)
-    else: # No pending command, so check whether device has said anything for a while...
-        if GetTempVal(devIdx, "LastSeen") != None:
-            if GetTempVal(devIdx, "LastSeen")+timedelta(seconds=900) < datetime.now(): # 15 minutes since we last heard from device 
-                if zcl.Cluster.Basic in inClstr: # Ask for Basic's Name, since everything must support this
-                    pendingAtCmd = telegesis.ReadAttr(devId, ep, zcl.Cluster.Basic, zcl.Attribute.Model_Name) # Get Basic's Device Name
+    if pendingAtCmd and consume:
+        DelTempVal(devIdx,"AtCmdRsp") # Remove item if we're about to use it (presuming successful sending of command...)
     return pendingAtCmd
 
 def SendPendingCommand():
@@ -370,17 +313,19 @@ def SendPendingCommand():
                 if offTime != None:
                     if datetime.now() > offTime:
                         SwitchOff(devIdx)
-                cmdRsp = Check(devIdx, True) # Automatically consume any pending command
-                if cmdRsp != None:
-                    log.log("Sending "+str(cmdRsp))
-                    telegesis.TxCmd(cmdRsp)  # Send command directly
+                else:
+                    cmdRsp = Check(devIdx, True) # Automatically consume any pending command
+                    if cmdRsp != None:
+                        log.log("Sending "+str(cmdRsp))
+                        telegesis.TxCmd(cmdRsp)  # Send command directly
             devIdx = devIdx + 1
 
 def IsListening(devIdx):
     type = GetVal(devIdx, "DevType")
     if type == "FFD" or type == "ZED":
-        return True # These devices are always awake and listening
+        return True
     else: # Assume sleepy (even if None), so check if we think it is polling
+        return True # These devices are always awake and listening
         pollTime = GetTempVal(devIdx, "PollingUntil")
         if pollTime != None:
             if datetime.now() < pollTime:
@@ -388,19 +333,7 @@ def IsListening(devIdx):
                 return True
         return False
 
-def CheckMissing():
-    global info
-    devIdx = 0
-    for device in info:
-        if GetTempVal(devIdx, "ReportedMissing") == None:
-            if GetTempVal(devIdx, "ReportMissingAfter") != None:
-                if GetTempVal(devIdx, "ReportMissingAfter") > timedate.now(): # 30 minutes
-                    variables.Set("MissingDevice", GetVal("UserName"))
-                    rules.Run("Missing==True") # Trigger is "missing"
-                    SetTempVal(devIdx, "ReportedMissing", timedate.now())   # To avoid re-reporting
-        devIdx = devIdx + 1
-
-def SetBinding(devIdx, cluster, ourEp):
+def SetBinding(devIdx, cluster, ourEp)
     global pendingBinding
     devId = GetVal(devIdx, "devId")
     ep = GetVal(devIdx, "EP")

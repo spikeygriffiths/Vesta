@@ -7,6 +7,7 @@ import cmd
 import readline
 import sys
 import select
+import socket
 from pathlib import Path
 from pprint import pprint # Pretty print for devs list
 # App-specific Python modules
@@ -16,16 +17,47 @@ import telegesis
 import variables
 import rules
 import hubapp
+import log
+
+sck = ""
+cliSck = ""
+sckLst = []
 
 if __name__ == "__main__":
     hubapp.main()
 
 def EventHandler(eventId, eventArg):
+    global sckLst, sck, cliSck
+    if eventId == events.ids.INIT:
+        sck = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Create socket
+        sck.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sck.setblocking(0) # accept() is no longer blocking
+        port = 12345
+        sck.bind(('', port))    # Listen on all available interfaces
+        sck.listen(0)
+        sckLst = [sck]
     if eventId == events.ids.SECONDS:
         if select.select([sys.stdin], [], [], 0)[0]:
             cmd = sys.stdin.readline()
             if cmd:
                 Commands().onecmd(cmd)
+        rd, wr, er = select.select(sckLst, [], [], 0)
+        for s in rd:
+            if s is sck:
+                cliSck, addr = sck.accept()
+                sckLst.append(cliSck)
+                log.log ("New connection from web page!")
+            else:
+                cmd = cliSck.recv(100)
+                if cmd:
+                    cmd = cmd.decode()                 
+                    log.log ("Got cmd "+ cmd)
+                    Commands().onecmd(cmd)
+                    cliSck.send(str.encode("Hello from Python!"))
+                else:
+                    log.log ("Closing socket")
+                    cliSck.close()
+                    sckLst.remove(cliSck)
     # End of Command EventHandler
 
 class Commands(cmd.Cmd):
