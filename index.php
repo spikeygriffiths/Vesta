@@ -4,7 +4,12 @@ error_reporting(E_ALL);
 echo "<html><head>";
 echo "</head><body>";
 echo "<center><h1>IoT Hub</h1> ";
-echo "Now: ", date('Y-m-d H:i:s'); // Add UpTime for hubapp
+echo "Now: ", date('Y-m-d H:i:s'), "<br>";
+$upT=shell_exec("uptime");
+$ans=explode(" up ",$upT);
+$ans=explode(',', $ans[1]);
+$ans=$ans[0].", ".$ans[1];
+echo "UpTime: ", $ans, "<br>";
 echo "</center>";
 $ps = shell_exec("ps ax");
 $iotHubRunning = (strpos($ps, "hubapp.py") !== false);
@@ -39,23 +44,27 @@ function ShowDevices($filename, $key)
 
 function ShowRules($filename, $key)
 {
-    $arr = array();
+    echo "<H2>Rules</H2>";
+    //$arr = array();
     $index = 0;
     $handle = fopen($filename, "r");
     if ($handle) {
-        echo "<table border=&quot;1&quot;>";
+        //echo "<table border=&quot;1&quot;>";
         while (!feof($handle)) {
             $line = fgets($handle);
-            while (($lt = strpos($line, "<")) !== false) {
-                $line = str_replace("<", "&lt;", $line);
-            }
+            //while (($lt = strpos($line, "<")) !== false) {
+            //    $line = str_replace("<", "&lt;", $line); // Not needed for value of input boxes
+            //}
             if (strpos($line, $key) !== false) {
-                echo "<tr><td>", $line, "</tr></td>";
+                //echo "<tr><td>", $line, "</tr></td>";
+                echo "<input type=\"text\" size=\"100\" name=\"rule", $index, "\" value=\"", $line, "\"><br>";
             }
-            $arr[$index++] = $line;
+            //$arr[$index] = $line;
+            $index++;
         }
-        echo "</table>";
+        //echo "</table>";
         fclose($handle); 
-    } else echo "No rules defined<br>"; // Else error opening file
+    }
+    echo "<input type=\"text\" size=\"100\" name=\"rule", $index, "\"><br>"; // Always have a blank rule at the end to add 
 }
 ?>

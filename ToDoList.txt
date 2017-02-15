@@ -3,10 +3,15 @@
 Features:
 * Auto-start network ("AT+EN") if ATN shows none available at start up
 * Multiple device ZigBee endpoints?
-* Web interface(!)
+* Show device presence/absence on web
+* Add new devices page to show new devices as they arrive
+* Web pages to auto-refresh when showing devices
+* Editing rules via web page
+* Renaming devices via web
+* Activity log for all triggers (except time), with selected bits (today,yesterday,last week, etc.) to be shown on web 
 * Toggle commands should trigger a "get on/off attr" so that we know what the state is
 * Colour lamp control
-* Daily synopsis - Any problems, device battery levels (done?) & voltages, if missing or not
+* Daily synopsis to show UpTime, if devices missing or not during day (>30m with no messages), last day's activity log
 * 
 # *** Burglar alarm? ***
 # if keyfob=arm do Arming Alarm for 30

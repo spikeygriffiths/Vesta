@@ -50,7 +50,7 @@ def EventHandler(eventId, eventArg):
             else:
                 cmd = cliSck.recv(100)
                 if cmd:
-                    cmd = cmd.decode()                 
+                    cmd = cmd.decode()
                     log.log ("Got cmd "+ cmd)
                     Commands().onecmd(cmd)
                     cliSck.send(str.encode("Hello from Python!"))
