@@ -16,6 +16,7 @@ if __name__ == "__main__":
     hubapp.main()
 
 devFilename = "devices.txt"
+devUserNames = "usernames.txt"
 dirty = False
 globalDevIdx = None
 pendingBinding = None # Needed because the BIND response doesn't include the cluster
@@ -50,7 +51,7 @@ def EventHandler(eventId, eventArg):
             devIdx = InitDev(devId)
             SetVal(devIdx,"DevType",eventArg[0])    # SED, FFD or ZED
             SetVal(devIdx,"EUI",eventArg[1])
-            SetVal(devIdx, "UserName", devId)   # Default username of network ID, since that's unique
+            NewUserName("New device "+devId, eventArg[1])   # Default username of network ID, since that's unique
             if eventArg[0] == "SED":
                 SetTempVal(devIdx,"PollingUntil", datetime.now()+timedelta(seconds=300))
         NoteEphemera(devIdx, eventArg)
@@ -70,7 +71,7 @@ def EventHandler(eventId, eventArg):
                 SetTempVal(devIdx,"PollingUntil", datetime.now()+timedelta(seconds=10))
                 telegesis.TxCmd(cmdRsp)  # This will go out after the Fast Poll Set - but possibly ought to go out as part of SECONDS handler..?
             else:
-                log.log("Don't want to know anything about "+GetVal(devIdx, "UserName"))
+                log.log("Don't want to know anything about "+GetUserNameFromIdx(devIdx))
                 telegesis.TxCmd(["AT+RAWZCL:"+devId+","+endPoint+",0020,11"+seq+"0000", "OK"]) # Tell device to stop Poll
     if eventId == events.ids.RXMSG:
         if eventArg[0] == "AddrResp" and eventArg[1] == "00":
@@ -185,8 +186,60 @@ def GetIdxFromItem(name, value):
     return None # Item not found
 
 def GetIdxFromUserName(userName):
-    return GetIdxFromItem("UserName", userName)
+    eui = GetDevIdFromUserName(userName) # Indirect via usernames
+    return GetIdxFromItem("EUI", eui)
+
+def GetUserNameFromIdx(idx):
+    eui = GetVal(idx, "EUI")
+    return GetUserNameFromEui(eui)
     
+def SetUserNameFromIdx(idx, userName):
+    eui = GetVal(idx, "EUI")
+    SetUserNameFromEui(userName, eui)
+
+def NewUserName(name, eui):
+    with open(devUserNames, "a") as f:
+        try:
+            userNames = eval(f.read()) # Load previous cache of device userNames into userNames[]
+            userNames.append(name, eui)
+            return
+        except:
+            log.fault("No usernames!")
+    return None # Item not found    
+
+def SetUserNameFromEui(userName, eui):
+    with open(devUserNames, "r") as f:
+        try:
+            userNames = eval(f.read()) # Load previous cache of device userNames into userNames[]
+            for nameTuple in userNames:
+                if nameTuple[1] == eui:
+                    nameTuple[0] = userName
+                    return
+        except:
+            log.fault("No usernames!")
+
+def GetDevIdFromUserName(userName):
+    with open(devUserNames, "r") as f:
+        try:
+            userNames = eval(f.read()) # Load previous cache of device userNames into userNames[]
+            for nameTuple in userNames:
+                if nameTuple[0] == userName:
+                    return nameTuple[1]
+        except:
+            log.fault("No usernames!")
+    return None # Item not found    
+
+def GetUserNameFromEui(eui):
+    with open(devUserNames, "r") as f:
+        try:
+            userNames = eval(f.read()) # Load previous cache of device userNames into userNames[]
+            for nameTuple in userNames:
+                if nameTuple[1] == eui:
+                    return nameTuple[0]
+        except:
+            log.fault("No usernames!")
+    return None # Item not found
+
 def InitDev(devId):
     global info
     log.log("Adding new devId: "+ str(devId))
@@ -244,7 +297,7 @@ def CheckAllAttrs():
 def SetVarFromAttr(devIdx, name, value): # See if this attribute has an associated variable for user & rules
     if name == "attr"+zcl.Cluster.PowerConfig+":"+zcl.Attribute.Batt_Percentage:
         SetTempVal(devIdx, "GetNextBatteryAfter", datetime.now()+timedelta(seconds=86400))    # Ask for battery every day
-        varName = GetVal(devIdx, "UserName")+"_BatteryPercentage"
+        varName = GetUserNameFromIdx(devIdx)+"_BatteryPercentage"
         if value != "FF":
             varVal = int(value, 16) / 2 # Arrives in 0.5% increments 
             variables.Set(varName, varVal)
@@ -252,7 +305,7 @@ def SetVarFromAttr(devIdx, name, value): # See if this attribute has an associat
         else:
             variables.Del(varName)
     if name == "attr"+zcl.Cluster.Temperature+":"+zcl.Attribute.Celsius:
-        varName = GetVal(devIdx, "UserName")+"_TemperatureC"
+        varName = GetUserNameFromIdx(devIdx)+"_TemperatureC"
         if value != "FF9C": # Don't know where this value comes from - should be "FFFF"
             varVal = int(value, 16) / 100 # Arrives in 0.01'C increments 
             variables.Set(varName, varVal)
@@ -287,7 +340,7 @@ def DelTempVal(devIdx, name):
     return None # Indicate item not found
 
 def NoteEphemera(devIdx, arg):
-    variables.Set(GetVal(devIdx, "UserName")+"_LastSeen", datetime.now().strftime("%y/%m/%d %H:%M:%S"))  # Mark it as "recently seen"
+    variables.Set(GetUserNameFromIdx(devIdx)+"_LastSeen", datetime.now().strftime("%y/%m/%d %H:%M:%S"))  # Mark it as "recently seen"
     DelTempVal(devIdx, "ReportedMissing") # ToDo Could only remove this once per day? to avoid spamming
     SetTempVal(devIdx, "LastSeen", datetime.now())  # Mark it as "recently seen"
     SetTempVal(devIdx, "ReportMissingAfter", datetime.now()+timedelta(seconds=1800))
@@ -395,7 +448,7 @@ def CheckMissing():
         if GetTempVal(devIdx, "ReportedMissing") == None:
             if GetTempVal(devIdx, "ReportMissingAfter") != None:
                 if GetTempVal(devIdx, "ReportMissingAfter") > timedate.now(): # 30 minutes
-                    variables.Set("MissingDevice", GetVal("UserName"))
+                    variables.Set("MissingDevice", GetUserNameFromIdx(devIdx))
                     rules.Run("Missing==True") # Trigger is "missing"
                     SetTempVal(devIdx, "ReportedMissing", timedate.now())   # To avoid re-reporting
         devIdx = devIdx + 1

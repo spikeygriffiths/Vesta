@@ -35,9 +35,12 @@ def EventHandler(eventId, eventArg):
         TxCmd(["AT+N", "OK"]) # Get network information, to see whether to start new network or use existing one
     elif eventId == events.ids.SECONDS:
         try:
-            inWait = ser.inWaiting() # Has given   File "/usr/lib/python3/dist-packages/serial/serialposix.py", line 435, in inWaiting, s = fcntl.ioctl(self.fd, TIOCINQ, TIOCM_zero_str), OSError: [Errno 5] Input/output error
-        except:
-            inWait = false
+            inWait = ser.inWaiting()
+        except OSError: # Has given   File "/usr/lib/python3/dist-packages/serial/serialposix.py", line 435, in inWaiting, s = fcntl.ioctl(self.fd, TIOCINQ, TIOCM_zero_str), OSError: [Errno 5] Input/output error
+            inWait = False
+            log.fault("ser.inWaiting() has failed")
+        except serial:  # Has given:   File "/usr/lib/python3/dist-packages/serial/serialposix.py", line 460, in read raise SerialException('device reports readiness to read but returned no data (device disconnected?)') serial.serialutil.SerialException: device reports readiness to read but returned no data (device disconnected?)
+            inWait = False
             log.fault("ser.inWaiting() has failed")
         if inWait:
             try:

@@ -138,14 +138,17 @@ class Commands(cmd.Cmd):
         """name devId name
         Allows user to associate friendly name with device Id"""
         argList = line.split()
-        devId = argList[0]
-        name = argList[1]
-        if devId != None and name != None:
-            devIdx = devices.GetIdx(devId)
-            if devIdx != None:
-                devices.SetVal(devIdx, "UserName", name)
+        if argList != []:
+            devId = argList[0]
+            name = argList[1]
+            if devId != None and name != None:
+                devIdx = devices.GetIdx(devId)
+                if devIdx != None:
+                    devices.SetUserNameFromIdx(devIdx, name)
+            else:
+                log.fault("Need both args!")
         else:
-            log.fault("Need both args!")
+            log.fault("Need devId and name!")
 
     def do_toggle(self, name):
         """toggle name

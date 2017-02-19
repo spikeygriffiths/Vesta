@@ -34,7 +34,7 @@ rulesFilename = "rules.txt"
 def EventHandler(eventId, eventArg):
     if eventId == events.ids.TRIGGER:
         devIdx = devices.GetIdx(eventArg[1]) # Lookup device from network address in eventArg[1]
-        userName = devices.GetVal(devIdx, "UserName")
+        userName = devices.GetUserNameFromIdx(devIdx)
         zoneType = devices.GetAttrVal(devIdx, zcl.Cluster.IAS_Zone, zcl.Attribute.Zone_Type) # Device type
         if zoneType != None:
             #log.log("DevId: "+eventArg[1]+" has type "+ zoneType)
@@ -57,7 +57,7 @@ def EventHandler(eventId, eventArg):
             log.fault("Unknown IAS device type for devId "+eventArg[1])
     elif eventId == events.ids.BUTTON:
         devIdx = devices.GetIdx(eventArg[1]) # Lookup device from network address in eventArg[1]
-        userName = devices.GetVal(devIdx, "UserName")
+        userName = devices.GetUserNameFromIdx(devIdx)
         log.log("Button "+ eventArg[1]+ " "+eventArg[0]) # Arg[0] holds "ON", "OFF" or "TOGGLE" (Case might be wrong)
         if userName:
             Run(userName+"=="+eventArg[0]) # See if rule exists
@@ -87,7 +87,9 @@ def Run(trigger): # Run through the rules looking to see if we have a match for 
             # end of rules
             variables.Del(triggerType) # Make sure we don't re-run the same trigger
     else:
-        log.fault("No " + rulesFilename+" !")
+        shell.exec("touch "+rulesFilename)
+        shell.exec("chmod 666 "+rulesFilename)
+        log.fault("Made new " + rulesFilename+" !")
 
 def FindItemInList(item, listToCheck):
     try:
@@ -204,7 +206,7 @@ def Action(actList):
                     if actList[4] == "for":
                         SetOnDuration(devIdx, int(actList[5],10))
             else:
-                log.log("Unknown action: "+action +" for device: "+devices.GetUserName(devIdx))
+                log.log("Unknown action: "+action +" for device: "+devices.GetUserNameFromIdx(devIdx))
 
 def SetOnDuration(devIdx, durationS):
     if durationS>0: # Duration of 0 means "Stay on forever"
