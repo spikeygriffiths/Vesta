@@ -34,7 +34,7 @@ rulesFilename = "rules.txt"
 def EventHandler(eventId, eventArg):
     if eventId == events.ids.TRIGGER:
         devIdx = devices.GetIdx(eventArg[1]) # Lookup device from network address in eventArg[1]
-        userName = devices.GetUserNameFromIdx(devIdx)
+        userName = devices.GetUserNameFromDevIdx(devIdx)
         zoneType = devices.GetAttrVal(devIdx, zcl.Cluster.IAS_Zone, zcl.Attribute.Zone_Type) # Device type
         if zoneType != None:
             #log.log("DevId: "+eventArg[1]+" has type "+ zoneType)
@@ -57,7 +57,7 @@ def EventHandler(eventId, eventArg):
             log.fault("Unknown IAS device type for devId "+eventArg[1])
     elif eventId == events.ids.BUTTON:
         devIdx = devices.GetIdx(eventArg[1]) # Lookup device from network address in eventArg[1]
-        userName = devices.GetUserNameFromIdx(devIdx)
+        userName = devices.GetUserNameFromDevIdx(devIdx)
         log.log("Button "+ eventArg[1]+ " "+eventArg[0]) # Arg[0] holds "ON", "OFF" or "TOGGLE" (Case might be wrong)
         if userName:
             Run(userName+"=="+eventArg[0]) # See if rule exists
@@ -187,7 +187,7 @@ def Action(actList):
         cmdStr = " ".join(cmdList)
         call(cmdStr, shell=True)
     else: # Must be a command for a device
-        devIdx = devices.GetIdxFromUserName(actList[1]) # Second arg is username for device
+        devIdx = devices.GetDevIdxFromUserName(actList[1]) # Second arg is username for device
         if devIdx == None:
             log.fault("Device "+actList[1]+" from rules.txt not found in devices")
         else:
@@ -206,7 +206,7 @@ def Action(actList):
                     if actList[4] == "for":
                         SetOnDuration(devIdx, int(actList[5],10))
             else:
-                log.log("Unknown action: "+action +" for device: "+devices.GetUserNameFromIdx(devIdx))
+                log.log("Unknown action: "+action +" for device: "+devices.GetUserNameFromDevIdx(devIdx))
 
 def SetOnDuration(devIdx, durationS):
     if durationS>0: # Duration of 0 means "Stay on forever"

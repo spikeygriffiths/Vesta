@@ -144,7 +144,7 @@ class Commands(cmd.Cmd):
             if devId != None and name != None:
                 devIdx = devices.GetIdx(devId)
                 if devIdx != None:
-                    devices.SetUserNameFromIdx(devIdx, name)
+                    devices.SetUserNameFromDevIdx(devIdx, name)
             else:
                 log.fault("Need both args!")
         else:

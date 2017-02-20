@@ -1,10 +1,11 @@
 #!ToDoList.txt
 
-Features:
-* Add new devices page to show new devices as they arrive (networkId known but no UserName)
-* Renaming devices via web.  Need two devices files - devnames.txt and devinfo.txt.  devinfo has all existing info, but without names.  devnames has just the UserName to NetworkId mapping.  devnames is reloaded whenever names need looking up (rules or logs).  Renames also affect the rules automatically.
+***** Features: *****
+* Add new devices page to show new devices as they arrive (UserName set to "New Device")
+* Renaming devices via web
 * Activity log for all triggers (except time), with selected bits (today,yesterday,last week, etc.) to be shown on web 
 * Show device presence/absence on web.  Absent if >30 mins with no messages, else present.  Initially Unknown.  FFDs and ZEDs to be prodded on hub startup.  SEDs to stay Unknown
+* Need states.txt file, with lists for hub & each device.  Present/absent, batt %, temp, On/Off, open/closed, Radio Quality(?), etc. for each device.  Hub state to include upTime, Armed/Alarming/Disarmed(?), Activity Faking, etc.
 * Toggle commands should trigger a "get on/off attr" so that we know what the state is
 * Colour lamp control
 * Daily synopsis to show UpTime, if devices missing or not during day (>30m with no messages), last day's activity log
@@ -28,4 +29,5 @@ Features:
 # if house==unoccupied and 0:00<time<sunset and HallLight_OnOff==off and rand(30)==0 do SwitchOn HallLight for 300
 
 Bugs
+* Fix stupid OSError thing from ser.inWaiting in telegesis.py
 Occasionally stalls!  But then recovers as if nothing had happened.

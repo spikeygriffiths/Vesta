@@ -32,7 +32,6 @@ function ShowDevices($filename, $key)
         $index = 0;
         while (!feof($handle)) {
             $line = fgets($handle);
-            // Need to parse Python list - might be better to have special file, or even an API(!)
             echo "<input type=\"text\" size=\"40\" name=\"username", $index, "\" value=\"", $line, "\"><br>";
             $index++;
         }

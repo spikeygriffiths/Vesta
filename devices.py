@@ -51,7 +51,7 @@ def EventHandler(eventId, eventArg):
             devIdx = InitDev(devId)
             SetVal(devIdx,"DevType",eventArg[0])    # SED, FFD or ZED
             SetVal(devIdx,"EUI",eventArg[1])
-            NewUserName("New device "+devId, eventArg[1])   # Default username of network ID, since that's unique
+            NewUserName("New device "+devId)   # Default username of network ID, since that's unique
             if eventArg[0] == "SED":
                 SetTempVal(devIdx,"PollingUntil", datetime.now()+timedelta(seconds=300))
         NoteEphemera(devIdx, eventArg)
@@ -71,7 +71,7 @@ def EventHandler(eventId, eventArg):
                 SetTempVal(devIdx,"PollingUntil", datetime.now()+timedelta(seconds=10))
                 telegesis.TxCmd(cmdRsp)  # This will go out after the Fast Poll Set - but possibly ought to go out as part of SECONDS handler..?
             else:
-                log.log("Don't want to know anything about "+GetUserNameFromIdx(devIdx))
+                #log.log("Don't want to know anything about "+GetUserNameFromDevIdx(devIdx))
                 telegesis.TxCmd(["AT+RAWZCL:"+devId+","+endPoint+",0020,11"+seq+"0000", "OK"]) # Tell device to stop Poll
     if eventId == events.ids.RXMSG:
         if eventArg[0] == "AddrResp" and eventArg[1] == "00":
@@ -185,59 +185,46 @@ def GetIdxFromItem(name, value):
         devIdx = devIdx + 1
     return None # Item not found
 
-def GetIdxFromUserName(userName):
-    eui = GetDevIdFromUserName(userName) # Indirect via usernames
-    return GetIdxFromItem("EUI", eui)
-
-def GetUserNameFromIdx(idx):
-    eui = GetVal(idx, "EUI")
-    return GetUserNameFromEui(eui)
-    
-def SetUserNameFromIdx(idx, userName):
-    eui = GetVal(idx, "EUI")
-    SetUserNameFromEui(userName, eui)
-
-def NewUserName(name, eui):
+def NewUserName(name):
     with open(devUserNames, "a") as f:
         try:
-            userNames = eval(f.read()) # Load previous cache of device userNames into userNames[]
-            userNames.append(name, eui)
+            f.append(name+"\n")
             return
         except:
             log.fault("No usernames!")
     return None # Item not found    
 
-def SetUserNameFromEui(userName, eui):
+def SetUserNameFromDevIdx(devIdx, userName):
     with open(devUserNames, "r") as f:
-        try:
-            userNames = eval(f.read()) # Load previous cache of device userNames into userNames[]
-            for nameTuple in userNames:
-                if nameTuple[1] == eui:
-                    nameTuple[0] = userName
-                    return
-        except:
-            log.fault("No usernames!")
+        userNames = []
+        for line in f:
+            line = line.strip()
+            userNames.append(line) # Load previous cache of device userNames into userNames
+        userNames[devIdx] = userName
+        # Ought to write it back out to disk here...
 
-def GetDevIdFromUserName(userName):
+def GetDevIdxFromUserName(userName):
     with open(devUserNames, "r") as f:
+        userNames = []
+        for line in f:
+            line = line.strip()
+            userNames.append(line) # Load previous cache of device userNames into userNames
         try:
-            userNames = eval(f.read()) # Load previous cache of device userNames into userNames[]
-            for nameTuple in userNames:
-                if nameTuple[0] == userName:
-                    return nameTuple[1]
-        except:
-            log.fault("No usernames!")
+            return userNames.index(userName)
+        except ValueError:
+            return None # Item not found
     return None # Item not found    
 
-def GetUserNameFromEui(eui):
+def GetUserNameFromDevIdx(devIdx):
     with open(devUserNames, "r") as f:
+        userNames = []
+        for line in f:
+            line = line.strip()
+            userNames.append(line) # Load previous cache of device userNames into userNames
         try:
-            userNames = eval(f.read()) # Load previous cache of device userNames into userNames[]
-            for nameTuple in userNames:
-                if nameTuple[1] == eui:
-                    return nameTuple[0]
+            return userNames[devIdx]
         except:
-            log.fault("No usernames!")
+            return None # Item not found, if index is outside list
     return None # Item not found
 
 def InitDev(devId):
@@ -297,7 +284,7 @@ def CheckAllAttrs():
 def SetVarFromAttr(devIdx, name, value): # See if this attribute has an associated variable for user & rules
     if name == "attr"+zcl.Cluster.PowerConfig+":"+zcl.Attribute.Batt_Percentage:
         SetTempVal(devIdx, "GetNextBatteryAfter", datetime.now()+timedelta(seconds=86400))    # Ask for battery every day
-        varName = GetUserNameFromIdx(devIdx)+"_BatteryPercentage"
+        varName = GetUserNameFromDevIdx(devIdx)+"_BatteryPercentage"
         if value != "FF":
             varVal = int(value, 16) / 2 # Arrives in 0.5% increments 
             variables.Set(varName, varVal)
@@ -305,7 +292,7 @@ def SetVarFromAttr(devIdx, name, value): # See if this attribute has an associat
         else:
             variables.Del(varName)
     if name == "attr"+zcl.Cluster.Temperature+":"+zcl.Attribute.Celsius:
-        varName = GetUserNameFromIdx(devIdx)+"_TemperatureC"
+        varName = GetUserNameFromDevIdx(devIdx)+"_TemperatureC"
         if value != "FF9C": # Don't know where this value comes from - should be "FFFF"
             varVal = int(value, 16) / 100 # Arrives in 0.01'C increments 
             variables.Set(varName, varVal)
@@ -340,7 +327,7 @@ def DelTempVal(devIdx, name):
     return None # Indicate item not found
 
 def NoteEphemera(devIdx, arg):
-    variables.Set(GetUserNameFromIdx(devIdx)+"_LastSeen", datetime.now().strftime("%y/%m/%d %H:%M:%S"))  # Mark it as "recently seen"
+    variables.Set(GetUserNameFromDevIdx(devIdx)+"_LastSeen", datetime.now().strftime("%y/%m/%d %H:%M:%S"))  # Mark it as "recently seen"
     DelTempVal(devIdx, "ReportedMissing") # ToDo Could only remove this once per day? to avoid spamming
     SetTempVal(devIdx, "LastSeen", datetime.now())  # Mark it as "recently seen"
     SetTempVal(devIdx, "ReportMissingAfter", datetime.now()+timedelta(seconds=1800))
@@ -448,7 +435,7 @@ def CheckMissing():
         if GetTempVal(devIdx, "ReportedMissing") == None:
             if GetTempVal(devIdx, "ReportMissingAfter") != None:
                 if GetTempVal(devIdx, "ReportMissingAfter") > timedate.now(): # 30 minutes
-                    variables.Set("MissingDevice", GetUserNameFromIdx(devIdx))
+                    variables.Set("MissingDevice", GetUserNameFromDevIdx(devIdx))
                     rules.Run("Missing==True") # Trigger is "missing"
                     SetTempVal(devIdx, "ReportedMissing", timedate.now())   # To avoid re-reporting
         devIdx = devIdx + 1
