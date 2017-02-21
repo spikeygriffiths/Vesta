@@ -1,9 +1,8 @@
 <?php
 error_reporting(E_ALL);
 ini_set('display_errors', '1');
-//shell_exec("chmod 666 /home/pi/hubapp/rules.txt");
 $numRules=$_POST["numRules"];
-$handle = fopen("/home/pi/hubapp/rules.txt", "w"); // or die("Can't save rules");
+$handle = fopen("/home/pi/hubapp/rules.txt", "w");
 if ($handle) {
     $previousRule = "";
     for ($index = 0; $index < $numRules; $index++) {

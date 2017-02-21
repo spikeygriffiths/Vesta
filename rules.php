@@ -5,7 +5,7 @@ echo "<H1>Rules</H1>";
 echo "</center>";
 echo "<form action=\"save_rules.php\" method=\"post\">";
 ShowRules("/home/pi/hubapp/rules.txt");
-echo "<input type=\"submit\" value=\"Save New Rules\">";
+echo "<input type=\"submit\" value=\"Update Rules\">";
 echo "</form>";
 echo "<center>";
 echo "Click <a href=\"index.php\">here</a> to return";

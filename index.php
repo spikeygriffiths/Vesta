@@ -10,33 +10,17 @@ $ans=explode(" up ",$upT);
 $ans=explode(',', $ans[1]);
 $ans=$ans[0].", ".$ans[1];
 echo "UpTime: ", $ans, "<br>";
-echo "</center>";
 $ps = shell_exec("ps ax");
 $iotHubRunning = (strpos($ps, "hubapp.py") !== false);
 if ($iotHubRunning) {
-    //echo "<button type=\"button\" onclick=\"alert('Not working yet...')\">Add new devices</button><br>";
-    echo "<button type=\"button\" onclick=\"window.location.href='AddNewDevices.php'\">Add new devices</button><br>";
-    ShowDevices("/home/pi/hubapp/usernames.txt");
-    echo  "<button type=\"button\" onclick=\"window.location.href='rules.php'\">Rules</button><br>";
+    echo "<button type=\"button\" onclick=\"window.location.href='devices.php'\">Devices</button><br>";
+    echo "<button type=\"button\" onclick=\"window.location.href='rules.php'\">Rules</button><br>";
+    echo "</center>";
  } else {
     echo "<center><h2>IoT Hub stopped</h2></center>"; 
     $reason = shell_exec("tail --lines=15 /home/pi/hubapp/error_log");
     echo "<b>Last lines of error log;</b><br>",nl2br($reason);
 }
 echo "</body></html>";
-
-function ShowDevices($filename, $key)
-{
-    $handle = fopen($filename, "r");
-    if ($handle) {
-        $index = 0;
-        while (!feof($handle)) {
-            $line = fgets($handle);
-            echo "<input type=\"text\" size=\"40\" name=\"username", $index, "\" value=\"", $line, "\"><br>";
-            $index++;
-        }
-        fclose($handle); 
-    } else echo "No devices!<br>"; // Else error opening file
-}
 
 ?>
