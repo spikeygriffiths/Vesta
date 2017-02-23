@@ -69,7 +69,7 @@ def EventHandler(eventId, eventArg):
                 log.log("Want to know "+str(cmdRsp))
                 telegesis.TxCmd(["AT+RAWZCL:"+devId+","+endPoint+",0020,11"+seq+"00012800", "OK"]) # Tell device to enter Fast Poll for 40qs (==10s)
                 SetTempVal(devIdx,"PollingUntil", datetime.now()+timedelta(seconds=10))
-                telegesis.TxCmd(cmdRsp)  # This will go out after the Fast Poll Set - but possibly ought to go out as part of SECONDS handler..?
+                #telegesis.TxCmd(cmdRsp)  # Sent as part of SECONDS handler - see SendPendingCommand()
             else:
                 #log.log("Don't want to know anything about "+GetUserNameFromDevIdx(devIdx))
                 telegesis.TxCmd(["AT+RAWZCL:"+devId+","+endPoint+",0020,11"+seq+"0000", "OK"]) # Tell device to stop Poll

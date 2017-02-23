@@ -174,6 +174,21 @@ class Commands(cmd.Cmd):
         else:
             log.fault("Insufficient Args")
 
+    def do_devAt(self, line):
+        """devAt name AtCmd
+        Send AtCmd to specified device when it next Checks In"""
+        argList = line.split()
+        if argList != []:
+            name = argList[0]
+            atCmd = argList[1]
+            if name != None:
+                devIdx = devices.GetDevIdxFromUserName(name) # Try name first
+                devices.SetTempVal(devIdx, "AtCmdRsp", [ atCmd, "OK"])
+            else:
+                log.fault("Need both args!")
+        else:
+            log.fault("Need devId and name!")
+
     def do_at(self, line):
         """at cmd
         "Sends AT command to Telegesis stick"""
