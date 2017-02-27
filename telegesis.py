@@ -43,10 +43,10 @@ def EventHandler(eventId, eventArg):
             inWait = False
             log.fault("ser.inWaiting() has failed")
         if inWait:
-            try:
-                Parse(str(ser.readline(),'utf-8').rstrip('\r\n'))
-            except:
-                log.fault("ser.readline() failed")
+            #try:
+            Parse(str(ser.readline(),'utf-8').rstrip('\r\n'))
+            #except:
+            #    log.fault("ser.readline() failed")
         elif expRsp == "" and len(txBuf):
             atCmd, expRsp = txBuf.popleft()
             log.log("Tx>"+atCmd)

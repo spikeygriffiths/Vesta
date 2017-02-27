@@ -77,7 +77,7 @@ def EventHandler(eventId, eventArg):
                 telegesis.TxCmd(cmdRsp)  # This will go out after the Fast Poll Set - but possibly ought to go out as part of SECONDS handler..?
             else:
                 #log.log("Don't want to know anything about "+GetUserNameFromDevIdx(devIdx))
-                telegesis.TxCmd(["AT+RAWZCL:"+devId+","+endPoint+",0020,11"+seq+"0000", "OK"]) # Tell device to stop Poll
+                telegesis.TxCmd(["AT+RAWZCL:"+devId+","+endPoint+",0020,11"+seq+"00000100", "OK"]) # Tell device to (effectively) stop Poll, by only staying in Fast poll for 1qs 
     if eventId == events.ids.RXMSG:
         if eventArg[0] == "AddrResp" and eventArg[1] == "00":
             devIdx = GetIdx(eventArg[2])
@@ -194,12 +194,17 @@ def GetIdxFromItem(name, value):
     return None # Item not found
 
 def NewUserName(name):
-    with open(devUserNames, "a") as f:
-        try:
+    try:
+        with open(devUserNames, "a") as f:
+            try:
+                f.append(name+"\n")
+                return
+            except:
+                log.fault("Can't append to " + devUserNames)
+    except:
+        with open(devUserNames, "w") as f:
             f.append(name+"\n")
             return
-        except:
-            log.fault("No usernames!")
     return None # Item not found    
 
 def SetUserNameFromDevIdx(devIdx, userName):
@@ -325,22 +330,24 @@ def CheckAllAttrs():
 def SetVarFromAttr(devIdx, name, value): # See if this attribute has an associated variable for user & rules
     if name == "attr"+zcl.Cluster.PowerConfig+":"+zcl.Attribute.Batt_Percentage:
         SetTempVal(devIdx, "GetNextBatteryAfter", datetime.now()+timedelta(seconds=86400))    # Ask for battery every day
-        varName = GetUserNameFromDevIdx(devIdx)+"_BatteryPercentage"
-        if value != "FF":
-            varVal = int(value, 16) / 2 # Arrives in 0.5% increments 
-            variables.Set(varName, varVal)
-            SetSynopsis(varName, str(varVal)) # Ready for the synopsis email
-            SetStatus(devIdx, "Battery", str(varVal)) # For web page
-        else:
-            variables.Del(varName)
-    if name == "attr"+zcl.Cluster.Temperature+":"+zcl.Attribute.Celsius:
-        varName = GetUserNameFromDevIdx(devIdx)+"_TemperatureC"
-        if value != "FF9C": # Don't know where this value comes from - should be "FFFF"
-            varVal = int(value, 16) / 100 # Arrives in 0.01'C increments 
-            variables.Set(varName, varVal)
-            SetStatus(devIdx, "Temperature", str(varVal)) # For web page
-        else:
-            variables.Del(varName)
+        devName = GetUserNameFromDevIdx(devIdx)
+        if devName != None:
+            varName = devName+"_BatteryPercentage"
+            if value != "FF":
+                varVal = int(value, 16) / 2 # Arrives in 0.5% increments 
+                variables.Set(varName, varVal)
+                SetSynopsis(varName, str(varVal)) # Ready for the synopsis email
+                SetStatus(devIdx, "Battery", str(varVal)) # For web page
+            else:
+                variables.Del(varName)
+        if name == "attr"+zcl.Cluster.Temperature+":"+zcl.Attribute.Celsius:
+            varName = devName+"_TemperatureC"
+            if value != "FF9C": # Don't know where this value comes from - should be "FFFF"
+                varVal = int(value, 16) / 100 # Arrives in 0.01'C increments 
+                variables.Set(varName, varVal)
+                SetStatus(devIdx, "Temperature", str(varVal)) # For web page
+            else:
+                variables.Del(varName)
 
 def GetAttrVal(devIdx, clstrId, attrId):
     name = "attr"+clstrId+":"+attrId # So that the id combines cluster as well as attribute
