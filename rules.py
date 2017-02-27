@@ -26,14 +26,16 @@ rulesFilename = "rules.txt"
 # if StairPir==active and 16:00<time<20:00 do SwitchOn StairLight for 120
 # if StairPir==active and 20:00<time<23:00 do Dim StairLight to 0.15 for 120
 #if DoorBell==TOGGLE and 7:00<time<20:59 do Play Westminster-chimes.mp3
-#if DoorBell==TOGGLE and 21:00<time<23:59 do email spikey@rosepip.com Out of hours doorbell
+#if DoorBell==TOGGLE and 21:00<time<23:59 do email fred@fred.com Out of hours doorbell
 
 # Note spaces used to separate each item.
-# Syntax is "if <condition> do <action>[ for <duration>]"
+# Syntax is "if <condition> do <action>[ for <duration in seconds>]"
 
 def EventHandler(eventId, eventArg):
     if eventId == events.ids.TRIGGER:
         devIdx = devices.GetIdx(eventArg[1]) # Lookup device from network address in eventArg[1]
+        now = datetime.now()
+        nowStr = now.strftime("%H:%M")
         userName = devices.GetUserNameFromDevIdx(devIdx)
         zoneType = devices.GetAttrVal(devIdx, zcl.Cluster.IAS_Zone, zcl.Attribute.Zone_Type) # Device type
         if zoneType != None:
@@ -43,22 +45,28 @@ def EventHandler(eventId, eventArg):
                     if userName:
                         Run(userName+"==opened") # See if rule exists
                     log.log("Door "+ eventArg[1]+ " opened")
+                    devices.SetStatus(devIdx, "Other", "opened @ "+ nowStr) # For web page
                 else:
                     if userName:
                         Run(userName+"==closed") # See if rule exists
                     log.log("Door "+ eventArg[1]+ " closed")
+                    devices.SetStatus(devIdx, "Other", "closed @ "+ nowStr) # For web page
             elif zoneType == zcl.Zone_Type.PIR:
                 if userName:
                     Run(userName+"==active") # See if rule exists
                 log.log("PIR "+ eventArg[1]+ " active")
+                devices.SetStatus(devIdx, "Other", "active @ "+ nowStr) # For web page
             else:
                 log.log("DevId: "+ eventArg[1]+" zonestatus "+ eventArg[3])
         else:
             log.fault("Unknown IAS device type for devId "+eventArg[1])
     elif eventId == events.ids.BUTTON:
         devIdx = devices.GetIdx(eventArg[1]) # Lookup device from network address in eventArg[1]
+        now = datetime.now()
+        nowStr = now.strftime("%H:%M")
         userName = devices.GetUserNameFromDevIdx(devIdx)
         log.log("Button "+ eventArg[1]+ " "+eventArg[0]) # Arg[0] holds "ON", "OFF" or "TOGGLE" (Case might be wrong)
+        devices.SetStatus(devIdx, "Other", "pressed @ "+ nowStr) # For web page
         if userName:
             Run(userName+"=="+eventArg[0]) # See if rule exists
 
@@ -152,7 +160,6 @@ def GetConditionResult(test, condition):
         if isNumber(tstVal):
             varVal = str(varVal)
             tstVal = str(tstVal)
-        #log.log("Comparing strs "+varVal+test+tstVal)
         return eval(varVal + test + tstVal)
     else:
         return False # If we couldn't find the item requested, assume the condition fails(?)
@@ -176,12 +183,12 @@ def Action(actList):
     elif action == "email": # First arg is recipient, remainder are body of the text.  Fixed subject
         emailBody = []
         for item in actList[2:]:
-            li = len(item) # Useful variable
-            if li > 2 and "{" in item and "}" in item:
-                if item.index("{")==0 and item.index("}")==li-1: # True if item is surrounded by {...}
-                    varName = item[1:li-1]
-                    emailBody.append(variables.Get(varName))
-            else:
+            #li = len(item) # Useful variable
+            #if li > 2 and "{" in item and "}" in item:
+            #    if item.index("{")==0 and item.index("}")==li-1: # True if item is surrounded by {...}
+            #        varName = item[1:li-1]
+            #        emailBody.append(variables.Get(varName))
+            #else:
                 emailBody.append(item)
         cmdList = ["echo", "\""+' '.join(emailBody)+"\"", "|", "mail", "-s", "\"Alert from IoT-Hub\"", actList[1]]
         cmdStr = " ".join(cmdList)

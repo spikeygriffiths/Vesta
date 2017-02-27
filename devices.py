@@ -18,6 +18,7 @@ if __name__ == "__main__":
 devFilename = "devices.txt"
 devUserNames = "usernames.txt"
 dirty = False
+statusUpdate = False
 globalDevIdx = None
 pendingBinding = None # Needed because the BIND response doesn't include the cluster
 pendingRptAttrId = None # Needed because CFGRPTRSP only includes the cluster and not the attr
@@ -26,9 +27,10 @@ pendingRptAttrId = None # Needed because CFGRPTRSP only includes the cluster and
 info = []
 ephemera = [] # Don't bother saving this
 synopsis = []
+status = []
 
 def EventHandler(eventId, eventArg):
-    global info, dirty, globalDevIdx, pendingBinding, pendingRptAttrId
+    global info, dirty, globalDevIdx, pendingBinding, pendingRptAttrId, statusUpdate
     if eventId == events.ids.INIT:
         try:
             with open(devFilename, "r") as f:
@@ -41,8 +43,11 @@ def EventHandler(eventId, eventArg):
         except OSError:
             info = []
         dirty = False   # Info[] is initialised now
+        devIdx = 0
         for devices in info:
             ephemera.append([]) # Initialise parallel ephemeral device list
+            InitDevStatus(devIdx) # Initialise parallel device status
+            devIdx = devIdx + 1
         CheckAllAttrs() #  Set up any useful variables for the loaded devices
     if eventId == events.ids.DEVICE_ANNOUNCE:
         devId = eventArg[2]
@@ -69,7 +74,7 @@ def EventHandler(eventId, eventArg):
                 log.log("Want to know "+str(cmdRsp))
                 telegesis.TxCmd(["AT+RAWZCL:"+devId+","+endPoint+",0020,11"+seq+"00012800", "OK"]) # Tell device to enter Fast Poll for 40qs (==10s)
                 SetTempVal(devIdx,"PollingUntil", datetime.now()+timedelta(seconds=10))
-                #telegesis.TxCmd(cmdRsp)  # Sent as part of SECONDS handler - see SendPendingCommand()
+                telegesis.TxCmd(cmdRsp)  # This will go out after the Fast Poll Set - but possibly ought to go out as part of SECONDS handler..?
             else:
                 #log.log("Don't want to know anything about "+GetUserNameFromDevIdx(devIdx))
                 telegesis.TxCmd(["AT+RAWZCL:"+devId+","+endPoint+",0020,11"+seq+"0000", "OK"]) # Tell device to stop Poll
@@ -161,6 +166,9 @@ def EventHandler(eventId, eventArg):
                 pprint(info, stream=f)
                 # Was print(info, file=f) # Save devices list directly to file
             dirty = False   # Don't save again until needed
+        if statusUpdate:
+            SaveStatus()
+            statusUpdate = False
     # End event handler
 
 def GetIdx(devId):
@@ -234,6 +242,7 @@ def InitDev(devId):
     ephemera.append([]) # Add parallel ephemeral device list
     devIdx = len(info)-1 # -1 to convert number of elements in list to an index
     SetVal(devIdx,"devId",devId)
+    InitDevStatus(devIdx)
     return devIdx
 
 def SetVal(devIdx, name, value):
@@ -258,6 +267,38 @@ def SetSynopsis(name, value): # Ready for the synopsis email
             synopsis.remove(item) # Remove old tuple if necessary
     synopsis.append((name, value)) # Add new one regardless
 
+def InitDevStatus(devIdx):  # All devices have the same items
+    global status
+    status.append([])
+    SetStatus(devIdx, "Battery", "N/A")
+    SetStatus(devIdx, "Temperature", "N/A")
+    SetStatus(devIdx, "Presence", "N/A")
+    SetStatus(devIdx, "Other", "N/A")    
+
+def SetStatus(devIdx, name, value):# For web page
+    global status, statusUpdate
+    for item in status[devIdx]:
+        if item[0] == name:
+            if item[1] == value:
+                return  # Bail if value hasn't changed
+            status[devIdx].remove(item) # Remove old tuple if value has changed
+    status[devIdx].append((name, value)) # Add new one regardless
+    statusUpdate = True
+
+def SaveStatus():
+    global status
+    devIdx = 0
+    with open("status.xml", 'wt') as f:
+        f.write("<status>\n");
+        for device in status:
+            f.write("<device>\n");
+            for item in status[devIdx]:
+                f.write("<"+item[0]+">"+item[1]+"</"+item[0]+">\n");        
+            f.write("</device>\n");
+            devIdx = devIdx + 1
+        f.write("</status>\n");
+        f.close()
+        
 def DelVal(devIdx, name):
     global info
     for item in info[devIdx]:
@@ -289,6 +330,7 @@ def SetVarFromAttr(devIdx, name, value): # See if this attribute has an associat
             varVal = int(value, 16) / 2 # Arrives in 0.5% increments 
             variables.Set(varName, varVal)
             SetSynopsis(varName, str(varVal)) # Ready for the synopsis email
+            SetStatus(devIdx, "Battery", str(varVal)) # For web page
         else:
             variables.Del(varName)
     if name == "attr"+zcl.Cluster.Temperature+":"+zcl.Attribute.Celsius:
@@ -296,6 +338,7 @@ def SetVarFromAttr(devIdx, name, value): # See if this attribute has an associat
         if value != "FF9C": # Don't know where this value comes from - should be "FFFF"
             varVal = int(value, 16) / 100 # Arrives in 0.01'C increments 
             variables.Set(varName, varVal)
+            SetStatus(devIdx, "Temperature", str(varVal)) # For web page
         else:
             variables.Del(varName)
 
@@ -331,6 +374,7 @@ def NoteEphemera(devIdx, arg):
     DelTempVal(devIdx, "ReportedMissing") # ToDo Could only remove this once per day? to avoid spamming
     SetTempVal(devIdx, "LastSeen", datetime.now())  # Mark it as "recently seen"
     SetTempVal(devIdx, "ReportMissingAfter", datetime.now()+timedelta(seconds=1800))
+    SetStatus(devIdx, "Presence", "present") # For web page
     if int(arg[-2]) < 0: # Assume penultimate item is RSSI, and thus that ultimate one is LQI
         rssi = arg[-2]
         lqi = arg[-1]
@@ -436,6 +480,7 @@ def CheckMissing():
             if GetTempVal(devIdx, "ReportMissingAfter") != None:
                 if GetTempVal(devIdx, "ReportMissingAfter") > timedate.now(): # 30 minutes
                     variables.Set("MissingDevice", GetUserNameFromDevIdx(devIdx))
+                    SetStatus(devIdx, "Presence", "absent") # For web page
                     rules.Run("Missing==True") # Trigger is "missing"
                     SetTempVal(devIdx, "ReportedMissing", timedate.now())   # To avoid re-reporting
         devIdx = devIdx + 1
