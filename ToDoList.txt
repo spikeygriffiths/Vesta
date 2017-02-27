@@ -1,10 +1,9 @@
 #!ToDoList.txt
 
 ***** Features: *****
-* Add new devices page to show new devices as they arrive (UserName set to "New Device")
+* ---TEST THIS--- Add new devices page to show new devices as they arrive (UserName set to "New Device")
 * Activity log for all triggers (except time), with selected bits (today,yesterday,last week, etc.) to be shown on web 
-* Show device presence/absence on web.  Absent if >30 mins with no messages, else present.  Initially Unknown.  FFDs and ZEDs to be prodded on hub startup.  SEDs to stay Unknown
-* Need devstates.xml(?) file, with lists for each device.  Present/absent, batt %, temp, On/Off, open/closed, Radio Quality(?), etc. for each device.
+* ---TEST THIS--- Show device presence/absence on web.  Absent if >30 mins with no messages, else present.  Initially Unknown.  FFDs and ZEDs to be prodded on hub startup.  SEDs to stay Unknown
 * Also hubstate.xml to include upTime, Armed/Alarming/Disarmed(?), Activity Faking, etc.
 * Toggle commands should trigger a "get on/off attr" so that we know what the state is
 * Colour lamp control
@@ -30,4 +29,4 @@
 
 Bugs
 * Fix stupid OSError thing from ser.inWaiting in telegesis.py
-Occasionally stalls!  But then recovers as if nothing had happened.
+* Occasionally stalls!  But then recovers as if nothing had happened.

@@ -56,7 +56,7 @@ def EventHandler(eventId, eventArg):
             devIdx = InitDev(devId)
             SetVal(devIdx,"DevType",eventArg[0])    # SED, FFD or ZED
             SetVal(devIdx,"EUI",eventArg[1])
-            NewUserName("New device "+devId)   # Default username of network ID, since that's unique
+            NewUserName("(New) "+devId)   # Default username of network ID, since that's unique
             if eventArg[0] == "SED":
                 SetTempVal(devIdx,"PollingUntil", datetime.now()+timedelta(seconds=300))
         NoteEphemera(devIdx, eventArg)
@@ -77,7 +77,7 @@ def EventHandler(eventId, eventArg):
                 telegesis.TxCmd(cmdRsp)  # This will go out after the Fast Poll Set - but possibly ought to go out as part of SECONDS handler..?
             else:
                 #log.log("Don't want to know anything about "+GetUserNameFromDevIdx(devIdx))
-                telegesis.TxCmd(["AT+RAWZCL:"+devId+","+endPoint+",0020,11"+seq+"00000100", "OK"]) # Tell device to (effectively) stop Poll, by only staying in Fast poll for 1qs 
+                telegesis.TxCmd(["AT+RAWZCL:"+devId+","+endPoint+",0020,11"+seq+"00000100", "OK"]) # Tell device to stop Poll
     if eventId == events.ids.RXMSG:
         if eventArg[0] == "AddrResp" and eventArg[1] == "00":
             devIdx = GetIdx(eventArg[2])
@@ -194,17 +194,12 @@ def GetIdxFromItem(name, value):
     return None # Item not found
 
 def NewUserName(name):
-    try:
-        with open(devUserNames, "a") as f:
-            try:
-                f.append(name+"\n")
-                return
-            except:
-                log.fault("Can't append to " + devUserNames)
-    except:
-        with open(devUserNames, "w") as f:
+    with open(devUserNames, "a") as f:
+        try:
             f.append(name+"\n")
             return
+        except:
+            log.fault("No usernames!")
     return None # Item not found    
 
 def SetUserNameFromDevIdx(devIdx, userName):
@@ -214,7 +209,10 @@ def SetUserNameFromDevIdx(devIdx, userName):
             line = line.strip()
             userNames.append(line) # Load previous cache of device userNames into userNames
         userNames[devIdx] = userName
-        # Ought to write it back out to disk here...
+        f.close()
+        with open(devUserNames, "r") as f:
+            for name in userNames:
+                f.writeline(name)
 
 def GetDevIdxFromUserName(userName):
     with open(devUserNames, "r") as f:
@@ -247,6 +245,8 @@ def InitDev(devId):
     ephemera.append([]) # Add parallel ephemeral device list
     devIdx = len(info)-1 # -1 to convert number of elements in list to an index
     SetVal(devIdx,"devId",devId)
+    variables.Set(GetUserNameFromDevIdx(devIdx)+"_LastSeen", datetime.now().strftime("%y/%m/%d %H:%M:%S"))  # Mark it as "recently seen", so that we prod it after a while if necessary
+    SetTempVal(devIdx, "ReportMissingAfter", datetime.now()+timedelta(seconds=1800))
     InitDevStatus(devIdx)
     return devIdx
 
@@ -330,24 +330,32 @@ def CheckAllAttrs():
 def SetVarFromAttr(devIdx, name, value): # See if this attribute has an associated variable for user & rules
     if name == "attr"+zcl.Cluster.PowerConfig+":"+zcl.Attribute.Batt_Percentage:
         SetTempVal(devIdx, "GetNextBatteryAfter", datetime.now()+timedelta(seconds=86400))    # Ask for battery every day
-        devName = GetUserNameFromDevIdx(devIdx)
-        if devName != None:
-            varName = devName+"_BatteryPercentage"
-            if value != "FF":
-                varVal = int(value, 16) / 2 # Arrives in 0.5% increments 
-                variables.Set(varName, varVal)
-                SetSynopsis(varName, str(varVal)) # Ready for the synopsis email
-                SetStatus(devIdx, "Battery", str(varVal)) # For web page
-            else:
-                variables.Del(varName)
-        if name == "attr"+zcl.Cluster.Temperature+":"+zcl.Attribute.Celsius:
-            varName = devName+"_TemperatureC"
-            if value != "FF9C": # Don't know where this value comes from - should be "FFFF"
-                varVal = int(value, 16) / 100 # Arrives in 0.01'C increments 
-                variables.Set(varName, varVal)
-                SetStatus(devIdx, "Temperature", str(varVal)) # For web page
-            else:
-                variables.Del(varName)
+        varName = GetUserNameFromDevIdx(devIdx)+"_BatteryPercentage"
+        if value != "FF":
+            varVal = int(value, 16) / 2 # Arrives in 0.5% increments 
+            variables.Set(varName, varVal)
+            SetSynopsis(varName, str(varVal)) # Ready for the synopsis email
+            SetStatus(devIdx, "Battery", str(varVal)) # For web page
+        else:
+            variables.Del(varName)
+    if name == "attr"+zcl.Cluster.Temperature+":"+zcl.Attribute.Celsius:
+        varName = GetUserNameFromDevIdx(devIdx)+"_TemperatureC"
+        if value != "FF9C": # Don't know where this value comes from - should be "FFFF"
+            varVal = int(value, 16) / 100 # Arrives in 0.01'C increments 
+            variables.Set(varName, varVal)
+            SetStatus(devIdx, "Temperature", str(varVal)) # For web page
+        else:
+            variables.Del(varName)
+    if name == "attr"+zcl.Cluster.Basic+"."+zcl.Attribute.Manuf_Name:
+        userName = GetUserNameFromDevIdx(devIdx)
+        if userName.find("(New)")==0:
+            userName = userName + " " + value
+            SetUserNameFromDevIdx(devIdx, userName)
+    if name == "attr"+zcl.Cluster.Basic+"."+zcl.Attribute.Model_Name:
+        userName = GetUserNameFromDevIdx(devIdx)
+        if userName.find("(New)")==0:
+            userName = userName + " " + value
+            SetUserNameFromDevIdx(devIdx, userName)
 
 def GetAttrVal(devIdx, clstrId, attrId):
     name = "attr"+clstrId+":"+attrId # So that the id combines cluster as well as attribute
@@ -483,7 +491,7 @@ def CheckMissing():
     global info
     devIdx = 0
     for device in info:
-        if GetTempVal(devIdx, "ReportedMissing") == None:
+        if GetTempVal(devIdx, "ReportedMissing") == None: # Check that we haven't recently reported our absence
             if GetTempVal(devIdx, "ReportMissingAfter") != None:
                 if GetTempVal(devIdx, "ReportMissingAfter") > timedate.now(): # 30 minutes
                     variables.Set("MissingDevice", GetUserNameFromDevIdx(devIdx))

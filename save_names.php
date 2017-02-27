@@ -11,8 +11,8 @@ if ($handle) {
         fputs($handle, $nameLine);
     }
     fclose($handle);
-    // Should probably go through the rules and make sure the names are consistent
-    echo "<meta http-equiv=\"refresh\" content=\"1;url=devices.php\" />";
+    // Should probably go through the rules and make sure the names are consistent.  Need old name as well as new one...
+    //echo "<meta http-equiv=\"refresh\" content=\"1;url=devices.php\" />";
     echo "New names saved";
 } else {
     echo "<br>Try chmod 666 home/pi/hubapp/usernames.txt...<br>";

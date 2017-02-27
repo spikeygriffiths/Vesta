@@ -38,7 +38,8 @@ function ShowDevices($names, $status)
         while (!feof($handle)) {
             $line = fgets($handle);
             if ($line != "") {
-                echo "<tr><td><input type=\"size\" text=\"20\" name=\"index", $username, "\" value=\"", $line, "\"></td>";
+                $username = "username".$index;
+                echo "<tr><td><input type=\"size\" text=\"20\" name=\"",$username, "\" value=\"", $line, "\"></td>";
                 $battLvl = $xml->device[$index]->Battery;
                 if ("N/A" != $battLvl) {
                     echo "<td>".$battLvl."%</td>";
