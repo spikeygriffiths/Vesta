@@ -2,6 +2,7 @@
 
 # Standard Python modules
 import serial
+import threading
 from collections import deque
 # App-specific Python modules
 import log
@@ -24,30 +25,26 @@ ourExtPan = "Unknown"
 if __name__ == "__main__":
     hubapp.main()
 
+def ReadTelegesis(ser):
+    ser.flushInput()
+    while True:
+        telegesisInLine = str(ser.readline(),'utf-8').rstrip('\r\n')
+        events.Issue(events.ids.RX_TELEGESIS, telegesisInLine)
+
 def EventHandler(eventId, eventArg):
     global ser, expRsp, expRspTimeoutS
     if eventId == events.ids.INIT:
         ser = serial.Serial('/dev/ttyUSB0',19200, timeout=1) # Could get these TTY settings from a "settings.txt" file?
-        ser.flushInput()
+        thread = threading.Thread(target=ReadTelegesis, args=(ser,))
+        thread.start()
         expRsp = ""
         TxCmd(["ATS63=0007",  "OK"]) # Request RSSI & LQI on every received message, also disable automatic checkIn responses
         TxCmd(["ATI",  "OK"]) # Request our EUI, as well as our Telegesis version
         TxCmd(["AT+N", "OK"]) # Get network information, to see whether to start new network or use existing one
+    elif eventId == events.ids.RX_TELEGESIS:
+        Parse(eventArg)
     elif eventId == events.ids.SECONDS:
-        try:
-            inWait = ser.inWaiting()
-        except OSError: # Has given   File "/usr/lib/python3/dist-packages/serial/serialposix.py", line 435, in inWaiting, s = fcntl.ioctl(self.fd, TIOCINQ, TIOCM_zero_str), OSError: [Errno 5] Input/output error
-            inWait = False
-            log.fault("ser.inWaiting() has failed")
-        except serial:  # Has given:   File "/usr/lib/python3/dist-packages/serial/serialposix.py", line 460, in read raise SerialException('device reports readiness to read but returned no data (device disconnected?)') serial.serialutil.SerialException: device reports readiness to read but returned no data (device disconnected?)
-            inWait = False
-            log.fault("ser.inWaiting() has failed")
-        if inWait:
-            #try:
-            Parse(str(ser.readline(),'utf-8').rstrip('\r\n'))
-            #except:
-            #    log.fault("ser.readline() failed")
-        elif expRsp == "" and len(txBuf):
+        if expRsp == "" and len(txBuf):
             atCmd, expRsp = txBuf.popleft()
             log.log("Tx>"+atCmd)
             expRspTimeoutS = 10

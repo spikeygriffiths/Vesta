@@ -2,13 +2,13 @@
 
 ***** Features: *****
 * ---TEST THIS--- Add new devices page to show new devices as they arrive (UserName set to "New Device")
-* Activity log for all triggers (except time), with selected bits (today,yesterday,last week, etc.) to be shown on web 
 * ---TEST THIS--- Show device presence/absence on web.  Absent if >30 mins with no messages, else present.  Initially Unknown.  FFDs and ZEDs to be prodded on hub startup.  SEDs to stay Unknown
-* Also hubstate.xml to include upTime, Armed/Alarming/Disarmed(?), Activity Faking, etc.
+* New hubstate.xml to include upTime, Armed/Alarming/Disarmed(?), Activity Faking, etc.
+* Activity log for all triggers (except time), with selected bits (today,yesterday,last week, etc.) to be shown on web 
+* Daily synopsis to use HTML email to show UpTime (use new hubstate.xml) & snapshot of devices page, plus last day's activity log
 * Toggle commands should trigger a "get on/off attr" so that we know what the state is
-* Colour lamp control
-* Daily synopsis to show UpTime, if devices missing or not during day (>30m with no messages), last day's activity log
 * Auto-start network ("AT+EN") if ATN shows none available at start up
+* Colour lamp control
 * Multiple device ZigBee endpoints?
  
 # *** Burglar alarm? ***
@@ -28,5 +28,4 @@
 # if house==unoccupied and 0:00<time<sunset and HallLight_OnOff==off and rand(30)==0 do SwitchOn HallLight for 300
 
 Bugs
-* Fix stupid OSError thing from ser.inWaiting in telegesis.py
 * Occasionally stalls!  But then recovers as if nothing had happened.
