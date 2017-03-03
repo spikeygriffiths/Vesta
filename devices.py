@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from datetime import timedelta
+import time
 from pprint import pprint # Pretty print for devs list
 # App-specific modules
 import events
@@ -11,6 +12,7 @@ import telegesis
 import rules
 import variables
 import zcl
+import iottime
 
 if __name__ == "__main__":
     hubapp.main()
@@ -169,6 +171,8 @@ def EventHandler(eventId, eventArg):
         if statusUpdate:
             SaveStatus()
             statusUpdate = False
+    if eventId == events.ids.MINUTES:
+            SaveStatus()    # For app UpTime
     # End event handler
 
 def GetIdx(devId):
@@ -295,6 +299,10 @@ def SaveStatus():
     devIdx = 0
     with open("status.xml", 'wt') as f:
         f.write("<status>\n");
+        f.write("<hub>\n")
+        upTime = datetime.now() - iottime.appStartTime
+        f.write("<uptime>"+str(upTime).split('.', 2)[0]+"</uptime>\n")
+        f.write("</hub>\n")
         for device in status:
             f.write("<device>\n");
             for item in status[devIdx]:

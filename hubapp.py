@@ -2,6 +2,7 @@
 # For Raspberry Pi using Telegesis USB stick to talk to array of ZigBee devices
 
 import time
+from datetime import datetime
 # App-specific Python modules
 import events
 import commands

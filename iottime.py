@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from astral import Astral
+import time
 # App-specific modules
 import events
 import devices
@@ -13,6 +14,7 @@ import variables
 if __name__ == "__main__":
     hubapp.main()
 
+appStartTime = datetime.now()
 oldMins = 0
 
 def EventHandler(eventId, eventArg):
@@ -21,18 +23,21 @@ def EventHandler(eventId, eventArg):
         SetSunTimes()
         rules.Run("trigger==hubstart")
         devices.SetSynopsis("IoT Hub started at", str(datetime.now()))
-    if eventId == events.ids.SECONDS:
+    elif eventId == events.ids.SECONDS:
         now = datetime.now()
         if now.minute != oldMins:
+            events.Issue(events.ids.MINUTES)
             oldMins = now.minute # Ready for next time
-            rules.Run("time=="+now.strftime("%H:%M")) # Run timed rules once per minute with time of date
-            CheckTimedRule("dawn", now)
-            CheckTimedRule("sunset", now)
-            CheckTimedRule("sunrise", now)
-            CheckTimedRule("dusk", now)
-            if now.minute == 0 and now.hour == 1: # 1am, time to calculate sunrise and sunset for new day 
-                SetSunTimes()
-                log.NewLog() # Roll the logs, to avoid running out of disc space
+    elif eventId == events.ids.MINUTES:
+        now = datetime.now()
+        rules.Run("time=="+now.strftime("%H:%M")) # Run timed rules once per minute with time of date
+        CheckTimedRule("dawn", now)
+        CheckTimedRule("sunset", now)
+        CheckTimedRule("sunrise", now)
+        CheckTimedRule("dusk", now)
+        if now.minute == 0 and now.hour == 1: # 1am, time to calculate sunrise and sunset for new day 
+            SetSunTimes()
+            log.NewLog() # Roll the logs, to avoid running out of disc space
                 
 def SetSunTimes():
     cityName = "London"

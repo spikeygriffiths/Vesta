@@ -23,7 +23,8 @@ class ids:
     RXEXPRSP = 7 # Arg is the whole response
     DEVICE_ANNOUNCE = 8 # Arg is the whole response (devType, devEui, devNodeId)
     INFO = 9 # No arg, just print any useful info
-    RX_TELEGESIS = 10   # Arg is line of raw Telegesis text 
+    RX_TELEGESIS = 10   # Arg is line of raw Telegesis text
+    MINUTES = 11 # No arg
 
 def Issue(eventId, eventArg=0):
     # Tell all interested parties about the new event
@@ -33,4 +34,4 @@ def Issue(eventId, eventArg=0):
     rules.EventHandler(eventId, eventArg)
     commands.EventHandler(eventId, eventArg)
     iottime.EventHandler(eventId, eventArg)
-    #variables.EventHandler(eventId, eventArg) # Not used yet
+
