@@ -173,23 +173,17 @@ def Action(actList):
         filename = "Sfx/"+actList[1]
         call(["omxplayer", "-o", "local", filename])
     elif action == "synopsis": # First arg is email recipient
-        emailBody = []
-        for items in devices.synopsis:
-            emailBody.append(' '.join(items))  # Tuples are joined by spaces
-        cmdList = ["echo", "\""+'\n'.join(emailBody)+"\"", "|", "mail", "-s", "\"Update from IoT-Hub\"", actList[1]]
-        cmdStr = " ".join(cmdList)
-        call(cmdStr, shell=True)
-        devices.synopsis = []   # Ready to start a new synopsis mail now
+        #emailBody = []
+        #for items in devices.synopsis:
+        #    emailBody.append(' '.join(items))  # Tuples are joined by spaces
+        #cmdList = ["echo", "\""+'\n'.join(emailBody)+"\"", "|", "mail", "-s", "\"Update from IoT-Hub\"", actList[1]]
+        #cmdStr = " ".join(cmdList)
+        #call(cmdStr, shell=True)
+        #devices.synopsis = []   # Ready to start a new synopsis mail now
     elif action == "email": # First arg is recipient, remainder are body of the text.  Fixed subject
         emailBody = []
         for item in actList[2:]:
-            #li = len(item) # Useful variable
-            #if li > 2 and "{" in item and "}" in item:
-            #    if item.index("{")==0 and item.index("}")==li-1: # True if item is surrounded by {...}
-            #        varName = item[1:li-1]
-            #        emailBody.append(variables.Get(varName))
-            #else:
-                emailBody.append(item)
+            emailBody.append(item)
         cmdList = ["echo", "\""+' '.join(emailBody)+"\"", "|", "mail", "-s", "\"Alert from IoT-Hub\"", actList[1]]
         cmdStr = " ".join(cmdList)
         call(cmdStr, shell=True)
