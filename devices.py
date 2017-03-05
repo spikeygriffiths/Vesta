@@ -49,6 +49,7 @@ def EventHandler(eventId, eventArg):
         for devices in info:
             ephemera.append([]) # Initialise parallel ephemeral device list
             InitDevStatus(devIdx) # Initialise parallel device status
+            SetTempVal(devIdx, "LastSeen", datetime.now()-timedelta(days=1))  # Mark it as "seen yesterday"
             devIdx = devIdx + 1
         CheckAllAttrs() #  Set up any useful variables for the loaded devices
     if eventId == events.ids.DEVICE_ANNOUNCE:
@@ -56,12 +57,13 @@ def EventHandler(eventId, eventArg):
         devIdx = GetIdx(devId)
         if devIdx == None:  # Which will only be the case if this device is actually new, but it may have just reset and announced
             devIdx = InitDev(devId)
+            SetUserNameFromDevIdx(devIdx, "(New) "+devId)   # Default username of network ID, since that's unique
             SetVal(devIdx,"DevType",eventArg[0])    # SED, FFD or ZED
             SetVal(devIdx,"EUI",eventArg[1])
-            NewUserName("(New) "+devId)   # Default username of network ID, since that's unique
             if eventArg[0] == "SED":
                 SetTempVal(devIdx,"PollingUntil", datetime.now()+timedelta(seconds=300))
-        NoteEphemera(devIdx, eventArg)
+        else:
+            NoteEphemera(devIdx, eventArg)
     if eventId == events.ids.CHECKIN:   # See if we have anything to ask the device...
         endPoint = eventArg[2]
         seq = "00" # was seq = eventArg[3], but that's the RSSI
@@ -181,7 +183,7 @@ def GetIdx(devId):
         return idx
     else:
         log.fault("Unknown device " + devId)
-        return None  # Was "return InitDev(devId) # Special case of devId search automatically initialising a new device if necessary" but it often failed
+        return None 
 
 def GetIdxFromItem(name, value):
     global info
@@ -197,26 +199,20 @@ def GetIdxFromItem(name, value):
         devIdx = devIdx + 1
     return None # Item not found
 
-def NewUserName(name):
-    with open(devUserNames, "a") as f:
-        try:
-            f.append(name+"\n")
-            return
-        except:
-            log.fault("No usernames!")
-    return None # Item not found    
-
 def SetUserNameFromDevIdx(devIdx, userName):
     with open(devUserNames, "r") as f:
         userNames = []
         for line in f:
             line = line.strip()
             userNames.append(line) # Load previous cache of device userNames into userNames
-        userNames[devIdx] = userName
         f.close()
-        with open(devUserNames, "r") as f:
-            for name in userNames:
-                f.writeline(name)
+    if devIdx > len(userNames):
+        userNames.append(userName)
+    else:
+        userNames[devIdx] = userName
+    with open(devUserNames, "w") as f:
+        for name in userNames:
+            f.write(name+'\n')
 
 def GetDevIdxFromUserName(userName):
     with open(devUserNames, "r") as f:
@@ -249,8 +245,8 @@ def InitDev(devId):
     ephemera.append([]) # Add parallel ephemeral device list
     devIdx = len(info)-1 # -1 to convert number of elements in list to an index
     SetVal(devIdx,"devId",devId)
-    variables.Set(GetUserNameFromDevIdx(devIdx)+"_LastSeen", datetime.now().strftime("%y/%m/%d %H:%M:%S"))  # Mark it as "recently seen", so that we prod it after a while if necessary
-    SetTempVal(devIdx, "ReportMissingAfter", datetime.now()+timedelta(seconds=1800))
+    #variables.Set(GetUserNameFromDevIdx(devIdx)+"_LastSeen", datetime.now().strftime("%y/%m/%d %H:%M:%S"))  # Mark it as "recently seen", so that we prod it after a while if necessary
+    #SetTempVal(devIdx, "ReportMissingAfter", datetime.now()+timedelta(seconds=1800))
     InitDevStatus(devIdx)
     return devIdx
 
@@ -292,6 +288,8 @@ def SetStatus(devIdx, name, value):# For web page
                 return  # Bail if value hasn't changed
             status[devIdx].remove(item) # Remove old tuple if value has changed
     status[devIdx].append((name, value)) # Add new one regardless
+    if name == "Other" and value != "N/A":
+        log.activity(devIdx, value)
     statusUpdate = True
 
 def SaveStatus():
@@ -338,22 +336,30 @@ def CheckAllAttrs():
 def SetVarFromAttr(devIdx, name, value): # See if this attribute has an associated variable for user & rules
     if name == "attr"+zcl.Cluster.PowerConfig+":"+zcl.Attribute.Batt_Percentage:
         SetTempVal(devIdx, "GetNextBatteryAfter", datetime.now()+timedelta(seconds=86400))    # Ask for battery every day
-        varName = GetUserNameFromDevIdx(devIdx)+"_BatteryPercentage"
+        #varName = GetUserNameFromDevIdx(devIdx)+"_BatteryPercentage"
         if value != "FF":
             varVal = int(value, 16) / 2 # Arrives in 0.5% increments 
-            variables.Set(varName, varVal)
-            SetSynopsis(varName, str(varVal)) # Ready for the synopsis email
+            #variables.Set(varName, varVal)
+            #SetSynopsis(varName, str(varVal)) # Ready for the synopsis email
             SetStatus(devIdx, "Battery", str(varVal)) # For web page
         else:
             variables.Del(varName)
     if name == "attr"+zcl.Cluster.Temperature+":"+zcl.Attribute.Celsius:
-        varName = GetUserNameFromDevIdx(devIdx)+"_TemperatureC"
+        #varName = GetUserNameFromDevIdx(devIdx)+"_TemperatureC"
         if value != "FF9C": # Don't know where this value comes from - should be "FFFF"
             varVal = int(value, 16) / 100 # Arrives in 0.01'C increments 
-            variables.Set(varName, varVal)
+            #variables.Set(varName, varVal)
             SetStatus(devIdx, "Temperature", str(varVal)) # For web page
         else:
             variables.Del(varName)
+    if name == "attr"+zcl.Cluster.OnOff+":"+zcl.Attribute.OnOffState:
+        now = datetime.now()
+        nowStr = now.strftime("%H:%M")
+        varVal = int(value, 16)
+        if varVal == 0:
+            SetStatus(devIdx, "Other", "Turned Off @ " + nowStr)
+        else:
+            SetStatus(devIdx, "Other", "Turned On @ " + nowStr)
     if name == "attr"+zcl.Cluster.Basic+"."+zcl.Attribute.Manuf_Name:
         userName = GetUserNameFromDevIdx(devIdx)
         if userName.find("(New)")==0:
@@ -393,7 +399,7 @@ def DelTempVal(devIdx, name):
     return None # Indicate item not found
 
 def NoteEphemera(devIdx, arg):
-    variables.Set(GetUserNameFromDevIdx(devIdx)+"_LastSeen", datetime.now().strftime("%y/%m/%d %H:%M:%S"))  # Mark it as "recently seen"
+    #variables.Set(GetUserNameFromDevIdx(devIdx)+"_LastSeen", datetime.now().strftime("%y/%m/%d %H:%M:%S"))  # Mark it as "recently seen"
     DelTempVal(devIdx, "ReportedMissing") # ToDo Could only remove this once per day? to avoid spamming
     SetTempVal(devIdx, "LastSeen", datetime.now())  # Mark it as "recently seen"
     SetTempVal(devIdx, "ReportMissingAfter", datetime.now()+timedelta(seconds=1800))
@@ -449,13 +455,12 @@ def Check(devIdx, consume):
                 if zcl.Cluster.Temperature in binding and tmpRpt not in rprtg:
                     pendingRptAttrId = zcl.Attribute.Celsius
                     return ("AT+CFGRPT:"+devId+","+ep+",0,"+zcl.Cluster.Temperature+",0,"+zcl.Attribute.Celsius+","+zcl.AttributeTypes.Uint16+",012C,0E10,0064", "CFGRPTRP") # 012C is 300==5 mins, 0E10 is 3600==1 hour, 0064 is 100, being 1.00'C
-#            if zcl.Cluster.OnOff in inClstr: # Commented out because TG won't let me set up reports for booleans
-#                onOffRpt = zcl.Cluster.OnOff+":"+zcl.Attribute.OnOffState
-#                if zcl.Cluster.OnOff in binding and onOffRpt not in rprtg:
-#                    pendingRptAttrId = zcl.Attribute.OnOffState
-#                    return ("AT+CFGRPT:"+devId+","+ep+",0,"+zcl.Cluster.OnOff+",0,"+zcl.Attribute.OnOffState+","+zcl.AttributeTypes.Boolean+",0005,0E10,01", "CFGRPTRP") # 0E10 is 3600==1 hour, 01 is "reportable change"
         else:
             SetVal(devIdx, "Reporting", [])
+    wantOnOff = GetTempVal(devIdx, "JustSentOnOff")
+    if wantOnOff:
+        DelTempVal(devIdx, "JustSentOnOff")
+        return telegesis.ReadAttr(devId, ep, zcl.Cluster.OnOff, zcl.Attribute.OnOffState) # Get OnOff state after sending toggle
     pendingAtCmd = GetTempVal(devIdx, "AtCmdRsp")
     if pendingAtCmd:
         if consume:
@@ -502,7 +507,7 @@ def CheckMissing():
         if GetTempVal(devIdx, "ReportedMissing") == None: # Check that we haven't recently reported our absence
             if GetTempVal(devIdx, "ReportMissingAfter") != None:
                 if GetTempVal(devIdx, "ReportMissingAfter") > timedate.now(): # 30 minutes
-                    variables.Set("MissingDevice", GetUserNameFromDevIdx(devIdx))
+                    #variables.Set("MissingDevice", GetUserNameFromDevIdx(devIdx))
                     SetStatus(devIdx, "Presence", "absent") # For web page
                     rules.Run("Missing==True") # Trigger is "missing"
                     SetTempVal(devIdx, "ReportedMissing", timedate.now())   # To avoid re-reporting
@@ -521,6 +526,7 @@ def SwitchOn(devIdx):
     devId = GetVal(devIdx, "devId")
     ep = GetVal(devIdx, "EP")
     if devId and ep:
+        SetTempVal(devIdx, "JustSentOnOff", "True")
         telegesis.TxCmd(["AT+RONOFF:"+devId+","+ep+",0,1", "OK"]) # Assume FFD if it supports OnOff cluster
 
 def SwitchOff(devIdx):
@@ -529,6 +535,7 @@ def SwitchOff(devIdx):
     if devId and ep:
         DelTempVal(devIdx,"SwitchOff@") # Remove any pending "Off" events if we're turning the device off directly
         telegesis.TxCmd(["AT+LCMVTOLEV:"+devId+","+ep+",0,0,FE,0001", "OK"]) # Ensure fully bright ready to be turned on later
+        SetTempVal(devIdx, "JustSentOnOff", "True")
         telegesis.TxCmd(["AT+RONOFF:"+devId+","+ep+",0,0", "OK"]) # Assume FFD if it supports OnOff cluster
 
 def Toggle(devIdx):
@@ -536,6 +543,7 @@ def Toggle(devIdx):
     ep = GetVal(devIdx, "EP")
     if devId and ep:
         DelTempVal(devIdx,"SwitchOff@") # Remove any pending "Off" events if we're handling the device directly
+        SetTempVal(devIdx, "JustSentOnOff", "True")
         telegesis.TxCmd(["AT+RONOFF:"+devId+","+ep+",0", "OK"]) # Assume FFD if it supports OnOff cluster
 
 def Dim(devIdx, levelFraction):

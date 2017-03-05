@@ -1,12 +1,9 @@
 #!ToDoList.txt
 
 ***** Features: *****
-* ---TEST THIS--- Add new devices page to show new devices as they arrive (UserName set to "New Device")
-* ---TEST THIS--- Show device presence/absence on web.  Absent if >30 mins with no messages, else present.  Initially Unknown.  FFDs and ZEDs to be prodded on hub startup.  SEDs to stay Unknown
-* Activity log for all triggers (except time), with selected bits (today,yesterday,last week, etc.) to be shown on web 
+* ---TEST THIS--- Show device presence/absence on web.  Absent if >30 mins with no messages, else present.  Initially Unknown
+* --- IMPROVE THIS ---Activity log for all triggers (except time), with selected bits (today,yesterday,last week, etc.) to be shown on web 
 * Daily synopsis to use HTML email to show UpTime (from status.xml) & snapshot of devices page, plus last day's activity log
-* Web page to use uptime from status.xml
-* Toggle commands should trigger a "get on/off attr" so that we know what the state is
 * Auto-start network ("AT+EN") if ATN shows none available at start up
 * Colour lamp control
 * Multiple device ZigBee endpoints?
@@ -29,3 +26,4 @@
 
 Bugs
 * Occasionally stalls!  But then recovers as if nothing had happened.
+* Cannot edit usernames when adding (auto-refresh loses edits!).  Can edit in devices page

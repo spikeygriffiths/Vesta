@@ -22,7 +22,8 @@ def EventHandler(eventId, eventArg):
     if eventId == events.ids.INIT:
         SetSunTimes()
         rules.Run("trigger==hubstart")
-        devices.SetSynopsis("IoT Hub started at", str(datetime.now()))
+        log.activity("hub", "started")
+        #devices.SetSynopsis("IoT Hub started at", str(datetime.now()))
     elif eventId == events.ids.SECONDS:
         now = datetime.now()
         if now.minute != oldMins:

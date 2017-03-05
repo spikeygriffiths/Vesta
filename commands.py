@@ -53,7 +53,7 @@ def EventHandler(eventId, eventArg):
                     cmd = cmd.decode()
                     log.log ("Got cmd "+ cmd)
                     Commands().onecmd(cmd)
-                    cliSck.send(str.encode("Hello from Python!"))
+                    #cliSck.send(str.encode("Hello from Python!"))
                 else:
                     log.log ("Closing socket")
                     cliSck.close()
@@ -173,21 +173,6 @@ class Commands(cmd.Cmd):
                 devices.Dim(devIdx, fraction)
         else:
             log.fault("Insufficient Args")
-
-    def do_devAt(self, line):
-        """devAt name AtCmd
-        Send AtCmd to specified device when it next Checks In"""
-        argList = line.split()
-        if argList != []:
-            name = argList[0]
-            atCmd = argList[1]
-            if name != None:
-                devIdx = devices.GetDevIdxFromUserName(name) # Try name first
-                devices.SetTempVal(devIdx, "AtCmdRsp", [ atCmd, "OK"])
-            else:
-                log.fault("Need both args!")
-        else:
-            log.fault("Need devId and name!")
 
     def do_at(self, line):
         """at cmd

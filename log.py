@@ -2,6 +2,8 @@
 
 from datetime import datetime
 from subprocess import call
+# App-specific Python modules
+import devices
 
 def Init(msg):
     try:
@@ -18,6 +20,13 @@ def fault(msg):
     timedMsg = "<" + str(datetime.now()) + ">"+ msg
     open("fault.log", "a").write(timedMsg+"\n")
     print("FAULT! "+ msg)  # To stdout
+
+def activity(devIdx, value):
+    if devIdx=="hub":
+        username = "Hub"
+    else:
+        username = devices.GetUserNameFromDevIdx(devIdx)
+    open("activity.log", "a").write(username+" "+value+" @ "+str(datetime.now())+"\n")
 
 def NewLog():
     call("rm old_debug.log", shell=True) # Remove yesterday's old log
