@@ -173,7 +173,7 @@ def Action(actList):
         filename = "Sfx/"+actList[1]
         call(["omxplayer", "-o", "local", filename])
     elif action == "synopsis": # First arg is email recipient
-        #emailBody = []
+        emailBody = []
         #for items in devices.synopsis:
         #    emailBody.append(' '.join(items))  # Tuples are joined by spaces
         #cmdList = ["echo", "\""+'\n'.join(emailBody)+"\"", "|", "mail", "-s", "\"Update from IoT-Hub\"", actList[1]]
