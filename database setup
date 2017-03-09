@@ -1,0 +1,28 @@
+sqlite3 hubstuff.db
+
+BEGIN;
+DROP TABLE IF EXISTS Devices;
+DROP TABLE IF EXISTS Events;
+CREATE TABLE Devices (
+  UserName TEXT,
+  ModelName TEXT,
+  ManufName TEXT,
+  nwkId TEXT,
+  eui64 TEXT,
+  devType TEXT,
+  endPoints TEXT,
+  inClusters TEXT,
+  outClusters TEXT
+);
+
+CREATE TABLE Events (
+  tDate DATE,
+  tTime TIME,
+  item TEXT,
+  value TEXT,  
+  devRowId INTEGER,
+  FOREIGN KEY(devRowId) REFERENCES Devices(rowId)
+);
+COMMIT;
+.quit
+

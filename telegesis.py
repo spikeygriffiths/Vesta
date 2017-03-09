@@ -14,6 +14,7 @@ expRsp = None
 expRspTimeoutS = 0
 expectOurEui = False
 txBuf = deque([])    # Nothing to transmit initially
+rxBuf = deque([])
 ourVersion = "Unknown"
 ourSoc = "Unknown"
 ourEui = "Unknown"
@@ -29,7 +30,7 @@ def ReadTelegesis(ser):
     ser.flushInput()
     while True:
         telegesisInLine = str(ser.readline(),'utf-8').rstrip('\r\n')
-        events.Issue(events.ids.RX_TELEGESIS, telegesisInLine)
+        rxBuf.append(telegesisInLine)  # Buffer this for subsequent processing in main thread
 
 def EventHandler(eventId, eventArg):
     global ser, expRsp, expRspTimeoutS
@@ -41,16 +42,21 @@ def EventHandler(eventId, eventArg):
         TxCmd(["ATS63=0007",  "OK"]) # Request RSSI & LQI on every received message, also disable automatic checkIn responses
         TxCmd(["ATI",  "OK"]) # Request our EUI, as well as our Telegesis version
         TxCmd(["AT+N", "OK"]) # Get network information, to see whether to start new network or use existing one
-    elif eventId == events.ids.RX_TELEGESIS:
-        Parse(eventArg)
     elif eventId == events.ids.SECONDS:
+        if len(rxBuf):
+            Parse(rxBuf.popleft())
         if expRsp == "" and len(txBuf):
             atCmd, expRsp = txBuf.popleft()
-            log.log("Tx>"+atCmd)
-            expRspTimeoutS = 10
-            atCmd = atCmd + "\r\n"
-            ser.write(atCmd.encode())
-        if expRsp != "" and expRspTimeoutS > 0:
+            wrAtCmd = atCmd + "\r\n"
+            try:
+                ser.write(wrAtCmd.encode())
+                log.log("Tx>"+atCmd)
+                expRspTimeoutS = 10
+            except:
+                log.fault("Failed to write to Telegesis stick")
+                TxCmd([atCmd, expRsp])    # Push them back on the stack and try again later
+                expRsp = "" # No expected response since we've not sent the command yet
+        if expRsp != "":
             expRspTimeoutS = expRspTimeoutS - eventArg  # Expect eventArg to be 0.1
             if expRspTimeoutS <= 0:
                 expRsp = ""
@@ -61,14 +67,10 @@ def EventHandler(eventId, eventArg):
     elif eventId == events.ids.RXEXPRSP:
         expRsp = ""
     elif eventId == events.ids.INFO:
-        if IsIdle == False:
-            print("Telegesis: Not idle, waiting for expRsp:", expRsp)
-        else:
-            print("Telegesis: IsIdle")
-            print("TxBuf: ", str(txBuf))
-            print("expRsp: \""+ expRsp + "\"")
-            if expRsp != "":
-                print("expRspTimeoutS: ", expRspTimeoutS)
+        print("TxBuf: ", str(txBuf))
+        print("expRsp: \""+ expRsp + "\"")
+        if expRsp != "":
+            print("expRspTimeoutS: ", expRspTimeoutS)
     # end eventId handler
 
 def Parse(atLine):
@@ -119,12 +121,6 @@ def Parse(atLine):
     else:
         events.Issue(events.ids.RXMSG, atList)
     # end Parse
-
-def IsIdle():
-    if ser.inWaiting() == 0 and expRsp == "" and len(txBuf) == 0:
-        return True
-    else:
-        return False
 
 def TxCmd(cmdRsp):  # Takes a list with two elements - command to send, and first word of last response to expect
     txBuf.append(cmdRsp)  # Append command and associated response as one item

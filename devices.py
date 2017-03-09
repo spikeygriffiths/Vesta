@@ -13,6 +13,7 @@ import rules
 import variables
 import zcl
 import iottime
+import database
 
 if __name__ == "__main__":
     hubapp.main()
@@ -46,10 +47,14 @@ def EventHandler(eventId, eventArg):
             info = []
         dirty = False   # Info[] is initialised now
         devIdx = 0
+        database.ClearDevices()
+        rowId = database.NewDevice("0000")
+        database.UpdateDevice(rowId, "UserName", "Hub")
         for devices in info:
             ephemera.append([]) # Initialise parallel ephemeral device list
             InitDevStatus(devIdx) # Initialise parallel device status
-            SetTempVal(devIdx, "LastSeen", datetime.now()-timedelta(days=1))  # Mark it as "seen yesterday"
+            CopyDevToDB(devIdx)
+            SetTempVal(devIdx, "LastSeen", datetime.now())  # Mark it as "seen at start up" so we don't start looking for it immediately
             devIdx = devIdx + 1
         CheckAllAttrs() #  Set up any useful variables for the loaded devices
     if eventId == events.ids.DEVICE_ANNOUNCE:
@@ -156,6 +161,9 @@ def EventHandler(eventId, eventArg):
                 if newRpt not in reporting:
                     reporting.append(newRpt)
                     SetVal(devIdx, "Reporting", reporting)
+    if eventId == events.ids.BUTTON:
+        devIdx = GetIdx(eventArg[1]) # Lookup device from network address in eventArg[1]
+        NoteEphemera(devIdx, eventArg)
     if eventId == events.ids.RXERROR:
         globalDevIdx = None # We've finished with this global if we get an error
     if eventId == events.ids.SECONDS:
@@ -174,8 +182,26 @@ def EventHandler(eventId, eventArg):
             SaveStatus()
             statusUpdate = False
     if eventId == events.ids.MINUTES:
-            SaveStatus()    # For app UpTime
+        SaveStatus()    # For app UpTime
+        CheckPresence()   # For all devices
     # End event handler
+
+def CheckPresence():  # Expected to be called infrequently - ie once/minute
+    global info
+    devIdx = 0
+    for device in info:
+        if GetTempVal(devIdx, "AtCmdRsp") == None:  # No pending command, so check whether device is present
+            lastSeen = GetTempVal(devIdx, "LastSeen") 
+            if lastSeen != None:
+                if datetime.now() > lastSeen+timedelta(seconds=900): # More than 15 minutes since we last heard from device
+                    devId = GetVal(devIdx, "devId")
+                    ep = GetVal(devIdx, "EP")
+                    if devId != None and ep != None:
+                        pendingAtCmd = telegesis.ReadAttr(devId, ep, zcl.Cluster.Basic, zcl.Attribute.Model_Name) # Get Basic's Device Name
+                        SetTempVal(devIdx, "AtCmdRsp", pendingAtCmd)
+                if datetime.now() > lastSeen+timedelta(seconds=1800): # More than 30 minutes since we last heard from device
+                    SetStatus(devIdx, "Presence", "* Missing *")
+        devIdx = devIdx + 1
 
 def GetIdx(devId):
     idx = GetIdxFromItem("devId", devId)
@@ -198,6 +224,29 @@ def GetIdxFromItem(name, value):
                 return devIdx
         devIdx = devIdx + 1
     return None # Item not found
+
+def CopyDevToDB(devIdx):
+    global info, dirty
+    rowId = database.NewDevice(None)
+    for item in info[devIdx]:
+        if item[0] == "EUI":
+            database.UpdateDevice(rowId, "eui64", item[1])
+        if item[0] == "devId":
+            database.UpdateDevice(rowId, "nwkId", item[1])
+        if item[0] == "DevType":
+            database.UpdateDevice(rowId, "devType", item[1])
+        if item[0] == "attr0000:0004":
+            database.UpdateDevice(rowId, "ManufName", item[1])
+        if item[0] == "attr0000:0005":
+            database.UpdateDevice(rowId, "ModelName", item[1])
+        if item[0] == "EP":
+            database.UpdateDevice(rowId, "endPoints", item[1])
+        if item[0] == "InCluster":
+            database.UpdateDevice(rowId, "inClusters", str(item[1]))
+        if item[0] == "outCluster":
+            database.UpdateDevice(rowId, "outClusters", str(item[1]))
+    name = GetUserNameFromDevIdx(devIdx)
+    database.UpdateDevice(rowId, "UserName", name)
 
 def SetUserNameFromDevIdx(devIdx, userName):
     with open(devUserNames, "r") as f:
@@ -245,8 +294,6 @@ def InitDev(devId):
     ephemera.append([]) # Add parallel ephemeral device list
     devIdx = len(info)-1 # -1 to convert number of elements in list to an index
     SetVal(devIdx,"devId",devId)
-    #variables.Set(GetUserNameFromDevIdx(devIdx)+"_LastSeen", datetime.now().strftime("%y/%m/%d %H:%M:%S"))  # Mark it as "recently seen", so that we prod it after a while if necessary
-    #SetTempVal(devIdx, "ReportMissingAfter", datetime.now()+timedelta(seconds=1800))
     InitDevStatus(devIdx)
     return devIdx
 
@@ -291,6 +338,7 @@ def SetStatus(devIdx, name, value):# For web page
     if name == "Other" and value != "N/A":
         log.activity(devIdx, value)
     statusUpdate = True
+    database.NewEvent(devIdx, name, value)
 
 def SaveStatus():
     global status
@@ -399,10 +447,7 @@ def DelTempVal(devIdx, name):
     return None # Indicate item not found
 
 def NoteEphemera(devIdx, arg):
-    #variables.Set(GetUserNameFromDevIdx(devIdx)+"_LastSeen", datetime.now().strftime("%y/%m/%d %H:%M:%S"))  # Mark it as "recently seen"
-    DelTempVal(devIdx, "ReportedMissing") # ToDo Could only remove this once per day? to avoid spamming
     SetTempVal(devIdx, "LastSeen", datetime.now())  # Mark it as "recently seen"
-    SetTempVal(devIdx, "ReportMissingAfter", datetime.now()+timedelta(seconds=1800))
     SetStatus(devIdx, "Presence", "present") # For web page
     if int(arg[-2]) < 0: # Assume penultimate item is RSSI, and thus that ultimate one is LQI
         rssi = arg[-2]
@@ -465,28 +510,22 @@ def Check(devIdx, consume):
     if pendingAtCmd:
         if consume:
             DelTempVal(devIdx,"AtCmdRsp") # Remove item if we're about to use it (presuming successful sending of command...)
-    else: # No pending command, so check whether device has said anything for a while...
-        if GetTempVal(devIdx, "LastSeen") != None:
-            if GetTempVal(devIdx, "LastSeen")+timedelta(seconds=900) < datetime.now(): # 15 minutes since we last heard from device 
-                if zcl.Cluster.Basic in inClstr: # Ask for Basic's Name, since everything must support this
-                    pendingAtCmd = telegesis.ReadAttr(devId, ep, zcl.Cluster.Basic, zcl.Attribute.Model_Name) # Get Basic's Device Name
     return pendingAtCmd
 
 def SendPendingCommand():
     global info
-    if telegesis.IsIdle() == True:
-        devIdx = 0
-        for device in info:
-            if IsListening(devIdx):# True if FFD, ZED or Polling
-                offTime = GetTempVal(devIdx, "SwitchOff@")
-                if offTime != None:
-                    if datetime.now() > offTime:
-                        SwitchOff(devIdx)
-                cmdRsp = Check(devIdx, True) # Automatically consume any pending command
-                if cmdRsp != None:
-                    log.log("Sending "+str(cmdRsp))
-                    telegesis.TxCmd(cmdRsp)  # Send command directly
-            devIdx = devIdx + 1
+    devIdx = 0
+    for device in info:
+        if IsListening(devIdx):# True if FFD, ZED or Polling
+            offTime = GetTempVal(devIdx, "SwitchOff@")
+            if offTime != None:
+                if datetime.now() > offTime:
+                    SwitchOff(devIdx)
+            cmdRsp = Check(devIdx, True) # Automatically consume any pending command
+            if cmdRsp != None:
+                log.log("Sending "+str(cmdRsp))
+                telegesis.TxCmd(cmdRsp)  # Send command directly
+        devIdx = devIdx + 1
 
 def IsListening(devIdx):
     type = GetVal(devIdx, "DevType")
@@ -496,22 +535,8 @@ def IsListening(devIdx):
         pollTime = GetTempVal(devIdx, "PollingUntil")
         if pollTime != None:
             if datetime.now() < pollTime:
-                #log.log("Now: "+ str(datetime.now()))
                 return True
         return False
-
-def CheckMissing():
-    global info
-    devIdx = 0
-    for device in info:
-        if GetTempVal(devIdx, "ReportedMissing") == None: # Check that we haven't recently reported our absence
-            if GetTempVal(devIdx, "ReportMissingAfter") != None:
-                if GetTempVal(devIdx, "ReportMissingAfter") > timedate.now(): # 30 minutes
-                    #variables.Set("MissingDevice", GetUserNameFromDevIdx(devIdx))
-                    SetStatus(devIdx, "Presence", "absent") # For web page
-                    rules.Run("Missing==True") # Trigger is "missing"
-                    SetTempVal(devIdx, "ReportedMissing", timedate.now())   # To avoid re-reporting
-        devIdx = devIdx + 1
 
 def SetBinding(devIdx, cluster, ourEp):
     global pendingBinding

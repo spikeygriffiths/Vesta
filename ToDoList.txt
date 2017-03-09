@@ -1,8 +1,8 @@
 #!ToDoList.txt
 
 ***** Features: *****
-* ---TEST THIS--- Show device presence/absence on web.  Absent if >30 mins with no messages, else present.  Initially Unknown
-* --- IMPROVE THIS ---Activity log for all triggers (except time), with selected bits (today,yesterday,last week, etc.) to be shown on web 
+* ---TEST THIS--- Show device absence on web.  Absent if >30 mins with no messages, else present.  Initially Unknown
+* Finish off SQL and move across to using this entirely - remove devices.txt and usernames.txt and status.xml
 * Daily synopsis to use HTML email to show UpTime (from status.xml) & snapshot of devices page, plus last day's activity log
 * Auto-start network ("AT+EN") if ATN shows none available at start up
 * Colour lamp control

@@ -1,14 +1,14 @@
-#!hubapp.py
+#!/usr/bin/env python3 
+# hubapp.py
 # For Raspberry Pi using Telegesis USB stick to talk to array of ZigBee devices
 
 import time
-from datetime import datetime
 # App-specific Python modules
 import events
-import commands
 import log
 
 def main():
+    events.Issue(events.ids.PREINIT)
     events.Issue(events.ids.INIT)
     sleepDelayS = 0.1
     while True:
@@ -19,7 +19,7 @@ def main():
 def EventHandler(eventId, eventArg):
     if eventId == events.ids.INIT:
         log.Init("   *********************************")
-        log.log("   *** Starting hubapp, v0.0.1.0 ***")
+        log.log("   *** Starting hubapp, v0.0.1.1 ***")
         log.log("   *********************************")
     # end event handler
     
