@@ -27,13 +27,14 @@ if __name__ == "__main__":
     hubapp.main()
 
 def ReadTelegesis(ser):
+    global ser, txBuf, rxBuf
     ser.flushInput()
     while True:
         telegesisInLine = str(ser.readline(),'utf-8').rstrip('\r\n')
         rxBuf.append(telegesisInLine)  # Buffer this for subsequent processing in main thread
 
 def EventHandler(eventId, eventArg):
-    global ser, expRsp, expRspTimeoutS
+    global ser, expRsp, expRspTimeoutS, txBuf, rxBuf
     if eventId == events.ids.INIT:
         ser = serial.Serial('/dev/ttyUSB0',19200, timeout=1) # Could get these TTY settings from a "settings.txt" file?
         thread = threading.Thread(target=ReadTelegesis, args=(ser,))
@@ -45,6 +46,8 @@ def EventHandler(eventId, eventArg):
     elif eventId == events.ids.SECONDS:
         if len(rxBuf):
             Parse(rxBuf.popleft())
+        if len(txBuf) > 100:
+            expRsp = "" # If we start clogging up the tx buffer, then start pushing it through regardless
         if expRsp == "" and len(txBuf):
             atCmd, expRsp = txBuf.popleft()
             wrAtCmd = atCmd + "\r\n"

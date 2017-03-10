@@ -26,4 +26,5 @@
 
 Bugs
 * Occasionally stalls!  But then recovers as if nothing had happened.
+* PySerial still in a mess.  Seems to stall when writing serial, and then never writes anything further.  Might have fixed this(?)
 * Cannot edit usernames when adding (auto-refresh loses edits!).  Can edit in devices page
