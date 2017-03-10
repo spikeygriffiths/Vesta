@@ -27,7 +27,7 @@ if __name__ == "__main__":
     hubapp.main()
 
 def ReadTelegesis(ser):
-    global ser, txBuf, rxBuf
+    global txBuf, rxBuf
     ser.flushInput()
     while True:
         telegesisInLine = str(ser.readline(),'utf-8').rstrip('\r\n')
