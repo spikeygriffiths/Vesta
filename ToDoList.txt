@@ -3,7 +3,10 @@
 ***** Features: *****
 * ---TEST THIS--- Show device absence on web.  Absent if >30 mins with no messages, else present.  Initially Unknown
 * Finish off SQL and move across to using this entirely - remove devices.txt and usernames.txt and status.xml
-* Daily synopsis to use HTML email to show UpTime (from status.xml) & snapshot of devices page, plus last day's activity log
+* Daily synopsis to use HTML email to show UpTime (from status.xml) & snapshot of devices page, plus last day's activity log.  Customise and improve synopsis, so that we can have different synopses daily, weekly or monthly...
+* Use new CLOUD_COVER event in rules
+* "info" button on web to show results of "info" command
+* Rules to include day of week, day of month and month for proper schedules
 * Auto-start network ("AT+EN") if ATN shows none available at start up
 * Colour lamp control
 * Multiple device ZigBee endpoints?

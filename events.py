@@ -9,6 +9,7 @@ import commands
 import variables
 import iottime
 import database
+import weather
 
 if __name__ == "__main__":
     hubapp.main()
@@ -25,8 +26,11 @@ class ids:
     DEVICE_ANNOUNCE = 8 # Arg is the whole response (devType, devEui, devNodeId)
     INFO = 9 # No arg, just print any useful info
     RX_TELEGESIS = 10   # Arg is line of raw Telegesis text
-    MINUTES = 11 # No arg
+    MINUTES = 11 # No arg.  Issued at startup and once a minute thereafter
     PREINIT = 12 #  No arg.  Issued immediately before INIT
+    HOURS = 13 # No arg.  Issued at startup and once an hour thereafter
+    CLOUD_COVER = 14 # Arg is percentage cloud cover now.  Issued once/hour
+    OUTSIDE_TEMP = 15   # Arg is outside temperature in celsius.  Issued once/hour
 
 def Issue(eventId, eventArg=0):
     # Tell all interested parties about the new event
@@ -37,4 +41,5 @@ def Issue(eventId, eventArg=0):
     iottime.EventHandler(eventId, eventArg)
     rules.EventHandler(eventId, eventArg)
     commands.EventHandler(eventId, eventArg)
-    
+    weather.EventHandler(eventId, eventArg)
+
