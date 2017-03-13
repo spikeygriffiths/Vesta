@@ -3,20 +3,21 @@ error_reporting(E_ALL);
 
 echo "<html><head>";
 echo "</head><body>";
-echo "<center><h1>IoT Hub</h1> <br>";
+echo "<center><h1>IoT Hub</h1>";
 echo "Now: ", date('Y-m-d H:i:s'), "<br>";
 ShowUpTime("/home/pi/hubapp/status.xml");
 $ps = shell_exec("ps ax");
 $iotHubRunning = (strpos($ps, "hubapp.py") !== false);
 echo "<br>";
 if ($iotHubRunning) {
-    echo "<button type=\"button\" onclick=\"window.location.href='devices.php'\">Devices</button><br>";
-    echo "<button type=\"button\" onclick=\"window.location.href='rules.php'\">Rules</button><br>";
-    echo "<button type=\"button\" onclick=\"window.location.href='activity.php'\">Activity</button><br>";
+    echo "<button type=\"button\" onclick=\"window.location.href='devices.php'\">Devices</button><br><br>";
+    echo "<button type=\"button\" onclick=\"window.location.href='rules.php'\">Rules</button><br><br>";
+    echo "<button type=\"button\" onclick=\"window.location.href='activity.php'\">Activity</button><br><br>";
+    echo "<button type=\"button\" onclick=\"window.location.href='log.php'\">Show Log</button><br><br>";
     echo "</center>";
  } else {
     echo "<center><h2>IoT Hub stopped</h2></center>"; 
-    $reason = shell_exec("tail --lines=15 /home/pi/hubapp/error_log");
+    $reason = shell_exec("tail --lines=15 /home/pi/hubapp/fault.log");
     echo "<b>Last lines of error log;</b><br>",nl2br($reason);
 }
 echo "</body></html>";
