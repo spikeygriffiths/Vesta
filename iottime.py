@@ -1,6 +1,7 @@
 #!iottime.py
 
 from datetime import datetime
+from datetime import timedelta
 from astral import Astral
 import time
 # App-specific modules
@@ -39,16 +40,26 @@ def EventHandler(eventId, eventArg):
             events.Issue(events.ids.HOURS)
             oldHours = now.hour # Ready for next time
         rules.Run("time=="+now.strftime("%H:%M")) # Run timed rules once per minute with time of date
-        CheckTimedRule("dawn", now)
-        CheckTimedRule("sunset", now)
-        CheckTimedRule("sunrise", now)
-        CheckTimedRule("dusk", now)
+        CheckTimedRule("dawn", now) # Sky getting light before sunrise
+        CheckTimedRule("sunrise", now) # Sun on horizon
+        CheckTimedRule("morning", now) # Now proper daylight (depending on cloud)
+        CheckTimedRule("evening", now)  # No longer proper daylight (depending on cloud)
+        CheckTimedRule("sunset", now) # Sun on horizon
+        CheckTimedRule("dusk", now) # Sky now getting dark after sunset
     if eventId == events.ids.HOURS:
         now = datetime.now()
         if now.hour == 1: # 1am, time to calculate sunrise and sunset for new day 
             SetSunTimes()
             log.NewLog() # Roll the logs, to avoid running out of disc space
-                
+    if eventId == events.ids.CLOUD_COVER:
+        extraTime = eventArg    # Just take percentage as minutes
+        sunrise = datetime.strptime(variables.Get("sunrise"), "%H:%M")
+        morning = sunrise + timedelta(minutes=extraTime)    # The more cloud, the later it gets light in the morning
+        variables.Set("morning", str(morning.strftime("%H:%M")))
+        sunset = datetime.strptime(variables.Get("sunset"), "%H:%M")
+        evening = sunset - timedelta(minutes=extraTime) # The more cloud, the earlier it gets dark in the evening
+        variables.Set("evening", str(evening.strftime("%H:%M")))
+
 def SetSunTimes():
     cityName = "London"
     a = Astral()
@@ -62,7 +73,7 @@ def SetSunTimes():
 
 def Get(item):
     if ":" not in item: # If named item rather than HH:MM timestamp
-        item = variables.Get(item)    # Get time from variable (eg sunrise, etc.)
+        item = variables.Get(item)    # Get time of day from variable (eg sunrise, etc.)
     return datetime.strptime(item, "%H:%M")
 
 def CheckTimedRule(name, now):

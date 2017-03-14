@@ -17,7 +17,7 @@ if __name__ == "__main__":
 def Set(name, value):
     global varList
     Del(name) # Remove old tuple if necessary
-    #log.log("Variable "+name+" gets "+value)
+    log.log("Variable \""+name+"\" gets "+value)
     varList.append((name, value)) # Add new one regardless
 
 def Del(name):
