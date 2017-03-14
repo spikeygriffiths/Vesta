@@ -52,6 +52,8 @@ def EventHandler(eventId, eventArg):
             SetSunTimes()
             log.NewLog() # Roll the logs, to avoid running out of disc space
     if eventId == events.ids.WEATHER:
+        now = datetime.now()
+        nowTime = datetime.strptime(now.strftime("%H:%M"), "%H:%M")
         extraTime = int(variables.Get("cloudCover"))    # Just take percentage cloudiness as minutes
         extraTime = extraTime + int(variables.Get("rain"))   # Any rain just makes it even darker (NB Don't know the units for this, nor their range)
         extraTime = extraTime + int(variables.Get("snow"))   # Any snow just makes it even darker (NB Don't know the units for this, nor their range)
