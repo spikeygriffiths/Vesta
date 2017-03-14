@@ -51,13 +51,25 @@ def EventHandler(eventId, eventArg):
         if now.hour == 1: # 1am, time to calculate sunrise and sunset for new day 
             SetSunTimes()
             log.NewLog() # Roll the logs, to avoid running out of disc space
-    if eventId == events.ids.CLOUD_COVER:
-        extraTime = eventArg    # Just take percentage as minutes
+    if eventId == events.ids.WEATHER:
+        extraTime = int(variables.Get("cloudCover"))    # Just take percentage cloudiness as minutes
+        extraTime = extraTime + int(variables.Get("rain"))   # Any rain just makes it even darker (NB Don't know the units for this, nor their range)
+        extraTime = extraTime + int(variables.Get("snow"))   # Any snow just makes it even darker (NB Don't know the units for this, nor their range)
         sunrise = datetime.strptime(variables.Get("sunrise"), "%H:%M")
         morning = sunrise + timedelta(minutes=extraTime)    # The more cloud, the later it gets light in the morning
+        oldMorning = variables.Get("morning")
+        if oldMorning != None:
+            oldMorning = datetime.strptime(oldMorning, "%H:%M")
+            if morning<nowTime and oldMorning>nowTime:  # If the new morning is before now and the old morning was after, then make sure we still issue the "morning" rule
+                morning = now + timedelta(minutes=1) # Set morning to be in the next minute if the clouds are clearing away
         variables.Set("morning", str(morning.strftime("%H:%M")))
         sunset = datetime.strptime(variables.Get("sunset"), "%H:%M")
         evening = sunset - timedelta(minutes=extraTime) # The more cloud, the earlier it gets dark in the evening
+        oldEvening = variables.Get("evening")
+        if oldEvening != None:
+            oldEvening = datetime.strptime(oldEvening, "%H:%M")
+            if evening<nowTime and oldEvening>nowTime:  # If the new evening is before now and the old evening was after, then make sure we still issue the "evening" rule
+                evening = now + timedelta(minutes=1) # Set evening to be in the next minute if the clouds are building up
         variables.Set("evening", str(evening.strftime("%H:%M")))
 
 def SetSunTimes():

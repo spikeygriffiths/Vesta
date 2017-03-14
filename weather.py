@@ -6,6 +6,7 @@ import pyowm
 # App-specific Python modules
 import log
 import events
+import variables
 
 owm = pyowm.OWM("590c17ed39950e5bc6648c3f83918987")  # My API Key
 
@@ -15,9 +16,22 @@ def EventHandler(eventId, eventArg):
         obs = owm.weather_at_place("Cambridge,UK")  # My location
         w = obs.get_weather()
         cloudCover = w.get_clouds() # Percentage cloud cover
-        events.Issue(events.ids.CLOUD_COVER, cloudCover)    # Tell system, so rules can advance sunset accordingly
-        log.log("Cloud cover now is " + str(cloudCover) + "%")
+        variables.Set("cloudCover", str(cloudCover))
         outsideTemp = w.get_temperature("celsius")["temp"] # Outside temperature in celsius
-        events.Issue(events.ids.OUTSIDE_TEMP, outsideTemp)    # Tell system
-        log.log("Outside temperature now is " + str(outsideTemp) + "'C")
+        variables.Set("outsideTemperature", str(outsideTemp))
+        windSpeed = w.get_wind()["speed"]
+        variables.Set("windSpeed", str(windSpeed))
+        rain = w.get_rain()
+        if rain != {}:
+            rain = rain["3h"]   # Rain volume in last 3 hours.  Unknown units, may be ml(?)
+        else:
+            rain = 0    # No rain
+        variables.Set("rain", str(rain))
+        snow = w.get_snow()
+        if snow != {}:
+            snow = snow["3h"]   # Snow volume in last 3 hours.  Unknown units, may be ml(?)
+        else:
+            snow = 0    # No snow
+        variables.Set("snow", str(snow))
+        events.Issue(events.ids.WEATHER, windSpeed)    # Tell system
 
