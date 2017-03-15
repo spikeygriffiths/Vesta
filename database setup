@@ -17,6 +17,7 @@ CREATE TABLE Devices (
 
 CREATE TABLE Events (
   timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+  item TEXT,
   value TEXT,  
   devRowId INTEGER,
   FOREIGN KEY(devRowId) REFERENCES Devices(rowId)

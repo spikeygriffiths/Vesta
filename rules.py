@@ -45,17 +45,17 @@ def EventHandler(eventId, eventArg):
                     if userName:
                         Run(userName+"==opened") # See if rule exists
                     log.log("Door "+ eventArg[1]+ " opened")
-                    devices.SetStatus(devIdx, "Other", "opened @ "+ nowStr) # For web page
+                    devices.SetStatus(devIdx, "Other", "opened!) # For web page
                 else:
                     if userName:
                         Run(userName+"==closed") # See if rule exists
                     log.log("Door "+ eventArg[1]+ " closed")
-                    devices.SetStatus(devIdx, "Other", "closed @ "+ nowStr) # For web page
+                    devices.SetStatus(devIdx, "Other", "closed") # For web page
             elif zoneType == zcl.Zone_Type.PIR:
                 if userName:
                     Run(userName+"==active") # See if rule exists
                 log.log("PIR "+ eventArg[1]+ " active")
-                devices.SetStatus(devIdx, "Other", "active @ "+ nowStr) # For web page
+                devices.SetStatus(devIdx, "Other", "active") # For web page
             else:
                 log.log("DevId: "+ eventArg[1]+" zonestatus "+ eventArg[3])
         else:
@@ -66,7 +66,7 @@ def EventHandler(eventId, eventArg):
         nowStr = now.strftime("%H:%M")
         userName = devices.GetUserNameFromDevIdx(devIdx)
         log.log("Button "+ eventArg[1]+ " "+eventArg[0]) # Arg[0] holds "ON", "OFF" or "TOGGLE" (Case might be wrong)
-        devices.SetStatus(devIdx, "Other", "pressed @ "+ nowStr) # For web page
+        devices.SetStatus(devIdx, "Other", "pressed") # For web page
         if userName:
             Run(userName+"=="+eventArg[0]) # See if rule exists
 

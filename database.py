@@ -25,11 +25,11 @@ def EventHandler(eventId, eventArg):
 # end of EventHandler
 
 def NewEventUsingDevIdx(devIdx, item, value):
-    NewEvent(item, value, devIdx+1)  # Insert event
+    NewEvent(devIdx+1, item, value)  # Insert event
 
 def NewEvent(rowId, item, value):
     global curs, flushDB
-    curs.execute("INSERT INTO Events VALUES((?), (?), (?))", (item, value, rowIdx))  # Insert event.  Rely on auto-timestamp from SQLite
+    curs.execute("INSERT INTO Events VALUES(datetime('now'),(?), (?), (?))", (item, value, rowId))  # Insert event.  Rely on auto-timestamp from SQLite
     flushDB = True # Batch up the commits
 
 def ClearDevices():

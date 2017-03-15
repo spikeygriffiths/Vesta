@@ -408,9 +408,9 @@ def SetVarFromAttr(devIdx, name, value): # See if this attribute has an associat
         nowStr = now.strftime("%H:%M")
         varVal = int(value, 16)
         if varVal == 0:
-            SetStatus(devIdx, "Other", "Turned Off @ " + nowStr)
+            SetStatus(devIdx, "Other", "Turned Off")
         else:
-            SetStatus(devIdx, "Other", "Turned On @ " + nowStr)
+            SetStatus(devIdx, "Other", "Turned On")
     if name == "attr"+zcl.Cluster.Basic+"."+zcl.Attribute.Manuf_Name:
         userName = GetUserNameFromDevIdx(devIdx)
         if userName.find("(New)")==0:
