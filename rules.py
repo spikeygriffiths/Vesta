@@ -45,7 +45,7 @@ def EventHandler(eventId, eventArg):
                     if userName:
                         Run(userName+"==opened") # See if rule exists
                     log.log("Door "+ eventArg[1]+ " opened")
-                    devices.SetStatus(devIdx, "Other", "opened!) # For web page
+                    devices.SetStatus(devIdx, "Other", "opened") # For web page
                 else:
                     if userName:
                         Run(userName+"==closed") # See if rule exists
