@@ -50,6 +50,8 @@ def EventHandler(eventId, eventArg):
         database.ClearDevices()
         rowId = database.NewDevice("0000")
         database.UpdateDevice(rowId, "UserName", "Hub")
+        database.UpdateDevice(rowId, "devType", "COO")
+        database.UpdateDevice(rowId, "eui64", "")
         for devices in info:
             ephemera.append([]) # Initialise parallel ephemeral device list
             InitDevStatus(devIdx) # Initialise parallel device status
@@ -243,7 +245,7 @@ def CopyDevToDB(devIdx):
             database.UpdateDevice(rowId, "endPoints", item[1])
         if item[0] == "InCluster":
             database.UpdateDevice(rowId, "inClusters", str(item[1]))
-        if item[0] == "outCluster":
+        if item[0] == "OutCluster":
             database.UpdateDevice(rowId, "outClusters", str(item[1]))
     name = GetUserNameFromDevIdx(devIdx)
     database.UpdateDevice(rowId, "UserName", name)
@@ -338,7 +340,8 @@ def SetStatus(devIdx, name, value):# For web page
     if name == "Other" and value != "N/A":
         log.activity(devIdx, value)
     statusUpdate = True
-    database.NewEvent(devIdx, name, value)
+    if value != "N/A":
+        database.NewEventUsingDevIdx(devIdx, name, value)
 
 def SaveStatus():
     global status

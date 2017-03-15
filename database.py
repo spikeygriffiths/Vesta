@@ -18,15 +18,18 @@ def EventHandler(eventId, eventArg):
         if flushDB:
             db.commit() # Flush events to disk
             flushDB = False
-    if eventId == events.ids.INFO:
-        print("Whole db\n")
-        for row in curs.execute("SELECT * FROM events"):
-            print(row)
+#    if eventId == events.ids.INFO:
+#        print("Whole db\n")
+#        for row in curs.execute("SELECT * FROM events"):
+#            print(row)
 # end of EventHandler
 
-def NewEvent(devIdx, item, value):
+def NewEventUsingDevIdx(devIdx, item, value):
+    NewEvent(item, value, devIdx+1)  # Insert event
+
+def NewEvent(rowId, item, value):
     global curs, flushDB
-    curs.execute("INSERT INTO Events VALUES(date('now'), time('now'), (?), (?), (?))", (item, value, devIdx+1))  # Insert event
+    curs.execute("INSERT INTO Events VALUES((?), (?), (?))", (item, value, rowIdx))  # Insert event.  Rely on auto-timestamp from SQLite
     flushDB = True # Batch up the commits
 
 def ClearDevices():

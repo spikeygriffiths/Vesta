@@ -26,30 +26,37 @@ ourExtPan = "Unknown"
 if __name__ == "__main__":
     hubapp.main()
 
-def ReadTelegesis(ser):
+def HandleSerial(ser):
     global expRsp, expRspTimeoutS, txBuf, rxBuf
-    ser.flushInput()
-    while True:
-        telegesisInLine = str(ser.readline(),'utf-8').rstrip('\r\n')
+    #if ser.inWaiting(): # Should be ser.in_waiting in later (>v3.0) pyserial libraries
+    telegesisInLine = str(ser.readline(),'utf-8').rstrip('\r\n')    # Rely on timeout=0 to return imemdiately,either with a line or with None
+    if telegesisInLine != None:
         rxBuf.append(telegesisInLine)  # Buffer this for subsequent processing in main thread
-        if expRsp == "" and len(txBuf):
-            atCmd, expRsp = txBuf.popleft()
-            wrAtCmd = atCmd + "\r\n"
-            ser.write(wrAtCmd.encode())
-            log.log("Tx>"+atCmd)
-            expRspTimeoutS = 10
+    if expRsp == "" and len(txBuf):
+        atCmd, expRsp = txBuf.popleft()
+        wrAtCmd = atCmd + "\r\n"
+        ser.write(wrAtCmd.encode())
+        log.log("Tx>"+atCmd)
+        expRspTimeoutS = 10
+
+#def ReadTelegesis(ser):
+#    global expRsp, expRspTimeoutS, txBuf, rxBuf
+#    while True:
+#        HandleSerial(ser)
 
 def EventHandler(eventId, eventArg):
     global ser, expRsp, expRspTimeoutS, txBuf, rxBuf
     if eventId == events.ids.INIT:
-        ser = serial.Serial('/dev/ttyUSB0',19200, timeout=0.2) # Could get these TTY settings from a "settings.txt" file?
-        thread = threading.Thread(target=ReadTelegesis, args=(ser,))
-        thread.start()
+        ser = serial.Serial('/dev/ttyUSB0',19200, timeout=0) # Could get these TTY settings from a "settings.txt" file?
+        ser.flushInput()
+        #thread = threading.Thread(target=ReadTelegesis, args=(ser,))
+        #thread.start()
         expRsp = ""
         TxCmd(["ATS63=0007",  "OK"]) # Request RSSI & LQI on every received message, also disable automatic checkIn responses
         TxCmd(["ATI",  "OK"]) # Request our EUI, as well as our Telegesis version
         TxCmd(["AT+N", "OK"]) # Get network information, to see whether to start new network or use existing one
     elif eventId == events.ids.SECONDS:
+        HandleSerial(ser)
         if len(rxBuf):
             Parse(rxBuf.popleft())
         if expRsp != "":
