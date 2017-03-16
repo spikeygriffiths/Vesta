@@ -17,8 +17,9 @@ echo "<center><h1>Devices</h1> ";
 echo "<button type=\"button\" onclick=\"window.location.href='AddNewDevices.php'\">Add new devices</button><br>";
 echo "</center>";
 echo "<form action=\"save_names.php\" method=\"post\">";
-//$db = new SQLite3("/home/pi/hubapp/hubstuff.db");
-//ShowDevices($db);   //was ("/home/pi/hubapp/usernames.txt", "/home/pi/hubapp/status.xml");
+//print_r (PDO::getAvailableDrivers()); echo("<br>");
+//echo phpinfo();
+ShowDevices("/home/pi/hubapp/hubstuff.db");   //was ("/home/pi/hubapp/usernames.txt", "/home/pi/hubapp/status.xml");
 echo "<input type=\"submit\" value=\"Update Names\">";
 echo "</form>";
 echo "<center>";
@@ -36,21 +37,29 @@ function TableElement($item, $units, $devIndex, $db)
 echo "<td>N/A</td>";
 }
 
-function ShowDevices($db)
+function ShowDevices($dbFilename)
 {
+    $dir = "sqlite:".$dbFilename;
+    $db = new PDO($dir) or die("Cannot open database");
     $index = 0;
     $result = $db->query("SELECT COUNT(*) FROM Devices");
-    $numDevs = $result->fetchArray();
+//    $result->setFetchMode(PDO::FETCH_OBJ);
+    $numDevs = $result->fetchColumn();
     echo "Number of devices: ",$numDevs;
     echo "<table>";
     echo "<tr><th>Name</th><th>Battery %</th><th>Temperature (C)</th><th>Presence</th><th>Notes</th></tr>";
     for ($devIndex = 0; $devIndex < $numDevs; $devIndex++) {
-        $username = $db->query("SELECT UserName FROM devices LIMIT ".$index.",1");
-        echo "<tr><td><input type=\"size\" text=\"20\" name=\"",$username, "\" value=\"", $line, "\"></td>";
+        $result = $db->query("SELECT UserName FROM devices LIMIT ".$devIndex.",1");
+        $result->setFetchMode(PDO::FETCH_OBJ);
+        $item = $result->fetch();
+        $username = $item->UserName;
+        echo "<tr><td>", $username, "</td>";
+        //echo "<tr><td><input type=\"size\" text=\"20\" name=\"",$username, "\" value=\"", $line, "\"></td>";
 	    TableElement("Battery", "%", $devIndex, $db);
 	    TableElement("Temperature", "'C", $devIndex, $db);
 	    TableElement("Presence", "", $devIndex, $db);
 	    TableElement("Other", "", $devIndex, $db);
+        echo "</tr>";
     }
     echo "</table>";
     echo "<input type=\"hidden\" name=\"numNames\", value=\"",$numDevs,"\">";

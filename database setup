@@ -16,7 +16,7 @@ CREATE TABLE Devices (
 );
 
 CREATE TABLE Events (
-  timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+  timestamp DATETIME,
   item TEXT,
   value TEXT,  
   devRowId INTEGER,
