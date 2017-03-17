@@ -13,7 +13,11 @@ owm = pyowm.OWM("590c17ed39950e5bc6648c3f83918987")  # My API Key
 def EventHandler(eventId, eventArg):
     global owm
     if eventId == events.ids.HOURS: # Get weather once/hour
-        obs = owm.weather_at_place("Cambridge,UK")  # My location
+        try:
+            obs = owm.weather_at_place("Cambridge,UK")  # My location
+        except:
+            log.fault("Couldn't get weather")
+            return
         w = obs.get_weather()
         cloudCover = w.get_clouds() # Percentage cloud cover
         variables.Set("cloudCover", str(cloudCover))
