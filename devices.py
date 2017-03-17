@@ -123,9 +123,7 @@ def EventHandler(eventId, eventArg):
                 attrId = eventArg[4]
                 if "00" == eventArg[5]:
                     attrVal = eventArg[6]
-                else:
-                    attrVal = "Error:"+eventArg[5]   # So that we don't ask for the same attribute again later
-                SetAttrVal(devIdx, clusterId, attrId, attrVal)
+                    SetAttrVal(devIdx, clusterId, attrId, attrVal)
         if eventArg[0] == "REPORTATTR":
             devIdx = GetIdx(eventArg[1])
             if devIdx != None:

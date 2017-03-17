@@ -26,6 +26,8 @@ def EventHandler(eventId, eventArg):
     global oldMins, oldHours, oldDay, oldWeek, oldMonth
     if eventId == events.ids.INIT:
         SetSunTimes()
+        variables.Set("morning", variables.Get("sunrise"))
+        variables.Set("evening", variables.Get("sunset"))   # Set up defaults until we get a weather report
         rules.Run("trigger==hubstart")
         log.activity("hub", "started")
         #devices.SetSynopsis("IoT Hub started at", str(datetime.now()))
