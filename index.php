@@ -10,7 +10,7 @@ $ps = shell_exec("ps ax");
 $iotHubRunning = (strpos($ps, "hubapp.py") !== false);
 echo "<br>";
 if ($iotHubRunning) {
-    echo "<button type=\"button\" onclick=\"window.location.href='devices.php'\">Devices</button><br><br>";
+    echo "<button type=\"button\" onclick=\"window.location.href='ShowAllDevices.php'\">Devices</button><br><br>";
     echo "<button type=\"button\" onclick=\"window.location.href='rules.php'\">Rules</button><br><br>";
     echo "<button type=\"button\" onclick=\"window.location.href='activity.php'\">Activity</button><br><br>";
     echo "<button type=\"button\" onclick=\"window.location.href='log.php'\">Show Log</button><br><br>";

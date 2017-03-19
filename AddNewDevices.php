@@ -19,33 +19,29 @@ echo "<center><h1>Add New Devices</h1> ";
 echo "Now: ", date('Y-m-d H:i:s'), "<br><br>"; // Show page refreshing
 echo "<button type=\"button\" onclick=\"HubCmd('open.php')\">Open hub for 1 minute</button><br>";
 echo "</center>";
-echo "<form action=\"save_names.php\" method=\"post\">";
-ShowNewDevices("/home/pi/hubapp/usernames.txt");
-echo "<input type=\"submit\" value=\"Update Names\">";
-echo "</form>";
+ShowNewDevices();
 echo "<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>";
-echo "<center>";
-echo "Click <a href=\"index.php\">here</a> to return";
-echo "</center>";
+echo "<center><a href=\"index.php\">Home</a></center>";
 echo "</body>";
 echo "</html>";
 
-function ShowNewDevices($names)
+function ShowNewDevices()
 {
-    $index = 0;
-    $handle = fopen($names, "r");
-    if ($handle) {
-        echo "<table>";
-        while (!feof($handle)) {
-            $line = fgets($handle);
-            if ($line != "") {
-                if (substr($line, 0, 5)=="(New)") {
-                    $username = "username".$index;
-                    echo "<tr><td><input type=\"size\" text=\"20\" name=\"",$username, "\" value=\"", $line, "\"></td>";
-                }
-            }
+    $dir = "sqlite:/home/pi/hubapp/hubstuff.db";
+    $db = new PDO($dir) or die("Cannot open database");
+    $result = $db->query("SELECT COUNT(*) FROM Devices");
+    $numDevs = $result->fetchColumn();
+    echo "<table>";
+    echo "<tr><th>Name</th><th>Type</th></tr>";
+    for ($devIndex = 0; $devIndex < $numDevs; $devIndex++) {
+        $result = $db->query("SELECT UserName, ModelName FROM devices LIMIT ".$devIndex.",1");
+        $result->setFetchMode(PDO::FETCH_ASSOC);
+        $item = $result->fetch();
+        $username = $item[UserName];
+        $modelname = $item[ModelName];
+        if (substr($username, 0, 5)=="(New)") {
+            echo "<tr><td>",$username,"</td><td>",$modelname,"</td></tr>";
         }
-        fclose($handle); 
         echo "</table>";
     } else echo "No devices!<br>"; // Else error opening file
     echo "<input type=\"hidden\" name=\"numNames\", value=\"",$index,"\">";
