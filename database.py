@@ -49,9 +49,12 @@ def NewDevice(devId):
 
 def UpdateDevice(rowId, item, value):
     global curs
-    print ("UpdateDevice, item="+item+", value="+value+" @rowId="+str(rowId))
-    #curs.execute("UPDATE Devices SET (?)=(?) WHERE rowid=(?)", (item, value, rowId))
-    curs.execute("UPDATE Devices SET "+item+"=\""+value+"\" WHERE rowid="+str(rowId))
+    if type(value) is str:
+        print ("UpdateDevice, item="+item+", value="+value+" @rowId="+str(rowId))
+        curs.execute("UPDATE Devices SET "+item+"=\""+value+"\" WHERE rowid="+str(rowId))
+    else: # Assume number (Integer or Float)
+        print ("UpdateDevice, item="+item+", value="+str(value)+" @rowId="+str(rowId))
+        curs.execute("UPDATE Devices SET "+item+"="+str(value)+" WHERE rowid="+str(rowId))
 
 def UpdateDeviceUsingDevIdx(devIdx, item, value):
     rowId = devIdx + 2  # devIdx values start at 0, sqlite starts at 1.  First item is hub, hence +2

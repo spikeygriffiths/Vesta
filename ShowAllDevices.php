@@ -9,24 +9,22 @@ echo "<body>";
 echo "<center><h1>Devices</h1> ";
 echo "<button type=\"button\" onclick=\"window.location.href='AddNewDevices.php'\">Add new devices</button><br>";
 echo "</center>";
-echo "<form action=\"save_names.php\" method=\"post\">";
 print_r (PDO::getAvailableDrivers()); echo("<br>"); // Shows whether you have SQLite for PDO installed
 ShowDevices();
-echo "<input type=\"submit\" value=\"Update Names\"></form>";
-echo "<center><a href=\"index.php\">Home</a> </center>";
+echo "<center><a href=\"/index.php\">Home</a> </center>";
 echo "</body></html>";
 
-function  DbGetItem($item, $devIndex, $db)
+function  DbGetItem($item, $devIdx, $db)
 {
-    $result = $db->query("SELECT ".$item." FROM Devices LIMIT ".$devIndex.",1");
+    $result = $db->query("SELECT ".$item." FROM Devices WHERE devIdx=".$devIdx);
     $result->setFetchMode(PDO::FETCH_ASSOC);
     $fetch = $result->fetch();
     return $fetch[$item];
 }
 
-function TableElement($item, $units, $devIndex, $db)
+function TableElement($item, $units, $devIdx, $db)
 {
-    $result = $db->query("SELECT value FROM Events WHERE item=\"".$item."\" AND devRowId=".$devIndex." ORDER BY TIMESTAMP DESC LIMIT 1");
+    $result = $db->query("SELECT value FROM Events WHERE item=\"".$item."\" AND devIdx=".$devIdx." ORDER BY TIMESTAMP DESC LIMIT 1");
     $result->setFetchMode(PDO::FETCH_ASSOC);
     $fetch = $result->fetch();
     $val = $fetch[value];
@@ -41,17 +39,16 @@ function ShowDevices()
     $numDevs = $result->fetchColumn();
     echo "<table>";
     echo "<tr><th>Name</th><th>Battery %</th><th>Temperature (C)</th><th>Presence</th><th>Notes</th></tr>";
-    for ($devIndex = 0; $devIndex < $numDevs; $devIndex++) {
+    for ($devIdx = 0; $devIdx < $numDevs; $devIdx++) {
         echo "<tr>";
-        $username = DbGetItem("UserName", $devIndex, $db);
-        echo "<td><a href=\"ShowOneDevice.php/?devIdx=",$devIndex,"\">",$username,"</a></td>";
-	    TableElement("Battery", "%", $devIndex, $db);
-	    TableElement("Temperature", "'C", $devIndex, $db);
-	    TableElement("Presence", "", $devIndex, $db);
-	    TableElement("Other", "", $devIndex, $db);
+        $username = DbGetItem("userName", $devIdx, $db);
+        echo "<td><a href=\"ShowOneDevice.php/?devIdx=",$devIdx,"\">",$username,"</a></td>";
+	    TableElement("Battery", "%", $devIdx, $db);
+	    TableElement("Temperature", "'C", $devIdx, $db);
+	    TableElement("Presence", "", $devIdx, $db);
+	    TableElement("Other", "", $devIdx, $db);
         echo "</tr>";
     }
     echo "</table>";
-    echo "<input type=\"hidden\" name=\"numNames\", value=\"",$numDevs,"\">";
 }
 ?>

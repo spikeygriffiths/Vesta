@@ -49,6 +49,7 @@ def EventHandler(eventId, eventArg):
         devIdx = 0
         database.ClearDevices()
         rowId = database.NewDevice("0000")
+        database.UpdateDevice(rowId, "devIdx", 0)
         database.UpdateDevice(rowId, "UserName", "Hub")
         database.UpdateDevice(rowId, "devType", "COO")
         database.UpdateDevice(rowId, "eui64", "")
@@ -236,9 +237,9 @@ def CopyDevToDB(devIdx):
         if item[0] == "DevType":
             database.UpdateDevice(rowId, "devType", item[1])
         if item[0] == "attr0000:0004":
-            database.UpdateDevice(rowId, "ManufName", item[1])
+            database.UpdateDevice(rowId, "manufName", item[1])
         if item[0] == "attr0000:0005":
-            database.UpdateDevice(rowId, "ModelName", item[1])
+            database.UpdateDevice(rowId, "modelName", item[1])
         if item[0] == "EP":
             database.UpdateDevice(rowId, "endPoints", item[1])
         if item[0] == "InCluster":
@@ -246,7 +247,8 @@ def CopyDevToDB(devIdx):
         if item[0] == "OutCluster":
             database.UpdateDevice(rowId, "outClusters", str(item[1]))
     name = GetUserNameFromDevIdx(devIdx)
-    database.UpdateDevice(rowId, "UserName", name)
+    database.UpdateDevice(rowId, "userName", name)
+    database.UpdateDevice(rowId, "devIdx", devIdx+1)    # Hub is item 0 in DB
 
 def SetUserNameFromDevIdx(devIdx, userName):
     with open(devUserNames, "r") as f:

@@ -4,9 +4,10 @@ BEGIN;
 DROP TABLE IF EXISTS Devices;
 DROP TABLE IF EXISTS Events;
 CREATE TABLE Devices (
-  UserName TEXT,
-  ModelName TEXT,
-  ManufName TEXT,
+  devIdx INTEGER,
+  userName TEXT,
+  modelName TEXT,
+  manufName TEXT,
   nwkId TEXT,
   eui64 TEXT,
   devType TEXT,
@@ -19,9 +20,13 @@ CREATE TABLE Events (
   timestamp DATETIME,
   item TEXT,
   value TEXT,  
-  devRowId INTEGER,
-  FOREIGN KEY(devRowId) REFERENCES Devices(rowId)
+  devIdx INTEGER,
+  FOREIGN KEY(devIdx) REFERENCES Devices(devIdx)
 );
 COMMIT;
 .quit
+# Next line needed to allow Python to write back to the database
+chmod 666 hubstuff.db
+# Next line needed to allow SQL from Apache to write back to the database
+chmod 777 ..
 

@@ -33,8 +33,8 @@ function ShowNewDevices()
     $numDevs = $result->fetchColumn();
     echo "<table>";
     echo "<tr><th>Name</th><th>Type</th></tr>";
-    for ($devIndex = 0; $devIndex < $numDevs; $devIndex++) {
-        $result = $db->query("SELECT UserName, ModelName FROM devices LIMIT ".$devIndex.",1");
+    for ($devIdx = 0; $devIdx < $numDevs; $devIdx++) {
+        $result = $db->query("SELECT userName, modelName FROM devices WHERE devIdx=".$devIdx);
         $result->setFetchMode(PDO::FETCH_ASSOC);
         $item = $result->fetch();
         $username = $item[UserName];
@@ -43,7 +43,6 @@ function ShowNewDevices()
             echo "<tr><td>",$username,"</td><td>",$modelname,"</td></tr>";
         }
         echo "</table>";
-    } else echo "No devices!<br>"; // Else error opening file
-    echo "<input type=\"hidden\" name=\"numNames\", value=\"",$index,"\">";
+    }
 }
 ?>
