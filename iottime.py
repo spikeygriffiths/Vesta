@@ -57,8 +57,8 @@ def EventHandler(eventId, eventArg):
         now = datetime.now()
         nowTime = datetime.strptime(now.strftime("%H:%M"), "%H:%M")
         extraTime = int(variables.Get("cloudCover"))    # Just take percentage cloudiness as minutes
-        extraTime = extraTime + int(variables.Get("rain"))   # Any rain just makes it even darker (NB Don't know the units for this, nor their range)
-        extraTime = extraTime + int(variables.Get("snow"))   # Any snow just makes it even darker (NB Don't know the units for this, nor their range)
+        extraTime = extraTime + float(variables.Get("rain"))   # Any rain just makes it even darker (Measured in mm/3hr)
+        extraTime = extraTime + float(variables.Get("snow"))   # Any snow just makes it even darker (Measured in mm/3hr)
         sunrise = datetime.strptime(variables.Get("sunrise"), "%H:%M")
         morning = sunrise + timedelta(minutes=extraTime)    # The more cloud, the later it gets light in the morning
         oldMorning = variables.Get("morning")

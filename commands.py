@@ -153,7 +153,7 @@ class Commands(cmd.Cmd):
     def do_toggle(self, name):
         """toggle name
         Sends toggle on/off command to named device"""
-        devIdx = devices.GetIdxFromUserName(name) # Try name first
+        devIdx = devices.GetDevIdxFromUserName(name) # Try name first
         if devIdx == None:
             devIdx = devices.GetIdx(name)   # Try devId if no name match
         if devIdx != None:

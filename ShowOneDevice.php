@@ -4,7 +4,12 @@ error_reporting(E_ALL);
 echo "<html>";
 echo "<head><style>table {font-family:arial, sans-serif;border-collapse: collapse;width: 100 % }";
 echo "td, th {border: 2px solid #dddddd;text-align: left;padding: 2px }";
-echo "</style></head>";
+echo "</style>";
+//echo "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js\"></script>";
+//echo "<script type=\"text/javascript\">";
+//echo "function HubCmd(addr) { $.ajax( {type : 'POST', data : { }, url : 'addr', success: function(data) { }, error: function(xhr) { alert('error!'); } }); }";
+echo "</script>";
+echo "</head>";
 echo "<body>";
 $devIdx=$_GET['devIdx'];
 $dir = "sqlite:/home/pi/hubapp/hubstuff.db";
@@ -60,7 +65,12 @@ function ShowDeviceInfo($db, $devIdx, $username)
     ShowDevItem("endPoints", "Endpoints", $devIdx, $db);
     ShowDevItem("inClusters", "In Clusters", $devIdx, $db);
     ShowDevItem("outClusters", "Out Clusters", $devIdx, $db);
+    $inClusters = DbGetItem("inClusters", $devIdx, $db);
     echo "</table>";
-    echo "<input type=\"submit\" value=\"Submit\" name=\"Update name\"></form>";
+    echo "<input type=\"submit\" value=\"Submit\" name=\"Update name\"></form><br>";
+    if (strpos($inClusters, "0006") !== false) { // Is switchable, eg smartplug, bulb, etc.
+        echo "<A href=\"/Command.php/?cmd=toggle ",$username,"\">Toggle</A><br>";
+        //echo "<button onclick=\"HubCmd(/Command.php/?cmd=toggle ",$username,")\">Toggle</button><br>";
+    }
 }
 ?>

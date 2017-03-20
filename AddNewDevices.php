@@ -11,13 +11,13 @@ echo "    $('body').append(data);";  // Only works reliably from button press, n
 echo "alert(data);";
 //echo " }";
 echo " }, error: function(xhr) { alert(\"error!\"); } }); }";
-echo "$(document).ready(function() { setInterval(\"HubCmd('open.php')\", 10000); });";
+echo "$(document).ready(function() { setInterval(\"HubCmd('Command.php/?cmd=open')\", 10000); });";
 echo "</script>";
 echo "</head>";
 echo "<body>";
 echo "<center><h1>Add New Devices</h1> ";
 echo "Now: ", date('Y-m-d H:i:s'), "<br><br>"; // Show page refreshing
-echo "<button type=\"button\" onclick=\"HubCmd('open.php')\">Open hub for 1 minute</button><br>";
+echo "<button type=\"button\" onclick=\"HubCmd('C   ommand.php/?cmd=open')\">Open hub for 1 minute</button><br>";
 echo "</center>";
 ShowNewDevices();
 echo "<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>";
