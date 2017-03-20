@@ -8,10 +8,10 @@ $dir = "sqlite:/home/pi/hubapp/hubstuff.db";
 $db = new PDO($dir) or die("Cannot open database");
 $username = DbGetItem("UserName", $devIdx,$db);
 echo "<center><h1>",$username,"</h1></center>";
-echo "<input type=\"size\" text=\"30\" name=\"UserName",$devIndex, "\" value=\"", $username, "\">";
-echo "<form action=\"save_names.php\" method=\"post\">";
+echo "<form action=\"/UpdateDeviceName.php/?devIdx=",$devIdx,"\" method=\"post\">";
+echo "<input type=\"text\" name=\"UserName\" value=\"", $username, "\">";
+echo "<input type=\"submit\" value=\"Submit\" name=\"Update name\"></form>";
 ShowDeviceInfo($db, $devIdx);
-echo "<input type=\"submit\" value=\"Update Names\"></form>";
 echo "<center><a href=\"index.php\">Home</a> </center>";
 echo "</body></html>";
 
