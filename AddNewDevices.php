@@ -36,12 +36,12 @@ function ShowNewDevices()
     for ($devIdx = 0; $devIdx < $numDevs; $devIdx++) {
         $result = $db->query("SELECT userName, modelName FROM devices WHERE devIdx=".$devIdx);
         $result->setFetchMode(PDO::FETCH_ASSOC);
-        $item = $result->fetch();
-        $username = $item[UserName];
-        $modelname = $item[ModelName];
-        if (substr($username, 0, 5)=="(New)") {
+        $fetch = $result->fetch();
+        $username = $fetch[UserName];
+        $modelname = $fetch[ModelName];
+        //if (substr($username, 0, 5)=="(New)") {
             echo "<tr><td>",$username,"</td><td>",$modelname,"</td></tr>";
-        }
+        //}
         echo "</table>";
     }
 }
