@@ -18,10 +18,8 @@ def EventHandler(eventId, eventArg):
         if flushDB:
             db.commit() # Flush events to disk
             flushDB = False
-#    if eventId == events.ids.INFO:
-#        print("Whole db\n")
-#        for row in curs.execute("SELECT * FROM events"):
-#            print(row)
+#    if eventId == events.ids.NEWDAY:
+#        curs.execute("DELETE FROM Events WHERE timestamp <= date('now', '-7 day')") # Flush all events older than a week to avoid filling database
 # end of EventHandler
 
 def NewEventUsingDevIdx(devIdx, item, value):
@@ -29,20 +27,40 @@ def NewEventUsingDevIdx(devIdx, item, value):
 
 def NewEvent(rowId, item, value):
     global curs, flushDB
-    curs.execute("INSERT INTO Events VALUES(datetime('now'),(?), (?), (?))", (item, value, rowId))  # Insert event.  Rely on auto-timestamp from SQLite
+    curs.execute("INSERT INTO Events VALUES(datetime('now'),(?), (?), (?))", (item, value, rowId))  # Insert event with timestamp
     flushDB = True # Batch up the commits
 
-def ClearDevices():
+#def ClearDevices():
+#    global curs
+#    curs.execute("DELETE FROM Devices")
+
+def GetDevicesCount():
     global curs
-    curs.execute("DELETE FROM Devices")
+    curs.execute("SELECT COUNT(*) FROM Devices") # Get number of devices
+    rows = curs.fetchone()
+    return rows[0]
+
+def GetDeviceItem(devIdx, item):
+    global curs
+    curs.execute("SELECT "+item+" FROM Devices WHERE devIdx="+str(devIdx));
+    rows = curs.fetchone()
+    return rows[0]  # Return value
+
+def SetDeviceItem(devIdx, item, value):
+    rowId = GetRowIdFromItem("devIdx", devIdx)
+    UpdateDevice(rowId, item, value)
+
+def GetDevIdx(item, value):
+    global curs
+    curs.execute("SELECT devIdx FROM Devices WHERE "+item+"="+value);
+    rows = curs.fetchone()
+    return rows[0]  # Return value
 
 def NewDevice(devId):
     global curs
-    curs.execute("SELECT COUNT(*) FROM Devices") # Get number of rows before adding new one
-    rows = curs.fetchone()
-    print("Rows in devices: ", rows[0]) 
+    numDevs = GetDevicesCount()
     curs.execute("INSERT INTO Devices DEFAULT VALUES")  # Insert blank row
-    rowId = rows[0] +1
+    rowId = numDevs +1
     if devId != None:
         UpdateDevice(rowId, "nwkId", devId)
     return rowId    # Return new devIdx for newly added device
@@ -50,10 +68,8 @@ def NewDevice(devId):
 def UpdateDevice(rowId, item, value):
     global curs
     if type(value) is str:
-        print ("UpdateDevice, item="+item+", value="+value+" @rowId="+str(rowId))
         curs.execute("UPDATE Devices SET "+item+"=\""+value+"\" WHERE rowid="+str(rowId))
     else: # Assume number (Integer or Float)
-        print ("UpdateDevice, item="+item+", value="+str(value)+" @rowId="+str(rowId))
         curs.execute("UPDATE Devices SET "+item+"="+str(value)+" WHERE rowid="+str(rowId))
 
 def UpdateDeviceUsingDevIdx(devIdx, item, value):

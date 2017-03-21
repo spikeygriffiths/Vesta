@@ -9,26 +9,16 @@ def Init(msg):
     try:
         log(msg)
     except:
-        call("sudo rm debug.log", shell=True) # Remove unusable log if necessary (we may be recovering from a power cut in the middle of writing the log)
+        call("sudo rm hub.log", shell=True) # Remove unusable log if necessary (we may be recovering from a power cut in the middle of writing the log)
         
 def log(msg):
     timedMsg = "<" + str(datetime.now()) + ">"+ msg
-    open("debug.log", "a").write(timedMsg+"\n")
-    print(timedMsg)  # To stdout
+    print(timedMsg)  # To stdout.  Relies on stdout being re-directed to hub.log (so that it includes crash information)
 
 def fault(msg):
-    timedMsg = "<" + str(datetime.now()) + ">"+ msg
-    open("fault.log", "a").write(timedMsg+"\n")
-    print("FAULT! "+ msg)  # To stdout
+    log("FAULT! " + msg)
 
-def activity(devIdx, value):
-    if devIdx=="hub":
-        username = "Hub"
-    else:
-        username = devices.GetUserNameFromDevIdx(devIdx)
-    open("activity.log", "a").write(username+" "+value+" @ "+str(datetime.now())+"\n")
-
-def NewLog():
-    call("rm old_debug.log", shell=True) # Remove yesterday's old log
-    call("mv debug.log old_debug.log", shell=True) # Move today's log to yesterday's, getting ready to start new log from now
+def RollLogs():
+    call("rm yesterday.log", shell=True) # Remove yesterday's old log
+    call("mv hub.log yesterday.log", shell=True) # Move today's log to yesterday's, getting ready to start new log from now
 
