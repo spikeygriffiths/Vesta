@@ -3,6 +3,7 @@
 ***** Features: *****
 * Show device absence on web.  Absent if >30 mins with no messages, else present.  Initially Unknown
 * Remove devices.txt and usernames.txt and status.xml
+* UpTime (in index.php) to come directly from hubapp
 * Update activity.php to use database events
 * Move personal stuff out of source code (eg weather and place) and into a "config.txt" file
 * Daily synopsis to use HTML email to show UpTime (from status.xml) & snapshot of devices page, plus last day's activity log.  Customise and improve synopsis, so that we can have different synopses daily, weekly or monthly...

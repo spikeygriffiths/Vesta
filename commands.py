@@ -10,6 +10,8 @@ import select
 import socket
 from pathlib import Path
 from pprint import pprint # Pretty print for devs list
+from datetime import datetime
+from datetime import timedelta
 # App-specific Python modules
 import devices
 import events
@@ -18,14 +20,12 @@ import variables
 import rules
 import hubapp
 import log
+import iottime
 import database
 
 sck = ""
 cliSck = ""
 sckLst = []
-
-if __name__ == "__main__":
-    hubapp.main()
 
 def EventHandler(eventId, eventArg):
     global sckLst, sck, cliSck
@@ -53,8 +53,12 @@ def EventHandler(eventId, eventArg):
                 if cmd:
                     cmd = cmd.decode()
                     log.log ("Got cmd "+ cmd)
+                    sys.stdout = open("cmdoutput", "w") # Redirect stdout to file
                     Commands().onecmd(cmd)
-                    #cliSck.send(str.encode("Hello from Python!"))
+                    sys.stdout = sys.__stdout__ # Put stdout back to normal (will hopefully also close the file)
+                    f = open("cmdoutput", "r")
+                    cmdOut = f.read()
+                    cliSck.send(str.encode(cmdOut))
                 else:
                     log.log ("Closing socket")
                     cliSck.close()
@@ -67,6 +71,16 @@ class Commands(cmd.Cmd):
         """info
         Displays useful information"""
         events.Issue(events.ids.INFO)
+
+    def do_uptime(self, line):
+        """uptime
+        Shows time app has been running"""
+        upTime = datetime.now() - iottime.appStartTime
+        #upTime = upTime.total_seconds()
+        #days, remainder = divmod(upTime, 86400)
+        #hours, remainder = divmod(remainder, 3600)
+        #minutes, seconds = divmod(remainder, 60)
+        print("%d days, %.2d:%.2d" % (upTime.days, upTime.seconds//3600, (upTime.seconds//60)%60))
 
     def do_vars(self, item):
         """vars [item]

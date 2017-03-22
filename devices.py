@@ -135,7 +135,7 @@ def EventHandler(eventId, eventArg):
         for devs in range(1, numDevs):  # Element 0 is hub, so skip that
             offAt = GetTempVal(devIdx, "SwitchOff@")
             if offAt:
-                if now >= offAt:
+                if datetime.now() >= offAt:
                     SwitchOff(devIdx)
             devIdx = devIdx + 1
     if eventId == events.ids.MINUTES:

@@ -1,11 +1,13 @@
 <?php 
 error_reporting(E_ALL); 
+session_start();
+include "HubCmd.php";
 
 echo "<html><head>";
 echo "</head><body>";
 echo "<center><h1>IoT Hub</h1>";
 echo "Now: ", date('Y-m-d H:i:s'), "<br>";
-ShowUpTime("/home/pi/hubapp/status.xml");
+ShowUpTime();
 $ps = shell_exec("ps ax");
 $iotHubRunning = (strpos($ps, "hubapp.py") !== false);
 echo "<br>";
@@ -22,11 +24,11 @@ if ($iotHubRunning) {
 }
 echo "</body></html>";
 
-function ShowUpTime($status)
+function ShowUpTime()
 {
-    if (file_exists($status)) {
-        $xml = simplexml_load_file($status) or die("Can't open ".$status);
-    } else die("Can't find ".$status);
-    echo "UpTime: " .  $xml->hub->uptime . "<br>";
+    echo "UpTime: ",HubCmd("uptime", True),"<br>";
+    //echo $_SESSION['cmdout'],"<br>";
+    //HubCmd('Command.php/?cmd=uptime');
+    //echo "<button type=\"button\" onclick=\"HubCmd('Command.php/?cmd=uptime')\">Show uptime</button><br>";
 }
 ?>

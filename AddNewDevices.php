@@ -17,7 +17,7 @@ echo "</head>";
 echo "<body>";
 echo "<center><h1>Add New Devices</h1> ";
 echo "Now: ", date('Y-m-d H:i:s'), "<br><br>"; // Show page refreshing
-echo "<button type=\"button\" onclick=\"HubCmd('C   ommand.php/?cmd=open')\">Open hub for 1 minute</button><br>";
+echo "<button type=\"button\" onclick=\"HubCmd('Command.php/?cmd=open')\">Open hub for 1 minute</button><br>";
 echo "</center>";
 ShowNewDevices();
 echo "<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>";
