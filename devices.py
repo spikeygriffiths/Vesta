@@ -106,17 +106,7 @@ def EventHandler(eventId, eventArg):
                 attrVal = eventArg[6]
                 NoteEphemera(devIdx, eventArg)
                 SetAttrVal(devIdx, clusterId, attrId, attrVal)
-                reporting = database.GetDeviceItem(devIdx, "reporting") # See if we're expecting this report, and note it in the reporting table
-                newRpt = clusterId+":"+attrId
-                if reporting != None:
-                    reportList = eval(reporting)
-                    if newRpt not in reportList:
-                        reportList.append(newRpt)
-                        reporting = str(reportList)
-                        database.SetDeviceItem(devIdx, "reporting", reporting)
-                else:
-                    reporting = "["+newRpt+"]"
-                    database.SetDeviceItem(devIdx, "reporting", reporting) # Ready for next time
+                NoteReporting(devIdx, clusterId, attrId)
         if eventArg[0] == "Bind":    # Binding Response from device
             devIdx = GetIdx(eventArg[1])
             if devIdx != None:
@@ -131,14 +121,7 @@ def EventHandler(eventId, eventArg):
             if devIdx != None and status == "00":
                 clusterId = eventArg[3]
                 attrId = pendingRptAttrId # Need to remember this, since it doesn't appear in CFGRPTRSP
-                reporting = database.GetDeviceItem(devIdx, "reporting")
-                newRpt = clusterId+":"+attrId
-                if reporting != None:
-                    reportList = eval(reporting)
-                    if newRpt not in reportList:
-                        reportList.append(newRpt)
-                        reporting = str(reportList)
-                        database.SetDeviceItem(devIdx, "reporting", reporting)
+                NoteReporting(devIdx, clusterId, attrId)
     if eventId == events.ids.BUTTON:
         devIdx = GetIdx(eventArg[1]) # Lookup device from network address in eventArg[1]
         NoteEphemera(devIdx, eventArg)
@@ -175,6 +158,19 @@ def CheckPresence():  # Expected to be called infrequently - ie once/minute
                 if datetime.now() > lastSeen+timedelta(seconds=1800): # More than 30 minutes since we last heard from device
                     SetStatus(devIdx, "Presence", "* Missing *")
         devIdx = devIdx + 1
+
+def NoteReporting(devIdx, clusterId, attrId):
+    reporting = database.GetDeviceItem(devIdx, "reporting") # See if we're expecting this report, and note it in the reporting table
+    newRpt = clusterId+":"+attrId
+    if reporting != None:
+        reportList = eval(reporting)
+        if newRpt not in reportList:
+            reportList.append(newRpt)
+            reporting = str(reportList)
+    else:
+        reporting = "['"+newRpt+"']"
+    print ("Reporting = "+reporting)
+    database.SetDeviceItem(devIdx, "reporting", reporting) # Ready for next time
 
 def GetIdx(devId):
     return database.GetDevIdx("nwkId", devId)
