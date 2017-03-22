@@ -132,3 +132,8 @@ def TxCmd(cmdRsp):  # Takes a list with two elements - command to send, and firs
 def ReadAttr(devId, ep, clstrId, attrId): # NB All args as hex strings
     return ("AT+READATR:"+devId+","+ep+",0,"+clstrId+","+attrId, "RESPATTR")
 
+def CheckIdle():
+    if expRsp != "":  # We're expecting a response, so we're busy
+        return False
+    return True # No response selected so we're free to take more commands
+

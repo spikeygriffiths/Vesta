@@ -12,6 +12,7 @@ import devices
 import zcl
 import variables
 import iottime
+import database
 
 if __name__ == "__main__":
     hubapp.main()
@@ -36,8 +37,8 @@ def EventHandler(eventId, eventArg):
         devIdx = devices.GetIdx(eventArg[1]) # Lookup device from network address in eventArg[1]
         now = datetime.now()
         nowStr = now.strftime("%H:%M")
-        userName = devices.GetUserNameFromDevIdx(devIdx)
-        zoneType = devices.GetAttrVal(devIdx, zcl.Cluster.IAS_Zone, zcl.Attribute.Zone_Type) # Device type
+        userName = database.GetDeviceItem(devIdx, "userName")
+        zoneType = database.GetDeviceItem(devIdx, "iasZoneType") # Device type
         if zoneType != None:
             #log.log("DevId: "+eventArg[1]+" has type "+ zoneType)
             if zoneType == zcl.Zone_Type.Contact:
@@ -45,17 +46,17 @@ def EventHandler(eventId, eventArg):
                     if userName:
                         Run(userName+"==opened") # See if rule exists
                     log.log("Door "+ eventArg[1]+ " opened")
-                    devices.SetStatus(devIdx, "Other", "opened") # For web page
+                    devices.SetStatus(devIdx, "Event", "opened") # For web page
                 else:
                     if userName:
                         Run(userName+"==closed") # See if rule exists
                     log.log("Door "+ eventArg[1]+ " closed")
-                    devices.SetStatus(devIdx, "Other", "closed") # For web page
+                    devices.SetStatus(devIdx, "Event", "closed") # For web page
             elif zoneType == zcl.Zone_Type.PIR:
                 if userName:
                     Run(userName+"==active") # See if rule exists
                 log.log("PIR "+ eventArg[1]+ " active")
-                devices.SetStatus(devIdx, "Other", "active") # For web page
+                devices.SetStatus(devIdx, "Event", "active") # For web page
             else:
                 log.log("DevId: "+ eventArg[1]+" zonestatus "+ eventArg[3])
         else:
@@ -64,9 +65,9 @@ def EventHandler(eventId, eventArg):
         devIdx = devices.GetIdx(eventArg[1]) # Lookup device from network address in eventArg[1]
         now = datetime.now()
         nowStr = now.strftime("%H:%M")
-        userName = devices.GetUserNameFromDevIdx(devIdx)
+        userName = database.GetDeviceItem(devIdx, "userName")
         log.log("Button "+ eventArg[1]+ " "+eventArg[0]) # Arg[0] holds "ON", "OFF" or "TOGGLE" (Case might be wrong)
-        devices.SetStatus(devIdx, "Other", "pressed") # For web page
+        devices.SetStatus(devIdx, "Event", "pressed") # For web page
         if userName:
             Run(userName+"=="+eventArg[0]) # See if rule exists
 
@@ -188,7 +189,7 @@ def Action(actList):
         cmdStr = " ".join(cmdList)
         call(cmdStr, shell=True)
     else: # Must be a command for a device
-        devIdx = devices.GetDevIdxFromUserName(actList[1]) # Second arg is username for device
+        devIdx = database.GetDevIdx("userName", actList[1]) # Second arg is username for device
         if devIdx == None:
             log.fault("Device "+actList[1]+" from rules.txt not found in devices")
         else:
@@ -207,7 +208,7 @@ def Action(actList):
                     if actList[4] == "for":
                         SetOnDuration(devIdx, int(actList[5],10))
             else:
-                log.log("Unknown action: "+action +" for device: "+devices.GetUserNameFromDevIdx(devIdx))
+                log.log("Unknown action: "+action +" for device: "+actList[1])
 
 def SetOnDuration(devIdx, durationS):
     if durationS>0: # Duration of 0 means "Stay on forever"

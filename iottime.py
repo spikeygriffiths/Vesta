@@ -11,6 +11,7 @@ import log
 import hubapp
 import rules
 import variables
+import database
 
 if __name__ == "__main__":
     hubapp.main()
@@ -29,8 +30,7 @@ def EventHandler(eventId, eventArg):
         variables.Set("morning", variables.Get("sunrise"))
         variables.Set("evening", variables.Get("sunset"))   # Set up defaults until we get a weather report
         rules.Run("trigger==hubstart")
-        log.activity("hub", "started")
-        #devices.SetSynopsis("IoT Hub started at", str(datetime.now()))
+        database.NewEvent(0, "Application", "started") # 0 is always hub
     elif eventId == events.ids.SECONDS:
         now = datetime.now()
         if now.minute != oldMins:
@@ -50,9 +50,11 @@ def EventHandler(eventId, eventArg):
         CheckTimedRule("dusk", now) # Sky now getting dark after sunset
     if eventId == events.ids.HOURS:
         now = datetime.now()
-        if now.hour == 1: # 1am, time to calculate sunrise and sunset for new day 
+        if now.hour == 1: # 1am, time to calculate sunrise and sunset for new day
+            events.Issue(events.ids.NEWDAY)
+    if eventId == events.ids.NEWDAY:
             SetSunTimes()
-            log.NewLog() # Roll the logs, to avoid running out of disc space
+            log.RollLogs() # Roll the logs, to avoid running out of disc space
     if eventId == events.ids.WEATHER:
         now = datetime.now()
         nowTime = datetime.strptime(now.strftime("%H:%M"), "%H:%M")

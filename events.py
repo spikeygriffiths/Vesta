@@ -29,7 +29,8 @@ class ids:
     MINUTES = 11 # No arg.  Issued at startup and once a minute thereafter
     PREINIT = 12 #  No arg.  Issued immediately before INIT
     HOURS = 13 # No arg.  Issued at startup and once an hour thereafter
-    WEATHER = 14 # No arg.  Issued once/hour.  Various variables ("cloudCover", "rain", "windSpeed", "outsideTemperature") hold current weather
+    NEWDAY = 14 # No arg.  Issued once/day (at 1am for now)
+    WEATHER = 15 # No arg.  Issued once/hour.  Various variables ("cloudCover", "rain", "windSpeed", "outsideTemperature") hold current weather
 
 def Issue(eventId, eventArg=0):
     # Tell all interested parties about the new event

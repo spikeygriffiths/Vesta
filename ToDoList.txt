@@ -3,6 +3,8 @@
 ***** Features: *****
 * Show device absence on web.  Absent if >30 mins with no messages, else present.  Initially Unknown
 * Finish off SQL and move across to using this entirely - remove devices.txt and usernames.txt and status.xml
+* Add binding, reporting and iasZoneType fields to each device
+* Update activity.php to use database events
 * Move personal stuff out of source code (eg weather and place) and into a "config.txt" file
 * Daily synopsis to use HTML email to show UpTime (from status.xml) & snapshot of devices page, plus last day's activity log.  Customise and improve synopsis, so that we can have different synopses daily, weekly or monthly...
 * "info" button on web to show results of "info" command

@@ -13,7 +13,10 @@ CREATE TABLE Devices (
   devType TEXT,
   endPoints TEXT,
   inClusters TEXT,
-  outClusters TEXT
+  outClusters TEXT,
+  binding TEXT,
+  reporting TEXT,
+  iasZoneType TEXT,
 );
 
 CREATE TABLE Events (

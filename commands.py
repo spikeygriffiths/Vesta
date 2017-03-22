@@ -18,6 +18,7 @@ import variables
 import rules
 import hubapp
 import log
+import database
 
 sck = ""
 cliSck = ""
@@ -67,24 +68,6 @@ class Commands(cmd.Cmd):
         Displays useful information"""
         events.Issue(events.ids.INFO)
 
-    def do_devs(self, term):
-        """devs [<term>]
-        Show all devices, or just fragments that contain <term>"""
-        if term == "":
-            pprint (devices.info)
-            pprint (devices.ephemera) # Clumsy, since it's not easy to tie each device to equivalent ephemeral index
-        else:
-            itemisedList = []
-            for device in devices.info:
-                for item in device:
-                    if term.lower() in item[0].lower():
-                        itemisedList.append(item)
-            for device in devices.ephemera:
-                for item in device:
-                    if term.lower() in item[0].lower():
-                        itemisedList.append(item)
-            pprint (itemisedList)
-
     def do_vars(self, item):
         """vars [item]
         Show all variables, or just variables that contain item"""
@@ -112,48 +95,15 @@ class Commands(cmd.Cmd):
         else:
             variables.Del(line)
 
-    def do_rules(self, item):
-        """rules [item]
-        Show all rules, or just rules that contain [item]"""
-        filename = rules.rulesFilename
-        rulesFile = Path(filename)
-        if rulesFile.is_file():
-            with open(filename) as rulesTxt:
-                for line in rulesTxt:
-                    if item != None and item.lower() in line.lower():
-                        print(line, end="")
-
     def do_open(self, line):
         """open
         Opens network (for 60s) to allow new device to join"""
         telegesis.TxCmd(["AT+PJOIN", "OK"])
 
-    def do_new(self, devId):
-        """new devId
-        Add new device with devId of 4 hex digits to device list"""
-        if devId != None:
-            devices.InitDev(devId)
-
-    def do_name(self, line):
-        """name devId name
-        Allows user to associate friendly name with device Id"""
-        argList = line.split()
-        if argList != []:
-            devId = argList[0]
-            name = argList[1]
-            if devId != None and name != None:
-                devIdx = devices.GetIdx(devId)
-                if devIdx != None:
-                    devices.SetUserNameFromDevIdx(devIdx, name)
-            else:
-                log.fault("Need both args!")
-        else:
-            log.fault("Need devId and name!")
-
     def do_toggle(self, name):
         """toggle name
         Sends toggle on/off command to named device"""
-        devIdx = devices.GetDevIdxFromUserName(name) # Try name first
+        devIdx = database.GetDevIdx("userName", name) # Try name first
         if devIdx == None:
             devIdx = devices.GetIdx(name)   # Try devId if no name match
         if devIdx != None:

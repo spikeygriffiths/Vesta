@@ -46,7 +46,7 @@ function ShowDevices()
 	    TableElement("Battery", "%", $devIdx, $db);
 	    TableElement("Temperature", "'C", $devIdx, $db);
 	    TableElement("Presence", "", $devIdx, $db);
-	    TableElement("Other", "", $devIdx, $db);
+	    TableElement("Event", "", $devIdx, $db);
         echo "</tr>";
     }
     echo "</table>";
