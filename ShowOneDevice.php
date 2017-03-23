@@ -67,7 +67,7 @@ function ShowDeviceInfo($db, $devIdx, $username)
     echo "</table>";
     echo "<input type=\"submit\" value=\"Submit\" name=\"Update name\"></form><br>";
     if (strpos($inClusters, "0006") !== false) { // Is switchable, eg smartplug, bulb, etc.
-        echo "<A href=\"/Command.php/?cmd=toggle ",$username,"\">Toggle</A><br>";
+        echo "<A href=\"/Command.php/?cmd=toggle ",$username,"&expRsp=false"\">Toggle</A><br>";
     }
 }
 ?>

@@ -2,28 +2,23 @@
 error_reporting(E_ALL); 
 
 echo "<html><body>";
-echo "<center><h1>Activity</h1> ";
-echo "</center>";
-ShowActivity("/home/pi/hubapp/activity.log");
-echo "</form>";
-echo "<center>";
-echo "Click <a href=\"index.php\">here</a> to return";
-echo "</center>";
+echo "<center><h1>Activity</h1> </center>";
+$dir = "sqlite:/home/pi/hubapp/hubstuff.db";
+$db = new PDO($dir) or die("Cannot open database");
+ShowActivity($db);
+echo "<center><a href=\"index.php\">Home</a></center>";
 echo "</body></html>";
 
-function ShowActivity($names)
+function ShowActivity($db)
 {
-    $index = 0;
-    $handle = fopen($names, "r");
-    if ($handle) {
-        while (!feof($handle)) {
-            $line = fgets($handle);
-            if ($line != "") {
-                echo $line."<br>";
-            }
-        }
-        fclose($handle); 
-    } else echo "No activity!<br>"; // Else error opening file
+    $sth = $db->prepare("SELECT * FROM Events");
+    $sth->execute();
+    echo "<table>";
+    while ($row =  $sth->fetch()) {
+        // Use $row['devIdx'] as key into Devices table to get $userName
+        echo"<tr><td>".$row['timestamp']."</td><td>".$row['item']."</td><td>".$row['value']."</td></tr>";
+    }
+    echo "</table>";
 }
 
 ?>
