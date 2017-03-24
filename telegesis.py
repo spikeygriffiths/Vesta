@@ -2,12 +2,12 @@
 
 # Standard Python modules
 import serial
-import threading
 from collections import deque
 # App-specific Python modules
 import log
 import events
-import hubapp
+import database
+import config
 
 ser = 0
 expRsp = None
@@ -15,16 +15,11 @@ expRspTimeoutS = 0
 expectOurEui = False
 txBuf = deque([])    # Nothing to transmit initially
 rxBuf = deque([])
-ourVersion = "Unknown"
 ourSoc = "Unknown"
-ourEui = "Unknown"
 ourChannel = "Unknown"
 ourPowLvl = "Unknown"
 ourPan = "Unknown"
 ourExtPan = "Unknown"
-
-if __name__ == "__main__":
-    hubapp.main()
 
 def HandleSerial(ser):
     global expRsp, expRspTimeoutS, txBuf, rxBuf
@@ -39,18 +34,13 @@ def HandleSerial(ser):
         log.log("Tx>"+atCmd)
         expRspTimeoutS = 10
 
-#def ReadTelegesis(ser):
-#    global expRsp, expRspTimeoutS, txBuf, rxBuf
-#    while True:
-#        HandleSerial(ser)
-
 def EventHandler(eventId, eventArg):
     global ser, expRsp, expRspTimeoutS, txBuf, rxBuf
     if eventId == events.ids.INIT:
-        ser = serial.Serial('/dev/ttyUSB0',19200, timeout=0) # Could get these TTY settings from a "settings.txt" file?
+        serPort = config.Get("tty", '/dev/ttyUSB0')
+        serSpeed = config.Get("baud", '19200')
+        ser = serial.Serial(serPort, int(serSpeed), timeout=0)
         ser.flushInput()
-        #thread = threading.Thread(target=ReadTelegesis, args=(ser,))
-        #thread.start()
         expRsp = ""
         TxCmd(["ATS63=0007",  "OK"]) # Request RSSI & LQI on every received message, also disable automatic checkIn responses
         TxCmd(["ATI",  "OK"]) # Request our EUI, as well as our Telegesis version
@@ -78,7 +68,6 @@ def EventHandler(eventId, eventArg):
 
 def Parse(atLine):
     global expRsp, expectOurEui
-    global ourVersion, ourSoc, ourEui
     global ourChannel, ourPowLvl, ourPan, ourExtPan
     if atLine == "":
         return # Ignore blank lines
@@ -94,8 +83,7 @@ def Parse(atLine):
             events.Issue(events.ids.RXEXPRSP, atList)
     # Not expecting any response, or it didn't match, so this must be spontaneous
     if expectOurEui == True and len(atList[0])==16: # If we're expecting an EUI and it looks plausible length
-        ourEui = atList[0]
-        log.log("Our EUI: "+ourEui)
+        database.SetDeviceItem(0, "eui64", atList[0])
         expectOurEui = False
     if atList[0] == 'OK':
         return
@@ -110,11 +98,9 @@ def Parse(atLine):
     elif atList[0] == 'ZONESTATUS':
         events.Issue(events.ids.TRIGGER, atList) # Tell rules engine
     elif 0 == atList[0].find("Telegesis"):
-        ourSoc = atList[0]
-        expectOurEui = True # Sometimes EUI follows Telegesis line directly
+        database.SetDeviceItem(0, "manufName", atList[0])
     elif 0 == atList[0].find("CICIE"):
-        ourVersion = atList[0]
-        log.log("Our version: "+ourVersion)
+        database.SetDeviceItem(0, "modelName", atList[0])
         expectOurEui = True # Following EUI has no prefix - we just have to know that it follows the CICIE line
     elif atList[0] == "+N=COO":
         ourChannel = atList[1]

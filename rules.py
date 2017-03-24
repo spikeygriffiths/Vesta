@@ -7,15 +7,12 @@ from subprocess import call
 # App-specific Python modules
 import events
 import log
-import hubapp
 import devices
 import zcl
 import variables
 import iottime
 import database
-
-if __name__ == "__main__":
-    hubapp.main()
+import config
 
 rulesFilename = "rules.txt"
 
@@ -27,7 +24,7 @@ rulesFilename = "rules.txt"
 # if StairPir==active and 16:00<time<20:00 do SwitchOn StairLight for 120
 # if StairPir==active and 20:00<time<23:00 do Dim StairLight to 0.15 for 120
 #if DoorBell==TOGGLE and 7:00<time<20:59 do Play Westminster-chimes.mp3
-#if DoorBell==TOGGLE and 21:00<time<23:59 do email fred@fred.com Out of hours doorbell
+#if DoorBell==TOGGLE and 21:00<time<23:59 do email Out of hours doorbell
 
 # Note spaces used to separate each item.
 # Syntax is "if <condition> do <action>[ for <duration in seconds>]"
@@ -174,20 +171,24 @@ def Action(actList):
         filename = "Sfx/"+actList[1]
         call(["omxplayer", "-o", "local", filename])
     elif action == "synopsis": # First arg is email recipient
-        emailBody = []
-        #for items in devices.synopsis:
-        #    emailBody.append(' '.join(items))  # Tuples are joined by spaces
-        #cmdList = ["echo", "\""+'\n'.join(emailBody)+"\"", "|", "mail", "-s", "\"Update from IoT-Hub\"", actList[1]]
-        #cmdStr = " ".join(cmdList)
-        #call(cmdStr, shell=True)
-        #devices.synopsis = []   # Ready to start a new synopsis mail now
+        emailAddress = config.Get("emailAddress")
+        if emailAddress != None:
+            emailBody = []
+            #for items in devices.synopsis:
+            #    emailBody.append(' '.join(items))  # Tuples are joined by spaces
+            #cmdList = ["echo", "\""+'\n'.join(emailBody)+"\"", "|", "mail", "-s", "\"Update from IoT-Hub\"", ]
+            #cmdStr = " ".join(cmdList)
+            #call(cmdStr, shell=True)
+            #devices.synopsis = []   # Ready to start a new synopsis mail now
     elif action == "email": # First arg is recipient, remainder are body of the text.  Fixed subject
-        emailBody = []
-        for item in actList[2:]:
-            emailBody.append(item)
-        cmdList = ["echo", "\""+' '.join(emailBody)+"\"", "|", "mail", "-s", "\"Alert from IoT-Hub\"", actList[1]]
-        cmdStr = " ".join(cmdList)
-        call(cmdStr, shell=True)
+        emailAddress = config.Get("emailAddress")
+        if emailAddress != None:
+            emailBody = []
+            for item in actList[1:]:
+                emailBody.append(item)
+            cmdList = ["echo", "\""+' '.join(emailBody)+"\"", "|", "mail", "-s", "\"Alert from IoT-Hub\"", emailAddress]
+            cmdStr = " ".join(cmdList)
+            call(cmdStr, shell=True)
     else: # Must be a command for a device
         devIdx = database.GetDevIdx("userName", actList[1]) # Second arg is username for device
         if devIdx == None:

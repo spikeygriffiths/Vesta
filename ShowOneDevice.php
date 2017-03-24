@@ -19,17 +19,22 @@ echo "</body></html>";
 function  DbGetItem($item, $devIdx, $db)
 {
     $result = $db->query("SELECT ".$item." FROM Devices WHERE devIdx=".$devIdx);
-    $result->setFetchMode(PDO::FETCH_ASSOC);
-    $fetch = $result->fetch();
-    return $fetch[$item];
+    if ($result != null) {
+        $result->setFetchMode(PDO::FETCH_ASSOC);
+        $fetch = $result->fetch();
+        if ($fetch != null) {
+            return $fetch[$item];
+        }
+    }
+    return null;
 }
 
 function ShowDevItem($item, $name, $devIdx, $db)
 {
     $val = DbGetItem($item, $devIdx,$db);
-    echo "<tr><td>",$name,"</td><td>";
-    if ($val != "") echo $val; else echo "N/A,";
-    echo "</td></tr>";
+    if ($val != null) {
+        echo "<tr><td>",$name,"</td><td>$val</td></tr>";
+    }
 }
 
 function ShowLatest($item, $units, $devIdx, $db)
@@ -37,10 +42,12 @@ function ShowLatest($item, $units, $devIdx, $db)
     $result = $db->query("SELECT value FROM Events WHERE item=\"".$item."\" AND devIdx=".$devIdx." ORDER BY TIMESTAMP DESC LIMIT 1");
     $result->setFetchMode(PDO::FETCH_ASSOC);
     $fetch = $result->fetch();
-    $val = $fetch[value];
-    echo "<tr><td>",$item,"</td><td>";
-    if ($val != "") echo $val,$units; else echo "N/A";
-    echo "</td></tr>";
+    if ($fetch) {
+        $val = $fetch[value];
+        if ($val) {
+            echo "<tr><td>",$item,"</td><td>$val,$units</td></tr>";
+        }
+    }
 }
 
 function ShowDeviceInfo($db, $devIdx, $username)
@@ -63,11 +70,11 @@ function ShowDeviceInfo($db, $devIdx, $username)
     ShowDevItem("binding", "Binding", $devIdx, $db);
     ShowDevItem("reporting", "Reporting", $devIdx, $db);
     ShowDevItem("iasZoneType", "IAS Zone Type", $devIdx, $db);
-    $inClusters = DbGetItem("inClusters", $devIdx, $db);
     echo "</table>";
     echo "<input type=\"submit\" value=\"Submit\" name=\"Update name\"></form><br>";
+    $inClusters = DbGetItem("inClusters", $devIdx, $db);
     if (strpos($inClusters, "0006") !== false) { // Is switchable, eg smartplug, bulb, etc.
-        echo "<A href=\"/Command.php/?cmd=toggle ",$username,"&expRsp=false"\">Toggle</A><br>";
+        echo "<A href=\"/Command.php/?cmd=toggle ",$username,"\">Toggle</A><br>";
     }
 }
 ?>

@@ -335,7 +335,7 @@ def SetBinding(devIdx, cluster, ourEp):
     eui = database.GetDeviceItem(devIdx, "eui64")
     if None != ep and None != eui: 
         pendingBinding = cluster
-        return ("AT+BIND:"+devId+",3,"+eui+","+ep+","+cluster+","+telegesis.ourEui+","+ourEp, "Bind")
+        return ("AT+BIND:"+devId+",3,"+eui+","+ep+","+cluster+","+database.GetDeviceItem(0, "eui64")+","+ourEp, "Bind")
 
 def SwitchOn(devIdx):
     devId = database.GetDeviceItem(devIdx, "nwkId")
