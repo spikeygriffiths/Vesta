@@ -54,8 +54,6 @@ def EventHandler(eventId, eventArg):
             if expRspTimeoutS <= 0:
                 expRsp = ""
     elif eventId == events.ids.RXERROR:
-        if ourEui == "Unknown":
-            TxCmd(["ATI",  "OK"]) # Request our EUI, as well as our Telegesis version
         expRsp = ""
     elif eventId == events.ids.RXEXPRSP:
         expRsp = ""

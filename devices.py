@@ -14,6 +14,7 @@ import variables
 import zcl
 import iottime
 import database
+import presence
 
 globalDevIdx = None
 pendingBinding = None # Needed because the BIND response doesn't include the cluster
@@ -25,14 +26,13 @@ ephemera = [] # Don't bother saving this
 def EventHandler(eventId, eventArg):
     global ephemera, globalDevIdx, pendingBinding, pendingRptAttrId
     if eventId == events.ids.INIT:
-        devIdx = 1
         ephemera.append([]) # Create placeholder for hub
         numDevs = database.GetDevicesCount()
-        for devs in range(1, numDevs):  # Element 0 is hub, so skip that
+        for devIdx in range(1, numDevs):  # Element 0 is hub, so skip that
             ephemera.append([]) # Initialise parallel ephemeral device list
             SetTempVal(devIdx, "LastSeen", datetime.now())  # Mark it as "seen at start up" so we don't start looking for it immediately
             SetTempVal(devIdx, "GetNextBatteryAfter", datetime.now())    # Ask for battery shortly after startup
-            devIdx = devIdx + 1
+        presence.Init()
     if eventId == events.ids.DEVICE_ANNOUNCE:
         devId = eventArg[2]
         devIdx = GetIdx(devId)
@@ -130,34 +130,15 @@ def EventHandler(eventId, eventArg):
     if eventId == events.ids.SECONDS:
         if telegesis.CheckIdle() == True:
             SendPendingCommand()
-        devIdx = 1
         numDevs = database.GetDevicesCount()
-        for devs in range(1, numDevs):  # Element 0 is hub, so skip that
+        for devIdx in range(1, numDevs):  # Element 0 is hub, so skip that
             offAt = GetTempVal(devIdx, "SwitchOff@")
             if offAt:
                 if datetime.now() >= offAt:
                     SwitchOff(devIdx)
-            devIdx = devIdx + 1
     if eventId == events.ids.MINUTES:
-        CheckPresence()   # For all devices
+        presence.Check()   # For all devices
     # End event handler
-
-def CheckPresence():  # Expected to be called infrequently - ie once/minute
-    devIdx = 1
-    numDevs = database.GetDevicesCount()
-    for devs in range(1, numDevs):  # Element 0 is hub, so skip that
-        if GetTempVal(devIdx, "AtCmdRsp") == None:  # No pending command, so check whether device is present
-            lastSeen = GetTempVal(devIdx, "LastSeen") 
-            if lastSeen != None:
-                if datetime.now() > lastSeen+timedelta(seconds=900): # More than 15 minutes since we last heard from device
-                    devId = database.GetDeviceItem(devIdx, "nwkId")
-                    ep = database.GetDeviceItem(devIdx, "endPoints")
-                    if devId != None and ep != None:
-                        pendingAtCmd = telegesis.ReadAttr(devId, ep, zcl.Cluster.Basic, zcl.Attribute.Model_Name) # Get Basic's Device Name
-                        SetTempVal(devIdx, "AtCmdRsp", pendingAtCmd)
-                if datetime.now() > lastSeen+timedelta(seconds=1800): # More than 30 minutes since we last heard from device
-                    SetStatus(devIdx, "Presence", "* Missing *")
-        devIdx = devIdx + 1
 
 def NoteReporting(devIdx, clusterId, attrId):
     reporting = database.GetDeviceItem(devIdx, "reporting") # See if we're expecting this report, and note it in the reporting table
@@ -187,7 +168,7 @@ def SetAttrVal(devIdx, clstrId, attrId, value):
     if clstrId == zcl.Cluster.PowerConfig and attrId == zcl.Attribute.Batt_Percentage:
         SetTempVal(devIdx, "GetNextBatteryAfter", datetime.now()+timedelta(seconds=86400))    # Ask for battery every day
         if value != "FF":
-            varVal = int(value, 16) / 2 # Arrives in 0.5% increments 
+            varVal = int(int(value, 16) / 2) # Arrives in 0.5% increments, but drop fractional component
             SetStatus(devIdx, "Battery", str(varVal)) # For web page
         else:
             variables.Del(varName)
@@ -236,7 +217,7 @@ def DelTempVal(devIdx, name):
 
 def NoteEphemera(devIdx, arg):
     SetTempVal(devIdx, "LastSeen", datetime.now())  # Mark it as "recently seen"
-    SetStatus(devIdx, "Presence", "present") # For web page
+    presence.Set(devIdx, presence.states.present) # For web page
     if int(arg[-2]) < 0: # Assume penultimate item is RSSI, and thus that ultimate one is LQI
         rssi = arg[-2]
         lqi = arg[-1]

@@ -2,7 +2,6 @@
 
 ***** Features: *****
 * Show device absence on web.  Absent if >30 mins with no messages, else present.  Initially Unknown.  Only note missing (or present) in Events DB when state changes, not every minute(!)
-* Remove devices.txt and usernames.txt, activity.log and status.xml, debug.log, fault.log
 * Daily synopsis to use HTML email to show UpTime (from status.xml) & snapshot of devices page, plus last day's activity log.  Customise and improve synopsis, so that we can have different synopses daily, weekly or monthly...
 * Rules to include day of week, day of month and month for proper schedules
 * Auto-start network ("AT+EN") if ATN shows none available at start up
@@ -27,4 +26,5 @@
 
 Bugs
 * Occasionally stalls!  But then recovers as if nothing had happened.
+* Still get stupid serial errors!!!  Boggling.
 

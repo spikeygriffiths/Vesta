@@ -24,14 +24,26 @@ def EventHandler(eventId, eventArg):
 
 def NewEvent(devIdx, item, value):
     global curs, flushDB
-    curs.execute("INSERT INTO Events VALUES(datetime('now'),(?), (?), (?))", (item, value, devIdx))  # Insert event with timestamp
-    flushDB = True # Batch up the commits
+    latest = GetLatestEvent(devIdx, item)
+    if latest != value: # Only update on change
+        curs.execute("INSERT INTO Events VALUES(datetime('now'),(?), (?), (?))", (item, value, devIdx))  # Insert event with timestamp
+        flushDB = True # Batch up the commits
+
+def GetLatestEvent(devIdx, item):
+    global curs
+    curs.execute("SELECT value FROM Events WHERE item=(?) AND devIdx=(?) ORDER BY TIMESTAMP DESC LIMIT 1", (item, devIdx));  # Get latest event of correct type and device
+    rows = curs.fetchone()
+    if rows != None:
+        return rows[0]
+    return None
 
 def GetDevicesCount():
     global curs
     curs.execute("SELECT COUNT(*) FROM Devices") # Get number of devices
     rows = curs.fetchone()
-    return rows[0]
+    if rows != None:
+        return rows[0]
+    return 0
 
 def GetDeviceItem(devIdx, item):
     global curs
