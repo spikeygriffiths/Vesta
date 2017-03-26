@@ -3,7 +3,6 @@
 from datetime import datetime
 from datetime import timedelta
 import time
-#from pprint import pprint # Pretty print for devs list
 # App-specific modules
 import events
 import log
@@ -26,18 +25,22 @@ ephemera = [] # Don't bother saving this
 def EventHandler(eventId, eventArg):
     global ephemera, globalDevIdx, pendingBinding, pendingRptAttrId
     if eventId == events.ids.INIT:
-        ephemera.append([]) # Create placeholder for hub
         numDevs = database.GetDevicesCount()
+        ephemera.append([]) # Create placeholder for hub
+        #database.KillStatus()   # Remove old status from last time
+        database.InitStatus(0) # Clear status for hub        
         for devIdx in range(1, numDevs):  # Element 0 is hub, so skip that
+            database.InitStatus(devIdx)
+            presence.Set(devIdx, presence.states.unknown)
             ephemera.append([]) # Initialise parallel ephemeral device list
             SetTempVal(devIdx, "LastSeen", datetime.now())  # Mark it as "seen at start up" so we don't start looking for it immediately
             SetTempVal(devIdx, "GetNextBatteryAfter", datetime.now())    # Ask for battery shortly after startup
-        presence.Init()
     if eventId == events.ids.DEVICE_ANNOUNCE:
         devId = eventArg[2]
         devIdx = GetIdx(devId)
         if devIdx == None:  # Which will only be the case if this device is actually new, but it may have just reset and announced
-            devIdx = InitDev(devId)
+            devIdx = InitDev()
+            database.SetDeviceItem(devIdx, "nwkId", devId)
             database.SetDeviceItem(devIdx, "Username", "(New) "+devId)   # Default username of network ID, since that's unique
             database.SetDeviceItem(devIdx,"devType",eventArg[0])    # SED, FFD or ZED
             database.SetDeviceItem(devIdx,"eui64",eventArg[1])
@@ -56,7 +59,7 @@ def EventHandler(eventId, eventArg):
             devId = database.GetDeviceItem(devIdx, "nwkId")
             cmdRsp = Check(devIdx, False)   # Check to see if we want to know anything about the device
             if cmdRsp != None:
-                log.log("Want to know "+str(cmdRsp))
+                log.debug("Want to know "+str(cmdRsp))
                 telegesis.TxCmd(["AT+RAWZCL:"+devId+","+endPoint+",0020,11"+seq+"00012800", "OK"]) # Tell device to enter Fast Poll for 40qs (==10s)
                 SetTempVal(devIdx,"PollingUntil", datetime.now()+timedelta(seconds=10))
                 telegesis.TxCmd(cmdRsp)  # This will go out after the Fast Poll Set - but possibly ought to go out as part of SECONDS handler..?
@@ -157,32 +160,29 @@ def GetIdx(devId):
     return database.GetDevIdx("nwkId", devId)
 
 def InitDev(devId):
-    log.log("Adding new devId: "+ str(devId))
+    #log.debug("Adding new devId: "+ str(devId))
     ephemera.append([]) # Add parallel ephemeral device list
     return database.NewDevice(devId)
-
-def SetStatus(devIdx, name, value):# For web page
-    database.NewEvent(devIdx, name, value)
 
 def SetAttrVal(devIdx, clstrId, attrId, value):
     if clstrId == zcl.Cluster.PowerConfig and attrId == zcl.Attribute.Batt_Percentage:
         SetTempVal(devIdx, "GetNextBatteryAfter", datetime.now()+timedelta(seconds=86400))    # Ask for battery every day
         if value != "FF":
             varVal = int(int(value, 16) / 2) # Arrives in 0.5% increments, but drop fractional component
-            SetStatus(devIdx, "Battery", str(varVal)) # For web page
+            database.SetStatus(devIdx, "battery", varVal) # For web page
         else:
             variables.Del(varName)
     if clstrId == zcl.Cluster.Temperature and attrId == zcl.Attribute.Celsius:
         if value != "FF9C": # Don't know where this value comes from - should be "FFFF"
             varVal = int(value, 16) / 100 # Arrives in 0.01'C increments 
-            SetStatus(devIdx, "Temperature", str(varVal)) # For web page
+            database.SetStatus(devIdx, "temperature", varVal) # For web page
         else:
             variables.Del(varName)
     if clstrId == zcl.Cluster.OnOff and attrId == zcl.Attribute.OnOffState:
         if int(value, 16) == 0:
-            SetStatus(devIdx, "Event", "Switched Off")
+            database.NewEvent(devIdx, "Event", "Switched Off")
         else:
-            SetStatus(devIdx, "Event", "Switched On")
+            database.NewEvent(devIdx, "Event", "Switched On")
     if clstrId == zcl.Cluster.IAS_Zone and attrId == zcl.Attribute.Zone_Type:
         database.SetDeviceItem(devIdx, "iasZoneType", value)
     if clstrId == zcl.Cluster.Basic:
@@ -284,9 +284,8 @@ def Check(devIdx, consume):
     return pendingAtCmd
 
 def SendPendingCommand():
-    devIdx = 1
     numDevs = database.GetDevicesCount()
-    for devs in range(1, numDevs):  # Element 0 is hub, so skip that
+    for devIdx in range(1, numDevs):  # Element 0 is hub, so skip that
         if IsListening(devIdx):# True if FFD, ZED or Polling
             offTime = GetTempVal(devIdx, "SwitchOff@")
             if offTime != None:
@@ -294,9 +293,8 @@ def SendPendingCommand():
                     SwitchOff(devIdx)
             cmdRsp = Check(devIdx, True) # Automatically consume any pending command
             if cmdRsp != None:
-                log.log("Sending "+str(cmdRsp))
+                log.debug("Sending "+str(cmdRsp))
                 telegesis.TxCmd(cmdRsp)  # Send command directly
-        devIdx = devIdx + 1
 
 def IsListening(devIdx):
     type = database.GetDeviceItem(devIdx, "devType")
@@ -317,6 +315,13 @@ def SetBinding(devIdx, cluster, ourEp):
     if None != ep and None != eui: 
         pendingBinding = cluster
         return ("AT+BIND:"+devId+",3,"+eui+","+ep+","+cluster+","+database.GetDeviceItem(0, "eui64")+","+ourEp, "Bind")
+
+def Prod(devIdx):    # Ask device a question, just to provoke a response                        
+    devId = database.GetDeviceItem(devIdx, "nwkId")
+    ep = database.GetDeviceItem(devIdx, "endPoints")
+    if devId != None and ep != None:
+        pendingAtCmd = telegesis.ReadAttr(devId, ep, zcl.Cluster.Basic, zcl.Attribute.Model_Name) # Get Basic's Device Name in order to prod it into life
+        SetTempVal(devIdx, "AtCmdRsp", pendingAtCmd)
 
 def SwitchOn(devIdx):
     devId = database.GetDeviceItem(devIdx, "nwkId")

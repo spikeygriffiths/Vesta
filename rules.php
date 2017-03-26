@@ -8,7 +8,7 @@ ShowRules("/home/pi/hubapp/rules.txt");
 echo "<input type=\"submit\" value=\"Update Rules\">";
 echo "</form>";
 echo "<center>";
-echo "Click <a href=\"index.php\">here</a> to return";
+echo "<a href=\"index.php\">Home</a>";
 echo "</center>";
 
 function ShowRules($filename)

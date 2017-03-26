@@ -18,9 +18,9 @@ def main():
      
 def EventHandler(eventId, eventArg):
     if eventId == events.ids.INIT:
-        log.Init("   *********************************")
-        log.log("   *** Starting hubapp, v0.1.0.0 ***")
-        log.log("   *********************************")
+        log.Init     ("   *********************************")
+        log.debug("   *** Starting hubapp, v0.1.0.0 ***")
+        log.debug("   *********************************")
     # end event handler
 
 if __name__ == "__main__":

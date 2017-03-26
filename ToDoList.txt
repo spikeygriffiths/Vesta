@@ -1,7 +1,13 @@
 #!ToDoList.txt
 
 ***** Features: *****
-* Show device absence on web.  Absent if >30 mins with no messages, else present.  Initially Unknown.  Only note missing (or present) in Events DB when state changes, not every minute(!)
+* ShowAllDevices and ShowOneDevice.php to use new Status table in database
+* Remove "Temperature" from ShowAllDevices.php and replace with "Signal".  Populate this from LQI and RSSI, which should also be in new Status database
+* Add new status.py module to handle all status access (or extend database.py)
+* GetStatus() to return value of item and also timestamp as a tuple.  Get rid of "LastSeen" tempVal and use time from GetStatus("Presence")
+* Group devices into metaDevices, eg StairsLamp & landingLamp.  Use rule "group <name> as <device>,<device>..."
+* Renaming devices must update Rules
+* New action in Rules - do Event <event> back into system to keep track of "day", "evening", "night", etc.  Also for Elevate Alarm state machine
 * Daily synopsis to use HTML email to show UpTime (from status.xml) & snapshot of devices page, plus last day's activity log.  Customise and improve synopsis, so that we can have different synopses daily, weekly or monthly...
 * Rules to include day of week, day of month and month for proper schedules
 * Auto-start network ("AT+EN") if ATN shows none available at start up
@@ -9,7 +15,7 @@
 * Multiple device ZigBee endpoints?
  
 # *** Burglar alarm? ***
-# if keyfob=arm do Arming Alarm for 30
+# if keyfob==arm do Arming Alarm for 30
 # if Pir==active and Alarm==Armed do Elevate Alarm for 60
 # if Pir==active and Alarm==Elevated do Activate Alarm
 # if Contact==opened and Alarm==Armed do Elevate Alarm for 60
@@ -17,7 +23,7 @@
 # if Alarm==Arming do play ArmingAlarm.mp3
 # if Alarm==Activated do play IntruderAlert.mp3
 # if Alarm==Activated do email spikey@rosepip.com Intruder Alert!
-# if keyfob=disarm do Disarm Alarm
+# if keyfob==disarm do Disarm Alarm
 
 # *** Activity Pretence ***
 # if Alarm==Armed and sunset<time<23:59 do SwitchOn SpikeyLampPlug

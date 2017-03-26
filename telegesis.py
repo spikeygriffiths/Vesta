@@ -31,7 +31,7 @@ def HandleSerial(ser):
         atCmd, expRsp = txBuf.popleft()
         wrAtCmd = atCmd + "\r\n"
         ser.write(wrAtCmd.encode())
-        log.log("Tx>"+atCmd)
+        log.debug("Tx>"+atCmd)
         expRspTimeoutS = 10
 
 def EventHandler(eventId, eventArg):
@@ -71,13 +71,13 @@ def Parse(atLine):
         return # Ignore blank lines
     if atLine[0:2] == 'AT':
         return # Exit immediately if line starts with AT, indicating an echo
-    log.log("Parsing:"+ atLine)
+    log.debug("Parsing:"+ atLine)
     atLine = atLine.replace(':',',') # Replace colons with commas
     atList = atLine.split(',') # Split on commas
-    #log.log("Processed line into "+ atList)
+    #log.debug("Processed line into "+ atList)
     if expRsp != "":  # We're expecting a response, so see if this matches
         if expRsp in atList:
-            log.log("Found expected response of "+ expRsp+ " in "+ str(atList))
+            log.debug("Found expected response of "+ expRsp+ " in "+ str(atList))
             events.Issue(events.ids.RXEXPRSP, atList)
     # Not expecting any response, or it didn't match, so this must be spontaneous
     if expectOurEui == True and len(atList[0])==16: # If we're expecting an EUI and it looks plausible length
@@ -99,7 +99,7 @@ def Parse(atLine):
         database.SetDeviceItem(0, "manufName", atList[0])
     elif 0 == atList[0].find("CICIE"):
         database.SetDeviceItem(0, "modelName", atList[0])
-        expectOurEui = True # Following EUI has no prefix - we just have to know that it follows the CICIE line
+        expectOurEui = True # Following EUI has ngo prefix - we just have to know that it follows the CICIE line
     elif atList[0] == "+N=COO":
         ourChannel = atList[1]
         ourPowLvl = atList[2]
@@ -111,7 +111,7 @@ def Parse(atLine):
 
 def TxCmd(cmdRsp):  # Takes a list with two elements - command to send, and first word of last response to expect
     txBuf.append(cmdRsp)  # Append command and associated response as one item
-    #log.log("Pushing Cmd:"+str(cmdRsp))
+    #log.debug("Pushing Cmd:"+str(cmdRsp))
 
 def ReadAttr(devId, ep, clstrId, attrId): # NB All args as hex strings
     return ("AT+READATR:"+devId+","+ep+",0,"+clstrId+","+attrId, "RESPATTR")

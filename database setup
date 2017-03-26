@@ -2,7 +2,6 @@ sqlite3 hubstuff.db
 
 BEGIN;
 DROP TABLE IF EXISTS Devices;
-DROP TABLE IF EXISTS Events;
 CREATE TABLE Devices (
   devIdx INTEGER,
   userName TEXT,
@@ -19,6 +18,17 @@ CREATE TABLE Devices (
   iasZoneType TEXT,
 );
 
+DROP TABLE IF EXISTS Status;
+CREATE TABLE Status (
+  devIdx INTEGER,
+  battery INTEGER, battery_time DATETIME,
+  temperature INTEGER, temperature_time DATETIME,
+  signal INTEGER, signal_time DATETIME,
+  presence TEXT, presence_time DATETIME,
+  FOREIGN KEY(devIdx) REFERENCES Devices(devIdx)
+);
+
+DROP TABLE IF EXISTS Events;
 CREATE TABLE Events (
   timestamp DATETIME,
   item TEXT,

@@ -37,25 +37,25 @@ def EventHandler(eventId, eventArg):
         userName = database.GetDeviceItem(devIdx, "userName")
         zoneType = database.GetDeviceItem(devIdx, "iasZoneType") # Device type
         if zoneType != None:
-            #log.log("DevId: "+eventArg[1]+" has type "+ zoneType)
+            #log.debug("DevId: "+eventArg[1]+" has type "+ zoneType)
             if zoneType == zcl.Zone_Type.Contact:
                 if int(eventArg[3], 16) & 1: # Bottom bit indicates alarm1
                     if userName:
                         Run(userName+"==opened") # See if rule exists
-                    log.log("Door "+ eventArg[1]+ " opened")
-                    devices.SetStatus(devIdx, "Event", "opened") # For web page
+                    log.debug("Door "+ eventArg[1]+ " opened")
+                    database.NewEvent(devIdx, "Event", "opened") # For web page
                 else:
                     if userName:
                         Run(userName+"==closed") # See if rule exists
-                    log.log("Door "+ eventArg[1]+ " closed")
-                    devices.SetStatus(devIdx, "Event", "closed") # For web page
+                    log.debug("Door "+ eventArg[1]+ " closed")
+                    database.NewEvent(devIdx, "Event", "closed") # For web page
             elif zoneType == zcl.Zone_Type.PIR:
                 if userName:
                     Run(userName+"==active") # See if rule exists
-                log.log("PIR "+ eventArg[1]+ " active")
-                devices.SetStatus(devIdx, "Event", "active") # For web page
+                log.debug("PIR "+ eventArg[1]+ " active")
+                database.NewEvent(devIdx, "Event", "active") # For web page
             else:
-                log.log("DevId: "+ eventArg[1]+" zonestatus "+ eventArg[3])
+                log.debug("DevId: "+ eventArg[1]+" zonestatus "+ eventArg[3])
         else:
             log.fault("Unknown IAS device type for devId "+eventArg[1])
     elif eventId == events.ids.BUTTON:
@@ -63,8 +63,8 @@ def EventHandler(eventId, eventArg):
         now = datetime.now()
         nowStr = now.strftime("%H:%M")
         userName = database.GetDeviceItem(devIdx, "userName")
-        log.log("Button "+ eventArg[1]+ " "+eventArg[0]) # Arg[0] holds "ON", "OFF" or "TOGGLE" (Case might be wrong)
-        devices.SetStatus(devIdx, "Event", "pressed") # For web page
+        log.debug("Button "+ eventArg[1]+ " "+eventArg[0]) # Arg[0] holds "ON", "OFF" or "TOGGLE" (Case might be wrong)
+        database.NewEvent(devIdx, "Event", "pressed") # For web page
         if userName:
             Run(userName+"=="+eventArg[0]) # See if rule exists
 
@@ -72,7 +72,7 @@ def Run(trigger): # Run through the rules looking to see if we have a match for 
     rulesFile = Path(rulesFilename)
     if rulesFile.is_file():
         with open(rulesFilename) as rules:
-            log.log("Running rule: "+ trigger)
+            log.debug("Running rule: "+ trigger)
             if "==" in trigger:
                 sep = trigger.index("==")
                 triggerType = trigger[:sep]
@@ -104,10 +104,10 @@ def FindItemInList(item, listToCheck):
         return None
 
 def ParseCondition(ruleConditionList, trigger):
-    #log.log("Parsing: "+" ".join(ruleConditionList))
+    #log.debug("Parsing: "+" ".join(ruleConditionList))
     subAnswers = ""
     if ruleConditionList[0] == trigger: # If first condition (must be trigger) matches, then check rest
-        #log.log("condition: "+ruleConditionList[0]+ " = trigger: "+trigger)
+        #log.debug("condition: "+ruleConditionList[0]+ " = trigger: "+trigger)
         subAnswers = subAnswers + "True"
         if len(ruleConditionList) > 0: # Only parse rest of condition if first item is true
             for condition in ruleConditionList[1:]:
@@ -163,10 +163,10 @@ def GetConditionResult(test, condition):
         return False # If we couldn't find the item requested, assume the condition fails(?)
 
 def Action(actList):
-    log.log("Action with: "+str(actList))
+    log.debug("Action with: "+str(actList))
     action = actList[0]
     if action == "Log":
-        log.log("Rule says Log event for "+' '.join(actList[1:]))
+        log.debug("Rule says Log event for "+' '.join(actList[1:]))
     elif action == "Play":
         filename = "Sfx/"+actList[1]
         call(["omxplayer", "-o", "local", filename])
@@ -209,10 +209,10 @@ def Action(actList):
                     if actList[4] == "for":
                         SetOnDuration(devIdx, int(actList[5],10))
             else:
-                log.log("Unknown action: "+action +" for device: "+actList[1])
+                log.debug("Unknown action: "+action +" for device: "+actList[1])
 
 def SetOnDuration(devIdx, durationS):
     if durationS>0: # Duration of 0 means "Stay on forever"
-        log.log("Switching off after "+str(durationS))
+        log.debug("Switching off after "+str(durationS))
         devices.SetTempVal(devIdx, "SwitchOff@", datetime.now()+timedelta(seconds=durationS))
 

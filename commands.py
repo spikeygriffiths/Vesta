@@ -47,12 +47,12 @@ def EventHandler(eventId, eventArg):
             if s is sck:
                 cliSck, addr = sck.accept()
                 sckLst.append(cliSck)
-                log.log ("New connection from web page!")
+                log.debug("New connection from web page!")
             else:
                 cmd = cliSck.recv(100)
                 if cmd:
                     cmd = cmd.decode()
-                    log.log ("Got cmd "+ cmd)
+                    log.debug("Got cmd "+ cmd)
                     sys.stdout = open("cmdoutput", "w") # Redirect stdout to file
                     Commands().onecmd(cmd)
                     sys.stdout = sys.__stdout__ # Put stdout back to normal (will hopefully also close the file)
@@ -60,7 +60,7 @@ def EventHandler(eventId, eventArg):
                     cmdOut = f.read()
                     cliSck.send(str.encode(cmdOut))
                 else:
-                    log.log ("Closing socket")
+                    log.debug("Closing socket")
                     cliSck.close()
                     sckLst.remove(cliSck)
     # End of Command EventHandler

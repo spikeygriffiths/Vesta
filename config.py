@@ -16,7 +16,7 @@ def Get(item, default=None):
                     if lineList[0].strip() == item: # Strip leading & trailing spaces 
                         value = lineList[1].splitlines()[0] # Discard trailing newline
                         value = value.strip()   # Discard leading or trailing spaces
-                        log.log("Matched:"+lineList[0]+ "with value:"+value)
+                        #log.debug("Matched:"+lineList[0]+ "with value:"+value)
                         return value
     return default  # If we get all through the config file without finding a match, use default value
  
