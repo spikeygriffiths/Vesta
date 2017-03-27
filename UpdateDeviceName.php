@@ -17,7 +17,7 @@ if ($count == 1) {
 } else {
     echo "Update failed, with count of:", $count, "<br>";
 }
-echo "<a href=ShowOneDevice.php/?devIdx=",$devIdx,">Show Device</a>";
+echo "<a href=/ShowOneDevice.php/?devIdx=",$devIdx,">Show Device</a>";
 
 function  DevGetItem($item, $devIdx, $db)
 {
@@ -50,6 +50,6 @@ function UpdateRules($oldUserName, $newUserName)
     fclose($inHandle); 
     shell_exec("mv /home/pi/hubapp/rules.txt /home/pi/hubapp/old_rules.txt");
     shell_exec("mv /home/pi/hubapp/new_rules.txt /home/pi/hubapp/rules.txt");
-    shell_exec("chmod 666 /home/pi/hubapp/rules.txt");
+    //shell_exec("chmod 666 /home/pi/hubapp/rules.txt");
 }
 ?>
