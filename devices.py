@@ -138,6 +138,13 @@ def EventHandler(eventId, eventArg):
             if offAt:
                 if datetime.now() >= offAt:
                     SwitchOff(devIdx)
+            pirOffAt = GetTempVal(devIdx, "PirInactive@")
+            if pirOffAt:
+                if datetime.now() >= pirOffAt:
+                    DelTempVal(devIdx, "PirInactive@")
+                    newState = "inactive"
+                    database.NewEvent(devIdx, "Event", newState)
+                    Rule(devIdx. newState)
     if eventId == events.ids.MINUTES:
         presence.Check()   # For all devices
     # End event handler
@@ -178,10 +185,14 @@ def SetAttrVal(devIdx, clstrId, attrId, value):
         else:
             variables.Del(varName)
     if clstrId == zcl.Cluster.OnOff and attrId == zcl.Attribute.OnOffState:
+        oldState = database.GetLatestEvent(devIdx, "Event")
         if int(value, 16) == 0:
-            database.NewEvent(devIdx, "Event", "Switched Off")
+            newState = "SwitchedOff"
         else:
-            database.NewEvent(devIdx, "Event", "Switched On")
+            newState = "SwitchedOn"
+        if oldState != newState:
+            database.NewEvent(devIdx, "Event", newState)
+            Rule(devIdx, newState)
     if clstrId == zcl.Cluster.IAS_Zone and attrId == zcl.Attribute.Zone_Type:
         database.SetDeviceItem(devIdx, "iasZoneType", value)
     if clstrId == zcl.Cluster.Basic:
@@ -189,6 +200,9 @@ def SetAttrVal(devIdx, clstrId, attrId, value):
             database.SetDeviceItem(devIdx, "modelName", value)
         if attrId == zcl.Attribute.Manuf_Name:
             database.SetDeviceItem(devIdx, "manufName", value)
+
+def Rule(devIdx, state):
+    rules.Run(database.GetDeviceItem(devIdx, "userName")+"=="+state)
 
 def SetTempVal(devIdx, name, value):
     global ephemera

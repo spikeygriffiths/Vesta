@@ -37,36 +37,35 @@ def EventHandler(eventId, eventArg):
         userName = database.GetDeviceItem(devIdx, "userName")
         zoneType = database.GetDeviceItem(devIdx, "iasZoneType") # Device type
         if zoneType != None:
-            #log.debug("DevId: "+eventArg[1]+" has type "+ zoneType)
+            oldState = database.GetLatestEvent(devIdx, "Event")
             if zoneType == zcl.Zone_Type.Contact:
                 if int(eventArg[3], 16) & 1: # Bottom bit indicates alarm1
-                    if userName:
-                        Run(userName+"==opened") # See if rule exists
-                    log.debug("Door "+ eventArg[1]+ " opened")
-                    database.NewEvent(devIdx, "Event", "opened") # For web page
+                    newState = "opened"
                 else:
-                    if userName:
-                        Run(userName+"==closed") # See if rule exists
-                    log.debug("Door "+ eventArg[1]+ " closed")
-                    database.NewEvent(devIdx, "Event", "closed") # For web page
+                    newState = "closed"
+                if oldState != newState:    # NB Might get same state if sensor re-sends, or due to battery report 
+                    database.NewEvent(devIdx, "Event", newState) # For web page.  Only update event log when state changes
+                    Run(userName+"=="+newState) # See if rule exists (when state changes)
+                    #log.debug("Door "+ eventArg[1]+ " "+newState)
             elif zoneType == zcl.Zone_Type.PIR:
-                if userName:
-                    Run(userName+"==active") # See if rule exists
-                log.debug("PIR "+ eventArg[1]+ " active")
-                database.NewEvent(devIdx, "Event", "active") # For web page
+                if int(eventArg[3], 16) & 1: # Bottom bit indicates alarm1
+                    newState = "active"
+                    devices.SetTempVal(devIdx, "PirInactive@", datetime.now()+timedelta(seconds=300))
+                else:
+                    newState = "inactive" # Might happen if we get an IAS battery report
+                Run(userName+"=="+newState) # See if rule exists
+                if oldState != newState:
+                    database.NewEvent(devIdx, "Event", newState) # For web page.  Only update event log when state changes
             else:
                 log.debug("DevId: "+ eventArg[1]+" zonestatus "+ eventArg[3])
         else:
             log.fault("Unknown IAS device type for devId "+eventArg[1])
     elif eventId == events.ids.BUTTON:
         devIdx = devices.GetIdx(eventArg[1]) # Lookup device from network address in eventArg[1]
-        now = datetime.now()
-        nowStr = now.strftime("%H:%M")
         userName = database.GetDeviceItem(devIdx, "userName")
-        log.debug("Button "+ eventArg[1]+ " "+eventArg[0]) # Arg[0] holds "ON", "OFF" or "TOGGLE" (Case might be wrong)
+        #log.debug("Button "+ eventArg[1]+ " "+eventArg[0]) # Arg[0] holds "ON", "OFF" or "TOGGLE" (Case might be wrong)
         database.NewEvent(devIdx, "Event", "pressed") # For web page
-        if userName:
-            Run(userName+"=="+eventArg[0]) # See if rule exists
+        Run(userName+"=="+eventArg[0]) # See if rule exists
 
 def Run(trigger): # Run through the rules looking to see if we have a match for the trigger
     rulesFile = Path(rulesFilename)

@@ -80,7 +80,7 @@ function ShowDeviceInfo($db, $devIdx, $username)
     ShowDevStatus("battery", "Battery %", $devIdx, $db);
     ShowDevStatus("temperature", "Temperature 'C", $devIdx, $db);
     ShowDevStatus("presence", "Presence", $devIdx, $db);
-    ShowLatest("Latest", $devIdx, $db);
+    ShowLatest("Event", $devIdx, $db);
     ShowDevItem("manufName", "Manufacturer", $devIdx, $db);
     ShowDevItem("modelName", "Model", $devIdx, $db);
     ShowDevItem("eui64", "EUI", $devIdx, $db);
