@@ -59,11 +59,11 @@ def EventHandler(eventId, eventArg):
             cmdRsp = Check(devIdx, False)   # Check to see if we want to know anything about the device
             if cmdRsp != None:
                 log.debug("Want to know "+str(cmdRsp))
-                telegesis.TxCmd(["AT+RAWZCL:"+devId+","+endPoint+",0020,11"+seq+"00012800", "OK"]) # Tell device to enter Fast Poll for 40qs (==10s)
+                telegesis.TxCmd(["AT+RAWZCL:"+devId+","+endPoint+",0020,11"+seq+"00012800", "DFTREP"]) # Tell device to enter Fast Poll for 40qs (==10s)
                 SetTempVal(devIdx,"PollingUntil", datetime.now()+timedelta(seconds=10))
-                telegesis.TxCmd(cmdRsp)  # This will go out after the Fast Poll Set - but possibly ought to go out as part of SECONDS handler..?
+                telegesis.TxCmd(cmdRsp)  # This will go out after the Fast Poll Set
             else:
-                telegesis.TxCmd(["AT+RAWZCL:"+devId+","+endPoint+",0020,11"+seq+"00000100", "OK"]) # Tell device to stop Poll
+                telegesis.TxCmd(["AT+RAWZCL:"+devId+","+endPoint+",0020,11"+seq+"00000100", "DFTREP"]) # Tell device to stop Poll
     if eventId == events.ids.RXMSG:
         if eventArg[0] == "AddrResp" and eventArg[1] == "00":
             devIdx = GetIdx(eventArg[2])
