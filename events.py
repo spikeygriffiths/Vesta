@@ -31,6 +31,8 @@ class ids:
     HOURS = 13 # No arg.  Issued at startup and once an hour thereafter
     NEWDAY = 14 # No arg.  Issued once/day (at 1am for now)
     WEATHER = 15 # No arg.  Issued once/hour.  Various variables ("cloudCover", "rain", "windSpeed", "outsideTemperature") hold current weather
+    TIMEOFDAY = 16 # Arg is string "morning", "lunchtime", etc.
+    ALARM = 17 # Arg is string, one of "Arming", "Armed", Elevated", "Activated", "Disarmed" 
 
 def Issue(eventId, eventArg=0):
     # Tell all interested parties about the new event

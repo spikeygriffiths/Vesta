@@ -169,6 +169,12 @@ def Action(actList):
     elif action == "Play":
         filename = "Sfx/"+actList[1]
         call(["omxplayer", "-o", "local", filename])
+    elif action == "Event":
+        if actList[1] == "TimeOfDay":
+            events.IssueEvent(events.ids.TIMEOFDAY, actList[2])
+        elif actList[1] == "Alarm":
+            events.IssueEvent(events.ids.ALARM, actList[2])
+        # Could have other events here...
     elif action == "synopsis": # First arg is email recipient
         emailAddress = config.Get("emailAddress")
         if emailAddress != None:

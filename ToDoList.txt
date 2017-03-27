@@ -2,7 +2,6 @@
 
 ***** Features: *****
 * Group devices, eg StairsLamp & landingLamp as "StairLamps".  Use Groups table in database to have a grpIdx with userName and list of devIdxs - on web page as drop-down list?
-* New action in Rules - do Event <event> back into system to keep track of "day", "evening", "night", etc.  Also for Elevate Alarm state machine
 * Daily synopsis to use HTML email to show UpTime (from status.xml) & snapshot of devices page, plus last day's activity log.  Customise and improve synopsis, so that we can have different synopses daily, weekly or monthly...
 * Rules to include day of week, day of month and month for proper schedules
 * Auto-start network ("AT+EN") if ATN shows none available at start up
@@ -10,15 +9,15 @@
 * Multiple device ZigBee endpoints?
  
 # *** Burglar alarm? ***
-# if keyfob==arm do Arming Alarm for 30
-# if Pir==active and Alarm==Armed do Elevate Alarm for 60
-# if Pir==active and Alarm==Elevated do Activate Alarm
-# if Contact==opened and Alarm==Armed do Elevate Alarm for 60
-# if Contact==opened and Alarm==Elevated do Activate Alarm
+# if keyfob==arm do Event Alarm Arming
+# if InternalPirs==active and Alarm==Armed do Event Alarm Elevate
+# if InternalPirs==active and Alarm==Elevated do Event Alarm Activate
+# if ExternalDoors==opened and Alarm==Armed do Event Alarm Elevate
+# if ExternalDoors==opened and Alarm==Elevated do Event Alarm Activate
 # if Alarm==Arming do play ArmingAlarm.mp3
 # if Alarm==Activated do play IntruderAlert.mp3
 # if Alarm==Activated do email Intruder Alert!
-# if keyfob==disarm do Disarm Alarm
+# if keyfob==disarm do Event Alarm Disarm
 
 # *** Activity Pretence ***
 # if Alarm==Armed and sunset<time<23:59 do SwitchOn SpikeyLampPlug
