@@ -18,7 +18,7 @@
 # if Contact==opened and Alarm==Elevated do Activate Alarm
 # if Alarm==Arming do play ArmingAlarm.mp3
 # if Alarm==Activated do play IntruderAlert.mp3
-# if Alarm==Activated do email spikey@rosepip.com Intruder Alert!
+# if Alarm==Activated do email Intruder Alert!
 # if keyfob==disarm do Disarm Alarm
 
 # *** Activity Pretence ***

@@ -71,6 +71,7 @@ def EventHandler(eventId, eventArg):
 def Run(trigger): # Run through the rules looking to see if we have a match for the trigger
     rulesFile = Path(rulesFilename)
     if rulesFile.is_file():
+        call("chmod 666 "+rulesFilename, shell=True)    # Make sure we can use it
         with open(rulesFilename) as rules:
             log.debug("Running rule: "+ trigger)
             if "==" in trigger:
@@ -93,8 +94,7 @@ def Run(trigger): # Run through the rules looking to see if we have a match for 
             # end of rules
             variables.Del(triggerType) # Make sure we don't re-run the same trigger
     else:
-        shell.exec("touch "+rulesFilename)
-        shell.exec("chmod 666 "+rulesFilename)
+        call("touch "+rulesFilename, shell=True)
         log.fault("Made new " + rulesFilename+" !")
 
 def FindItemInList(item, listToCheck):
