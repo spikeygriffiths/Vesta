@@ -71,7 +71,7 @@ def EventHandler(eventId, eventArg):
 def Run(trigger): # Run through the rules looking to see if we have a match for the trigger
     rulesFile = Path(rulesFilename)
     if rulesFile.is_file():
-        call("chmod 666 "+rulesFilename, shell=True)    # Make sure we can use it
+        call("sudo chmod 666 "+rulesFilename, shell=True)    # Make sure we can use it
         with open(rulesFilename) as rules:
             log.debug("Running rule: "+ trigger)
             if "==" in trigger:
