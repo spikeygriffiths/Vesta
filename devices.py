@@ -144,7 +144,7 @@ def EventHandler(eventId, eventArg):
                     DelTempVal(devIdx, "PirInactive@")
                     newState = "inactive"
                     database.NewEvent(devIdx, "Event", newState)
-                    Rule(devIdx. newState)
+                    Rule(devIdx, newState)
     if eventId == events.ids.MINUTES:
         presence.Check()   # For all devices
     # End event handler
