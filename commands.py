@@ -140,7 +140,18 @@ class Commands(cmd.Cmd):
 
     def do_at(self, line):
         """at cmd
-        "Sends AT command to Telegesis stick"""
+        Sends AT command to Telegesis stick"""
         telegesis.TxCmd(["AT"+line, "OK"])
         
+    def do_status(self, line):
+        """status <devIdx> <item> <value>
+        Sets status table entry"""
+        argList = line.split()
+        if len(argList) >= 3:
+            devIdx = argList[0]
+            item = argList[1]
+            value = argList[2]
+            database.SetStatus(devIdx, item, value)
+        else:
+            log.fault("Insufficient Args")
 

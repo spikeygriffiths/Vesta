@@ -14,12 +14,40 @@ ShowDevices();
 echo "<center><a href=\"/index.php\">Home</a> </center>";
 echo "</body></html>";
 
-function  DbGetItem($item, $devIdx, $db)
+function DevGetItem($item, $devIdx, $db)
 {
     $result = $db->query("SELECT ".$item." FROM Devices WHERE devIdx=".$devIdx);
-    $result->setFetchMode(PDO::FETCH_ASSOC);
-    $fetch = $result->fetch();
-    return $fetch[$item];
+    if ($result != null) {
+        $result->setFetchMode(PDO::FETCH_ASSOC);
+        $fetch = $result->fetch();
+        if ($fetch != null) {
+            return $fetch[$item];
+        }
+    }
+    return null;
+}
+
+function  DevGetStatus($item, $devIdx, $db)
+{
+    $result = $db->query("SELECT ".$item." FROM Status WHERE devIdx=".$devIdx);
+    if ($result != null) {
+        $result->setFetchMode(PDO::FETCH_ASSOC);
+        $fetch = $result->fetch();
+        if ($fetch != null) {
+            return $fetch[$item];
+        }
+    }
+    return null;
+}
+
+function ShowDevStatus($item, $devIdx, $db)
+{
+    $val = DevGetStatus($item, $devIdx,$db);
+    if ($val != null) {
+        echo "<td>$val</td>";
+    } else {
+        echo "<td>N/A</td>";
+    }
 }
 
 function TableElement($item, $units, $devIdx, $db)
@@ -38,14 +66,14 @@ function ShowDevices()
     $result = $db->query("SELECT COUNT(*) FROM Devices");
     $numDevs = $result->fetchColumn();
     echo "<table>";
-    echo "<tr><th>Name</th><th>Battery %</th><th>Temperature (C)</th><th>Presence</th><th>Notes</th></tr>";
+    echo "<tr><th>Name</th><th>Battery %</th><th>Signal %</th><th>Presence</th><th>Notes</th></tr>";
     for ($devIdx = 0; $devIdx < $numDevs; $devIdx++) {
         echo "<tr>";
-        $username = DbGetItem("userName", $devIdx, $db);
+        $username = DevGetItem("userName", $devIdx, $db);
         echo "<td><a href=\"ShowOneDevice.php/?devIdx=",$devIdx,"\">",$username,"</a></td>";
-	    TableElement("Battery", "%", $devIdx, $db);
-	    TableElement("Temperature", "'C", $devIdx, $db);
-	    TableElement("Presence", "", $devIdx, $db);
+	    ShowDevStatus("battery", $devIdx, $db);
+	    ShowDevStatus("signal", $devIdx, $db);
+  	    ShowDevStatus("presence", $devIdx, $db);
 	    TableElement("Event", "", $devIdx, $db);
         echo "</tr>";
     }

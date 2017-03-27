@@ -33,7 +33,6 @@ def EventHandler(eventId, eventArg):
             database.InitStatus(devIdx)
             presence.Set(devIdx, presence.states.unknown)
             ephemera.append([]) # Initialise parallel ephemeral device list
-            SetTempVal(devIdx, "LastSeen", datetime.now())  # Mark it as "seen at start up" so we don't start looking for it immediately
             SetTempVal(devIdx, "GetNextBatteryAfter", datetime.now())    # Ask for battery shortly after startup
     if eventId == events.ids.DEVICE_ANNOUNCE:
         devId = eventArg[2]
@@ -186,11 +185,10 @@ def SetAttrVal(devIdx, clstrId, attrId, value):
     if clstrId == zcl.Cluster.IAS_Zone and attrId == zcl.Attribute.Zone_Type:
         database.SetDeviceItem(devIdx, "iasZoneType", value)
     if clstrId == zcl.Cluster.Basic:
-        if attrId == zcl.Attribute.Manuf_Name or attrId == zcl.Attribute.Model_Name:
-            userName = database.GetDeviceItem(devIdx, "userName")
-            if userName.find("(New)")==0:   # userName starts with "(New)"
-                userName = userName + " " + value
-                database.SetDeviceItem(devIdx, "userName", userName)
+        if attrId == zcl.Attribute.Model_Name:
+            database.SetDeviceItem(devIdx, "modelName", value)
+        if attrId == zcl.Attribute.Manuf_Name:
+            database.SetDeviceItem(devIdx, "manufName", value)
 
 def SetTempVal(devIdx, name, value):
     global ephemera
@@ -216,13 +214,12 @@ def DelTempVal(devIdx, name):
     return None # Indicate item not found
 
 def NoteEphemera(devIdx, arg):
-    SetTempVal(devIdx, "LastSeen", datetime.now())  # Mark it as "recently seen"
-    presence.Set(devIdx, presence.states.present) # For web page
+    presence.Set(devIdx, presence.states.present) # Note presence
     if int(arg[-2]) < 0: # Assume penultimate item is RSSI, and thus that ultimate one is LQI
         rssi = arg[-2]
         lqi = arg[-1]
-        SetTempVal(devIdx, "RSSI", rssi)
-        SetTempVal(devIdx, "LQI", lqi)
+        signal = int((int(lqi, 16) * 100) / 255)    # Convert 0-255 to 0-100.  Ignore RSSI for now
+        database.SetStatus(devIdx, "signal", signal)
         arg.remove(rssi)
         arg.remove(lqi)
 
