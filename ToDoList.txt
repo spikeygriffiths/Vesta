@@ -2,20 +2,19 @@
 
 ***** Features: *****
 * Group devices, eg StairsLamp & landingLamp as "StairLamps".  Use Groups table in database to have a grpIdx with userName and list of devIdxs - on web page as drop-down list?
-* Consider one message in flight per device. rather than per hub, to avoid ERROR 66
-* Daily synopsis to use HTML email to show UpTime (from status.xml) & snapshot of devices page, plus last day's activity log.  Customise and improve synopsis, so that we can have different synopses daily, weekly or monthly...
-* Rules to include day of week, day of month and month for proper schedules
+* Consider one message in flight per device. rather than per hub, to avoid ERROR 66 and stalling
+* Daily synopsis to use HTML email to show UpTime & snapshot of devices page, plus last day's activity log.  Customise and improve synopsis, so that we can have different synopses daily, weekly or monthly...
 * Auto-start network ("AT+EN") if ATN shows none available at start up
 * Colour lamp control
 * Multiple device ZigBee endpoints?
  
 # *** Burglar alarm? ***
 # if keyfob==arm do Event Alarm Arming
+# if Alarm==Arming do play ArmingAlarm.mp3
 # if InternalPirs==active and Alarm==Armed do Event Alarm Elevate
 # if InternalPirs==active and Alarm==Elevated do Event Alarm Activate
 # if ExternalDoors==opened and Alarm==Armed do Event Alarm Elevate
 # if ExternalDoors==opened and Alarm==Elevated do Event Alarm Activate
-# if Alarm==Arming do play ArmingAlarm.mp3
 # if Alarm==Activated do play IntruderAlert.mp3
 # if Alarm==Activated do email Intruder Alert!
 # if keyfob==disarm do Event Alarm Disarm
@@ -23,9 +22,9 @@
 # *** Activity Pretence ***
 # if Alarm==Armed and sunset<time<23:59 do SwitchOn SpikeyLampPlug
 # if time==00:30 and Alarm==Armed do SwitchOff SpikeyLampPlug
-# if house==unoccupied and 0:00<time<sunset and HallLight_OnOff==off and rand(30)==0 do SwitchOn HallLight for 300
+# if InternalPirs==unoccupied and 0:00<time<sunset and HallLight_OnOff==off and rand(30)==0 do SwitchOn HallLight for 300
 
 Bugs
-* Occasionally stalls!  But then recovers as if nothing had happened.
-* Still get stupid serial errors!!!  Boggling.
+* Occasionally stalls!  But then recovers as if nothing had happened.  Suspect stalled messages for other devices
+* Still get stupid serial errors!!!  But only when headless...
 

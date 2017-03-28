@@ -2,6 +2,8 @@
 
 from datetime import datetime
 from datetime import timedelta
+from datetime import date
+import calendar
 from astral import Astral
 import time
 # App-specific modules
@@ -14,15 +16,13 @@ import database
 import config
 
 appStartTime = datetime.now()
-oldMins = 0
-oldHours = 0
-oldDay = 0
-oldWeek = 0
-oldMonth = 0
+oldMins = -1
+oldHours = -1   # Force the first reading of time to change hour
 
 def EventHandler(eventId, eventArg):
-    global oldMins, oldHours, oldDay, oldWeek, oldMonth
+    global oldMins, oldHours
     if eventId == events.ids.INIT:
+        SetDayInfo()
         SetSunTimes()
         if variables.Get("sunrise") != None:
             variables.Set("morning", variables.Get("sunrise"))
@@ -49,11 +49,12 @@ def EventHandler(eventId, eventArg):
             CheckTimedRule("dusk", now) # Sky now getting dark after sunset
     if eventId == events.ids.HOURS:
         now = datetime.now()
-        if now.hour == 1: # 1am, time to calculate sunrise and sunset for new day
+        if now.hour == 0: # Midnight, time to calculate sunrise and sunset for new day
             events.Issue(events.ids.NEWDAY)
     if eventId == events.ids.NEWDAY:
             SetSunTimes()
             log.RollLogs() # Roll the logs, to avoid running out of disc space
+            SetDayInfo()
     if eventId == events.ids.WEATHER:
         if variables.Get("sunrise") != None:    # Can only use weather if we know sunrise & sunset
             now = datetime.now()
@@ -77,6 +78,17 @@ def EventHandler(eventId, eventArg):
                 if evening<nowTime and oldEvening>nowTime:  # If the new evening is before now and the old evening was after, then make sure we still issue the "evening" rule
                     evening = now + timedelta(minutes=1) # Set evening to be in the next minute if the clouds are building up
             variables.Set("evening", str(evening.strftime("%H:%M")))
+
+def SetDayInfo():
+    today = date.today()
+    dayOfWeek = today.weekday()
+    variables.Set("dayOfWeek", calendar.day_name[dayOfWeek]) # To allow different rules on different days of the week
+    if dayOfWeek < 5:
+        variables.Set("weekend","false")
+    else:
+        variables.Set("weekend", "true")
+    variables.Set("dayOfMonth", str(today.day))
+    variables.Set("month", str(today.month))
 
 def SetSunTimes():
     cityName = config.Get("cityName")
