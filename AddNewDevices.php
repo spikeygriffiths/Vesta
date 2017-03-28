@@ -17,11 +17,11 @@ echo "</head>";
 echo "<body>";
 echo "<center><h1>Add New Devices</h1> ";
 echo "Now: ", date('Y-m-d H:i:s'), "<br><br>"; // Show page refreshing
-echo "<button type=\"button\" onclick=\"HubCmd('Command.php/?cmd=open&expRsp=false')\">Open hub for 1 minute</button><br>";
-echo "</center>";
+echo "<button type=\"button\" onclick=\"HubCmd('Command.php/?cmd=open&expRsp=false')\">Open hub for 1 minute</button><br><br><br><br>";
 ShowNewDevices();
-echo "<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>";
-echo "<center><a href=\"index.php\">Home</a></center>";
+echo "<br><br><br><br>";
+echo "<center><a href=\"/ShowAllDevices.php\">All Devices</a> </center><br>";
+echo "<center><a href=\"/index.php\">Home</a> </center>";
 echo "</body>";
 echo "</html>";
 
@@ -31,18 +31,19 @@ function ShowNewDevices()
     $db = new PDO($dir) or die("Cannot open database");
     $result = $db->query("SELECT COUNT(*) FROM Devices");
     $numDevs = $result->fetchColumn();
-    echo "<table>";
-    echo "<tr><th>Name</th><th>Type</th></tr>";
-    for ($devIdx = 0; $devIdx < $numDevs; $devIdx++) {
-        $result = $db->query("SELECT userName, modelName FROM devices WHERE devIdx=".$devIdx);
+    $foundNothing = True;
+    for ($devIdx = 1; $devIdx < $numDevs; $devIdx++) {
+        $result = $db->query("SELECT userName, manufName, modelName FROM devices WHERE devIdx=".$devIdx);
         $result->setFetchMode(PDO::FETCH_ASSOC);
         $fetch = $result->fetch();
-        $username = $fetch[UserName];
-        $modelname = $fetch[ModelName];
-        //if (substr($username, 0, 5)=="(New)") {
-            echo "<tr><td>",$username,"</td><td>",$modelname,"</td></tr>";
-        //}
-        echo "</table>";
+        $userName = $fetch[userName];
+        $manufName = $fetch[manufName];
+        $modelName = $fetch[modelName];
+        if (substr($userName, 0, 5)=="(New)") {
+            $foundNothing = False;
+            echo "Found new ",$modelName," manufactured by: ",$manufName,"<br>";
+        }
     }
+    if ($foundNothing) echo "Nothing so far...<br>";
 }
 ?>
