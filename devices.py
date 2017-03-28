@@ -284,8 +284,7 @@ def Check(devIdx, consume):
                     return ("AT+CFGRPT:"+devId+","+ep+",0,"+zcl.Cluster.Temperature+",0,"+zcl.Attribute.Celsius+","+zcl.AttributeTypes.Uint16+",012C,0E10,0064", "CFGRPTRP") # 012C is 300==5 mins, 0E10 is 3600==1 hour, 0064 is 100, being 1.00'C
         else:
             database.SetDeviceItem(devIdx, "reporting", "[]")
-    wantOnOff = GetTempVal(devIdx, "JustSentOnOff")
-    if wantOnOff:
+    if GetTempVal(devIdx, "JustSentOnOff"):
         DelTempVal(devIdx, "JustSentOnOff")
         return telegesis.ReadAttr(devId, ep, zcl.Cluster.OnOff, zcl.Attribute.OnOffState) # Get OnOff state after sending toggle
     pendingAtCmd = GetTempVal(devIdx, "AtCmdRsp")

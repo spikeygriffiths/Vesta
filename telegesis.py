@@ -15,7 +15,6 @@ expRspTimeoutS = 0
 expectOurEui = False
 txBuf = deque([])    # Nothing to transmit initially
 rxBuf = deque([])
-ourSoc = "Unknown"
 ourChannel = "Unknown"
 ourPowLvl = "Unknown"
 ourPan = "Unknown"
@@ -23,7 +22,6 @@ ourExtPan = "Unknown"
 
 def HandleSerial(ser):
     global expRsp, expRspTimeoutS, txBuf, rxBuf
-    #if ser.inWaiting(): # Should be ser.in_waiting in later (>v3.0) pyserial libraries
     telegesisInLine = str(ser.readline(),'utf-8').rstrip('\r\n')    # Rely on timeout=0 to return imemdiately,either with a line or with None
     if telegesisInLine != None:
         rxBuf.append(telegesisInLine)  # Buffer this for subsequent processing in main thread
@@ -32,7 +30,7 @@ def HandleSerial(ser):
         wrAtCmd = atCmd + "\r\n"
         ser.write(wrAtCmd.encode())
         log.debug("Tx>"+atCmd)
-        expRspTimeoutS = 10
+        expRspTimeoutS = 2  # If we've not heard back after 2 seconds, it's probably got lost, so try again
 
 def EventHandler(eventId, eventArg):
     global ser, expRsp, expRspTimeoutS, txBuf, rxBuf
@@ -74,17 +72,16 @@ def Parse(atLine):
     log.debug("Parsing:"+ atLine)
     atLine = atLine.replace(':',',') # Replace colons with commas
     atList = atLine.split(',') # Split on commas
-    #log.debug("Processed line into "+ atList)
     if expRsp != "":  # We're expecting a response, so see if this matches
         if expRsp in atList:
             log.debug("Found expected response of "+ expRsp+ " in "+ str(atList))
             events.Issue(events.ids.RXEXPRSP, atList)
     # Not expecting any response, or it didn't match, so this must be spontaneous
-    if expectOurEui == True and len(atList[0])==16: # If we're expecting an EUI and it looks plausible length
+    if atList[0] == 'OK':
+        return  # Discard OK if we're not expecting it
+    elif expectOurEui == True and len(atList[0])==16: # If we're expecting an EUI and it looks plausible length
         database.SetDeviceItem(0, "eui64", atList[0])
         expectOurEui = False
-    if atList[0] == 'OK':
-        return
     elif atList[0] == "ERROR":
         events.Issue(events.ids.RXERROR, int(atList[1],16)) # See if anyone cares about the error
     elif atList[0] == "SED" or atList[0] == "FFD" or atList[0] == "ZED":
@@ -99,7 +96,7 @@ def Parse(atLine):
         database.SetDeviceItem(0, "manufName", atList[0])
     elif 0 == atList[0].find("CICIE"):
         database.SetDeviceItem(0, "modelName", atList[0])
-        expectOurEui = True # Following EUI has ngo prefix - we just have to know that it follows the CICIE line
+        expectOurEui = True # Following EUI has no prefix - we just have to know that it follows the CICIE line
     elif atList[0] == "+N=COO":
         ourChannel = atList[1]
         ourPowLvl = atList[2]
