@@ -18,7 +18,7 @@ echo "<body>";
 echo "<center><h1>Add New Devices</h1> ";
 echo "Now: ", date('Y-m-d H:i:s'), "<br><br>"; // Show page refreshing
 echo "<button type=\"button\" onclick=\"HubCmd('Command.php/?cmd=open&expRsp=false')\">Open hub for 1 minute</button><br><br>";
-echo "<h3>Top tip - Make sure the new devices are all different types so you can distinguish them later!<h3><br><br>";
+echo "<h3>Top tip - Make sure the new devices are all different types so you can distinguish them later!</h3><br><br>";
 ShowNewDevices();
 echo "<br><br><br><br>";
 echo "<center><a href=\"/ShowAllDevices.php\">All Devices</a> </center><br>";
