@@ -50,13 +50,13 @@ function ShowDevStatus($item, $devIdx, $db)
     }
 }
 
-function TableElement($item, $units, $devIdx, $db)
+function ShowEvent($devIdx, $db)
 {
-    $result = $db->query("SELECT value FROM Events WHERE item=\"".$item."\" AND devIdx=".$devIdx." ORDER BY TIMESTAMP DESC LIMIT 1");
+    $result = $db->query("SELECT event FROM Events WHERE devIdx=".$devIdx." ORDER BY TIMESTAMP DESC LIMIT 1");
     $result->setFetchMode(PDO::FETCH_ASSOC);
     $fetch = $result->fetch();
-    $val = $fetch[value];
-    if ($val != "") echo "<td>",$val,$units,"</td>"; else echo "<td>N/A</td>";
+    $val = $fetch[event];
+    if ($val != "") echo "<td>",$val,"</td>"; else echo "<td>N/A</td>";
 }
 
 function ShowDevices()
@@ -74,7 +74,7 @@ function ShowDevices()
 	    ShowDevStatus("battery", $devIdx, $db);
 	    ShowDevStatus("signal", $devIdx, $db);
   	    ShowDevStatus("presence", $devIdx, $db);
-	    TableElement("Event", "", $devIdx, $db);
+        ShowEvent($devIdx, $db);
         echo "</tr>";
     }
     echo "</table>";

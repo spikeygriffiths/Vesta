@@ -112,7 +112,7 @@ class Commands(cmd.Cmd):
     def do_open(self, line):
         """open
         Opens network (for 60s) to allow new device to join"""
-        telegesis.TxCmd(["AT+PJOIN", "OK"])
+        devices.EnqueueCmd(0, ["AT+PJOIN", "OK"])
 
     def do_toggle(self, name):
         """toggle name
@@ -141,7 +141,7 @@ class Commands(cmd.Cmd):
     def do_at(self, line):
         """at cmd
         Sends AT command to Telegesis stick"""
-        telegesis.TxCmd(["AT"+line, "OK"])
+        devices.EnqueueCmd(0, ["AT"+line, "OK"])
         
     def do_status(self, line):
         """status <devIdx> <item> <value>

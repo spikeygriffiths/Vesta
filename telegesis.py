@@ -4,14 +4,13 @@
 import serial
 from collections import deque
 # App-specific Python modules
+import devices
 import log
 import events
 import database
 import config
 
 ser = 0
-expRsp = None
-expRspTimeoutS = 0
 expectOurEui = False
 txBuf = deque([])    # Nothing to transmit initially
 rxBuf = deque([])
@@ -21,49 +20,37 @@ ourPan = "Unknown"
 ourExtPan = "Unknown"
 
 def HandleSerial(ser):
-    global expRsp, expRspTimeoutS, txBuf, rxBuf
+    global txBuf, rxBuf
     telegesisInLine = str(ser.readline(),'utf-8').rstrip('\r\n')    # Rely on timeout=0 to return imemdiately,either with a line or with None
     if telegesisInLine != None:
         rxBuf.append(telegesisInLine)  # Buffer this for subsequent processing in main thread
-    if expRsp == "" and len(txBuf):
-        atCmd, expRsp = txBuf.popleft()
+    if len(txBuf):
+        atCmd = txBuf.popleft()
         wrAtCmd = atCmd + "\r\n"
         ser.write(wrAtCmd.encode())
         log.debug("Tx>"+atCmd)
-        expRspTimeoutS = 2  # If we've not heard back after 2 seconds, it's probably got lost, so try again
 
 def EventHandler(eventId, eventArg):
-    global ser, expRsp, expRspTimeoutS, txBuf, rxBuf
+    global ser, txBuf, rxBuf
     if eventId == events.ids.INIT:
         serPort = config.Get("tty", '/dev/ttyUSB0')
         serSpeed = config.Get("baud", '19200')
         ser = serial.Serial(serPort, int(serSpeed), timeout=0)
         ser.flushInput()
-        expRsp = ""
-        TxCmd(["ATS63=0007",  "OK"]) # Request RSSI & LQI on every received message, also disable automatic checkIn responses
-        TxCmd(["ATI",  "OK"]) # Request our EUI, as well as our Telegesis version
-        TxCmd(["AT+N", "OK"]) # Get network information, to see whether to start new network or use existing one
+        devices.EnqueueCmd(0, ["ATS63=0007", "OK"]) # Request RSSI & LQI on every received message, also disable automatic checkIn responses
+        if database.GetDeviceItem(0, "modelName") == None:
+            devices.EnqueueCmd(0, ["ATI", "OK"]) # Request our EUI, as well as our Telegesis version
+        devices.EnqueueCmd(0, ["AT+N", "OK"]) # Get network information, to see whether to start new network or use existing one
     elif eventId == events.ids.SECONDS:
         HandleSerial(ser)
         if len(rxBuf):
             Parse(rxBuf.popleft())
-        if expRsp != "":
-            expRspTimeoutS = expRspTimeoutS - eventArg  # Expect eventArg to be 0.1
-            if expRspTimeoutS <= 0:
-                expRsp = ""
-    elif eventId == events.ids.RXERROR:
-        expRsp = ""
-    elif eventId == events.ids.RXEXPRSP:
-        expRsp = ""
     elif eventId == events.ids.INFO:
         print("TxBuf: ", str(txBuf))
-        print("expRsp: \""+ expRsp + "\"")
-        if expRsp != "":
-            print("expRspTimeoutS: ", expRspTimeoutS)
     # end eventId handler
 
 def Parse(atLine):
-    global expRsp, expectOurEui
+    global expectOurEui
     global ourChannel, ourPowLvl, ourPan, ourExtPan
     if atLine == "":
         return # Ignore blank lines
@@ -72,14 +59,9 @@ def Parse(atLine):
     log.debug("Parsing:"+ atLine)
     atLine = atLine.replace(':',',') # Replace colons with commas
     atList = atLine.split(',') # Split on commas
-    if expRsp != "":  # We're expecting a response, so see if this matches
-        if expRsp in atList:
-            log.debug("Found expected response of "+ expRsp+ " in "+ str(atList))
-            events.Issue(events.ids.RXEXPRSP, atList)
-    # Not expecting any response, or it didn't match, so this must be spontaneous
     if atList[0] == 'OK':
-        return  # Discard OK if we're not expecting it
-    elif expectOurEui == True and len(atList[0])==16: # If we're expecting an EUI and it looks plausible length
+        events.Issue(events.ids.RXOK)
+    elif expectOurEui == True and len(atList[0])==16: # If we're expecting an EUI and it's the correct length
         database.SetDeviceItem(0, "eui64", atList[0])
         expectOurEui = False
     elif atList[0] == "ERROR":
@@ -106,15 +88,9 @@ def Parse(atLine):
         events.Issue(events.ids.RXMSG, atList)
     # end Parse
 
-def TxCmd(cmdRsp):  # Takes a list with two elements - command to send, and first word of last response to expect
-    txBuf.append(cmdRsp)  # Append command and associated response as one item
-    #log.debug("Pushing Cmd:"+str(cmdRsp))
+def TxCmd(cmd):  # Takes command to send
+    txBuf.append(cmd)  # Append command
 
 def ReadAttr(devId, ep, clstrId, attrId): # NB All args as hex strings
     return ("AT+READATR:"+devId+","+ep+",0,"+clstrId+","+attrId, "RESPATTR")
-
-def CheckIdle():
-    if expRsp != "":  # We're expecting a response, so we're busy
-        return False
-    return True # No response selected so we're free to take more commands
 

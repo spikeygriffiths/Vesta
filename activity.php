@@ -67,7 +67,7 @@ function ShowActivity($db, $dbTime, $titleTime, $devIdx)
     echo "<table>";
     while ($row =  $sth->fetch()) {
         $userName = DbGetItem("userName", $row['devIdx'],$db);        // Use $row['devIdx'] as key into Devices table to get $userName
-        echo"<tr><td> ".$row['timestamp']." </td><td>".$userName." </td><td> ".$row['value']." </td></tr>";
+        echo"<tr><td> ".$row['timestamp']." </td><td>".$userName." </td><td> ".$row['event']." </td></tr>";
     }
     echo "</table>";
 }

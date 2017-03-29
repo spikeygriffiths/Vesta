@@ -44,7 +44,7 @@ def EventHandler(eventId, eventArg):
                 else:
                     newState = "closed"
                 if oldState != newState:    # NB Might get same state if sensor re-sends, or due to battery report 
-                    database.NewEvent(devIdx, "Event", newState) # For web page.  Only update event log when state changes
+                    database.NewEvent(devIdx, newState) # For web page.  Only update event log when state changes
                     Run(userName+"=="+newState) # See if rule exists (when state changes)
                     #log.debug("Door "+ eventArg[1]+ " "+newState)
             elif zoneType == zcl.Zone_Type.PIR:
@@ -55,7 +55,7 @@ def EventHandler(eventId, eventArg):
                     newState = "inactive" # Might happen if we get an IAS battery report
                 Run(userName+"=="+newState) # See if rule exists
                 if oldState != newState:
-                    database.NewEvent(devIdx, "Event", newState) # For web page.  Only update event log when state changes
+                    database.NewEvent(devIdx, newState) # For web page.  Only update event log when state changes
             else:
                 log.debug("DevId: "+ eventArg[1]+" zonestatus "+ eventArg[3])
         else:
@@ -64,7 +64,7 @@ def EventHandler(eventId, eventArg):
         devIdx = devices.GetIdx(eventArg[1]) # Lookup device from network address in eventArg[1]
         userName = database.GetDeviceItem(devIdx, "userName")
         #log.debug("Button "+ eventArg[1]+ " "+eventArg[0]) # Arg[0] holds "ON", "OFF" or "TOGGLE" (Case might be wrong)
-        database.NewEvent(devIdx, "Event", "pressed") # For web page
+        database.NewEvent(devIdx, "pressed") # For web page
         Run(userName+"=="+eventArg[0]) # See if rule exists
 
 def Run(trigger): # Run through the rules looking to see if we have a match for the trigger

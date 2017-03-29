@@ -63,14 +63,14 @@ def GetStatus(devIdx, item):
     return None
 
 # === Events ===
-def NewEvent(devIdx, item, value):
+def NewEvent(devIdx, event):
     global curs, flushDB
-    curs.execute("INSERT INTO Events VALUES(datetime('now', 'localtime'),(?), (?), (?))", (item, value, devIdx))  # Insert event with local timestamp
+    curs.execute("INSERT INTO Events VALUES(datetime('now', 'localtime'),(?), (?))", (event, devIdx))  # Insert event with local timestamp
     flushDB = True # Batch up the commits
 
-def GetLatestEvent(devIdx, item):
+def GetLatestEvent(devIdx):
     global curs
-    curs.execute("SELECT value FROM Events WHERE item=(?) AND devIdx=(?) ORDER BY TIMESTAMP DESC LIMIT 1", (item, devIdx));  # Get latest event of correct type and device
+    curs.execute("SELECT value FROM Events devIdx=(?) ORDER BY TIMESTAMP DESC LIMIT 1", (devIdx));  # Get latest event of device
     rows = curs.fetchone()
     if rows != None:
         return rows[0]

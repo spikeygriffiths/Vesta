@@ -31,8 +31,7 @@ CREATE TABLE Status (
 DROP TABLE IF EXISTS Events;
 CREATE TABLE Events (
   timestamp DATETIME,
-  item TEXT,
-  value TEXT,  
+  event TEXT,
   devIdx INTEGER,
   FOREIGN KEY(devIdx) REFERENCES Devices(devIdx)
 );

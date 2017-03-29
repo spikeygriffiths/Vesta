@@ -22,7 +22,7 @@ class ids:
     CHECKIN = 4 # Arg is list, including nodeId in arg[1]
     RXMSG = 5 # Arg is list, direct from Telegesis
     RXERROR = 6 # Arg is decimal number indicating error
-    RXEXPRSP = 7 # Arg is the whole response
+    RXOK = 7 # No arg.  We've received an OK and so that might be interesting if something's waiting for this
     DEVICE_ANNOUNCE = 8 # Arg is the whole response (devType, devEui, devNodeId)
     INFO = 9 # No arg, just print any useful info
     RX_TELEGESIS = 10   # Arg is line of raw Telegesis text

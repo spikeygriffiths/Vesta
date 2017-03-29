@@ -58,17 +58,13 @@ function ShowDevItem($item, $name, $devIdx, $db)
     }
 }
 
-function ShowLatest($item, $devIdx, $db)
+function ShowEvent($devIdx, $db)
 {
-    $result = $db->query("SELECT value FROM Events WHERE item=\"".$item."\" AND devIdx=".$devIdx." ORDER BY TIMESTAMP DESC LIMIT 1");
+    $result = $db->query("SELECT event FROM Events WHERE devIdx=".$devIdx." ORDER BY TIMESTAMP DESC LIMIT 1");
     $result->setFetchMode(PDO::FETCH_ASSOC);
     $fetch = $result->fetch();
-    if ($fetch) {
-        $val = $fetch[value];
-        if ($val) {
-            echo "<tr><td>",$item,"</td><td>$val</td></tr>";
-        }
-    }
+    $val = $fetch[event];
+    if ($val != "") echo "<td>",$val,"</td>"; else echo "<td>N/A</td>";
 }
 
 function ShowDeviceInfo($db, $devIdx, $username)
@@ -80,7 +76,9 @@ function ShowDeviceInfo($db, $devIdx, $username)
     ShowDevStatus("battery", "Battery %", $devIdx, $db);
     ShowDevStatus("temperature", "Temperature 'C", $devIdx, $db);
     ShowDevStatus("presence", "Presence", $devIdx, $db);
-    ShowLatest("Event", $devIdx, $db);
+    echo "<tr><td>Event</td>";
+    ShowEvent($devIdx, $db);
+    echo "</tr>";
     ShowDevItem("manufName", "Manufacturer", $devIdx, $db);
     ShowDevItem("modelName", "Model", $devIdx, $db);
     ShowDevItem("eui64", "EUI", $devIdx, $db);
