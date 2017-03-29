@@ -70,7 +70,7 @@ def NewEvent(devIdx, event):
 
 def GetLatestEvent(devIdx):
     global curs
-    curs.execute("SELECT value FROM Events devIdx=(?) ORDER BY TIMESTAMP DESC LIMIT 1", (devIdx));  # Get latest event of device
+    curs.execute("SELECT event FROM Events WHERE devIdx="+str(devIdx)+" ORDER BY TIMESTAMP DESC LIMIT 1");  # Get latest event of device
     rows = curs.fetchone()
     if rows != None:
         return rows[0]

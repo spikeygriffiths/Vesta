@@ -37,7 +37,7 @@ def EventHandler(eventId, eventArg):
         userName = database.GetDeviceItem(devIdx, "userName")
         zoneType = database.GetDeviceItem(devIdx, "iasZoneType") # Device type
         if zoneType != None:
-            oldState = database.GetLatestEvent(devIdx, "Event")
+            oldState = database.GetLatestEvent(devIdx)
             if zoneType == zcl.Zone_Type.Contact:
                 if int(eventArg[3], 16) & 1: # Bottom bit indicates alarm1
                     newState = "opened"

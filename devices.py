@@ -3,6 +3,7 @@
 from datetime import datetime
 from datetime import timedelta
 import time
+from array import *
 # App-specific modules
 import events
 import log
@@ -23,7 +24,7 @@ pendingRptAttrId = None # Needed because CFGRPTRSP only includes the cluster and
 ephemera = [] # Don't bother saving this
 txQueue = [] # Queue of outbound messages & responses for each device
 expRsp = [] # List of expected responses for each device
-expRspTimeoutS = [] # List of timeouts if we're expecting a response, one per device
+expRspTimeoutS = array('f',[]) # Array of timeouts if we're expecting a response, one per device
 
 def EventHandler(eventId, eventArg):
     global ephemera, globalDevIdx, pendingBinding, pendingRptAttrId
@@ -84,11 +85,11 @@ def EventHandler(eventId, eventArg):
                 events.Issue(events.ids.RXERROR, int(eventArg[2],16)) # Tell system that we're aborting this command
         elif eventArg[0] == "InCluster":
             if globalDevIdx != None:
-                database.SetDeviceItem(devIdx, "inClusters", eventArg[1:]) # Store whole list from arg[1] to arg[n]
+                database.SetDeviceItem(globalDevIdx, "inClusters", str(eventArg[1:])) # Store whole list from arg[1] to arg[n]
         elif eventArg[0] == "OutCluster":
             if globalDevIdx != None:
                 NoteMsgDetails(globalDevIdx, eventArg)
-                database.SetDeviceItem(devIdx, "outClusters", eventArg[1:]) # Store whole list from arg[1] to arg[n]
+                database.SetDeviceItem(globalDevIdx, "outClusters", str(eventArg[1:])) # Store whole list from arg[1] to arg[n]
             globalDevIdx = None # We've finished with this global for now
         if eventArg[0] == "RESPATTR":
             devIdx = GetIdx(eventArg[1])
@@ -142,11 +143,9 @@ def EventHandler(eventId, eventArg):
                         log.debug("Sending "+str(cmdRsp))
                         expRsp[devIdx] = cmdRsp[1]  # Note response
                         expRspTimeoutS[devIdx] = 2  # If we've not heard back after 2 seconds, it's probably got lost, so try again
-                        telegesis.TxCmd(cmd)  # Send command directly
+                        telegesis.TxCmd(cmdRsp[0])  # Send command directly
                 else:   # We're expecting a response, so time it out
-                    timeLeft = float(expRspTimeoutS[devIdx][0])
-                    timeLeft = timeLeft - eventArg
-                    expRspTimeoutS[devIdx] = timeLeft
+                    expRspTimeoutS[devIdx] = expRspTimeoutS[devIdx] - eventArg
                     if expRspTimeoutS[devIdx] <= 0:
                         expRsp[devIdx] = None
             offAt = GetTempVal(devIdx, "SwitchOff@")
@@ -200,7 +199,7 @@ def SetAttrVal(devIdx, clstrId, attrId, value):
         else:
             variables.Del(varName)
     if clstrId == zcl.Cluster.OnOff and attrId == zcl.Attribute.OnOffState:
-        oldState = database.GetLatestEvent(devIdx, "Event")
+        oldState = database.GetLatestEvent(devIdx)
         if int(value, 16) == 0:
             newState = "SwitchedOff"
         else:
@@ -266,7 +265,7 @@ def Check(devIdx):
     if None == eui:
         return ("AT+EUIREQ:"+devId+","+devId, "AddrResp")
     if None == inClstr or None == outClstr:
-        database.SetDeviceItem(devIdx, "outClusters", []) # Some devices have no outclusters...
+        database.SetDeviceItem(devIdx, "outClusters", "[]") # Some devices have no outclusters...
         return ("AT+SIMPLEDESC:"+devId+","+devId+","+ep, "OutCluster")
     binding = database.GetDeviceItem(devIdx, "binding")
     rprtg = database.GetDeviceItem(devIdx, "reporting")
@@ -367,8 +366,8 @@ def Dim(devIdx, levelFraction):
 def InitQueue(devIdx):
     global txQueue, expRsp, expRspTimeoutS
     txQueue.append([])
-    expRsp[devIdx] = None
-    expRspTimeoutS[devIdx] = 0
+    expRsp.append("")
+    expRspTimeoutS.append(0)
 
 def EnqueueCmd(devIdx, cmdRsp):
     global txQueue
