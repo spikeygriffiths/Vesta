@@ -1,8 +1,7 @@
 #!ToDoList.txt
 
 ***** Features: *****
-* Group devices, eg StairsLamp & landingLamp as "StairLamps".  Use Groups table in database to have a grpIdx with userName and list of devIdxs - on web page as drop-down list?
-* Consider one message in flight per device. rather than per hub, to avoid ERROR 66 and stalling
+* Group devices, eg StairsLamp & landingLamp as "StairLamps".  Use Groups table in database to have a userName and list of devIdxs - on web page as drop-down list?
 * Daily synopsis to use HTML email to show UpTime & snapshot of devices page, plus last day's activity log.  Customise and improve synopsis, so that we can have different synopses daily, weekly or monthly...
 * New command to report channel, PAN id, Ext PAN id for ShowOneDevice page to use when displaying hub info
 * Auto-start network ("AT+EN") if ATN shows none available at start up
@@ -10,15 +9,19 @@
 * Multiple device ZigBee endpoints?
  
 # *** Burglar alarm? ***
-# if keyfob==arm do Event Alarm Arming
-# if Alarm==Arming do play ArmingAlarm.mp3
-# if InternalPirs==active and Alarm==Armed do Event Alarm Elevate
-# if InternalPirs==active and Alarm==Elevated do Event Alarm Activate
-# if ExternalDoors==opened and Alarm==Armed do Event Alarm Elevate
-# if ExternalDoors==opened and Alarm==Elevated do Event Alarm Activate
+# if keyfob==arm do Set AlarmState=StartArming
+# if AlarmState==StartArming do Set AlarmTimeout=30, Set AlarmState=Arming
+# if AlarmState==Arming do repeat play ArmingAlarm.mp3
+# if AlarmState==DoneArming do stop play, Set AlarmState=Armed
+# if ExternalDoors==opened and Alarm==DoneArming do Set AlarmState=Disarm, email Door open - Disarming
+# if InternalPirs==active and Alarm==Armed do Set AlarmState=Elevate
+# if InternalPirs==active and Alarm==Elevated do Set AlarmState=Activate
+# if ExternalDoors==opened and Alarm==Armed do Set AlarmState=Elevate
+# if ExternalDoors==opened and Alarm==Elevated do Set AlarmState=Activate
+# if Alarm==Elevate do Set AlarmTimeout=60, Set AlarmState=Elevated
 # if Alarm==Activated do play IntruderAlert.mp3
 # if Alarm==Activated do email Intruder Alert!
-# if keyfob==disarm do Event Alarm Disarm
+# if keyfob==disarm do Set AlarmState=Disarm
 
 # *** Activity Pretence ***
 # if Alarm==Armed and sunset<time<23:59 do SwitchOn SpikeyLampPlug

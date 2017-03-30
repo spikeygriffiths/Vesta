@@ -78,11 +78,7 @@ class Commands(cmd.Cmd):
         """uptime
         Shows time app has been running"""
         upTime = datetime.now() - iottime.appStartTime
-        #upTime = upTime.total_seconds()
-        #days, remainder = divmod(upTime, 86400)
-        #hours, remainder = divmod(remainder, 3600)
-        #minutes, seconds = divmod(remainder, 60)
-        print("%d days, %.2d:%.2d" % (upTime.days, upTime.seconds//3600, (upTime.seconds//60)%60))
+        print("%d days, %.2d:%.2d" % (upTime.days, upTime.seconds//3600, (upTime.seconds//60)%60))  # Used by web page
 
     def do_vars(self, item):
         """vars [item]

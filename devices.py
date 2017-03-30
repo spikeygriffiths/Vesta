@@ -255,6 +255,8 @@ def NoteMsgDetails(devIdx, arg):
 
 def Check(devIdx):
     global pendingBinding, pendingRptAttrId
+    if devIdx == 0:
+        return  # We don't need anything from the hub
     devId = database.GetDeviceItem(devIdx, "nwkId")
     ep = database.GetDeviceItem(devIdx, "endPoints")
     eui = database.GetDeviceItem(devIdx, "eui64")

@@ -35,6 +35,12 @@ CREATE TABLE Events (
   devIdx INTEGER,
   FOREIGN KEY(devIdx) REFERENCES Devices(devIdx)
 );
+
+DROP TABLE IF EXISTS Groups;
+CREATE TABLE Groups (
+  userName TEXT,
+  devIdxList TEXT
+);
 COMMIT;
 .quit
 # Next line needed to allow Python to write back to the database

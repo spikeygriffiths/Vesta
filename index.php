@@ -12,6 +12,7 @@ if ($iotHubRunning) {
     echo "UpTime: ",HubCmd("uptime", True),"<br>";
     echo "<br>";
     echo "<button type=\"button\" onclick=\"window.location.href='ShowAllDevices.php'\">Devices</button><br><br>";
+    echo "<button type=\"button\" onclick=\"window.location.href='Groups.php'\">Groups</button><br><br>";
     echo "<button type=\"button\" onclick=\"window.location.href='rules.php'\">Rules</button><br><br>";
     echo "<button type=\"button\" onclick=\"window.location.href='activity.php'\">Events</button><br><br>";
     echo "<button type=\"button\" onclick=\"window.location.href='log.php'\">Show Debugging Log</button><br><br>";

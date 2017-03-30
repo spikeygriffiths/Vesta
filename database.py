@@ -76,13 +76,13 @@ def GetLatestEvent(devIdx):
         return rows[0]
     return None
 
-# === Groups === (Not implemented yet)
-def GetGroupDevs(grpIdx):
+# === Groups ===
+def GetGroupDevs(userName):
     global curs
-    curs.execute("SELECT devList FROM Groups WHERE grpIdx="+str(grpIdx));
+    curs.execute("SELECT devIdxList FROM Groups WHERE userName="+str(userName));
     rows = curs.fetchone()
     if rows != None:
-        return rows[0]
+        return rows[0]  # List of devIdxes 
     return None
 
 # === Devices ===
