@@ -12,6 +12,7 @@ from pathlib import Path
 from pprint import pprint # Pretty print for devs list
 from datetime import datetime
 from datetime import timedelta
+from subprocess import call
 # App-specific Python modules
 import devices
 import events
@@ -53,12 +54,13 @@ def EventHandler(eventId, eventArg):
                 if cmd:
                     cmd = cmd.decode()
                     log.debug("Got cmd "+ cmd)
-                    sys.stdout = open("cmdoutput", "w") # Redirect stdout to file
+                    sys.stdout = open("cmdoutput.txt", "w") # Redirect stdout to file
                     Commands().onecmd(cmd)
                     sys.stdout = sys.__stdout__ # Put stdout back to normal (will hopefully also close the file)
-                    f = open("cmdoutput", "r")
+                    f = open("cmdoutput.txt", "r")
                     cmdOut = f.read()
                     cliSck.send(str.encode(cmdOut))
+                    call("rm cmdoutput.txt", shell=True) # Remove cmd output after we've used it
                 else:
                     log.debug("Closing socket")
                     cliSck.close()
