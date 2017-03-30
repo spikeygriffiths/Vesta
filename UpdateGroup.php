@@ -15,25 +15,51 @@ echo "<center><a href=\"/Groups.php\">Groups</a> </center><br>";
 echo "<center><a href=\"/index.php\">Home</a> </center>";
 echo "</body></html>";
 
-function  DevGetItem($item, $devIdx, $db)
+function  DbGetItem($item, $devIdx, $db)
 {
     $result = $db->query("SELECT ".$item." FROM Devices WHERE devIdx=".$devIdx);
-    if ($result != null) {
-        $result->setFetchMode(PDO::FETCH_ASSOC);
-        $fetch = $result->fetch();
-        if ($fetch != null) {
-            return $fetch[$item];
-        }
-    }
-    return null;
+    $result->setFetchMode(PDO::FETCH_ASSOC);
+    $fetch = $result->fetch();
+    return $fetch[$item];
 }
 
 function ShowGroupInfo($db, $groupName)
 {
+    echo "<center><table>";
     echo "<form action=\"/UpdateGroupName.php/?oldName=",$groupName,"\" method=\"post\">";
-    echo "<table>";
-    echo "<tr><td>Name</td><td><input type=\"text\" name=\"NewName\" value=\"", $groupName, "\"></td>";
+    echo "<tr><td><input type=\"text\" name=\"NewName\" value=\"", $groupName, "\"></td>";
+    echo "<td><input type=\"submit\" value=\"Update name\"></form></td></tr>";
+    $sth = $db->prepare("SELECT devIdxList FROM Groups WHERE userName=\"".$groupName."\"");
+    $sth->execute();
+    $sth->setFetchMode(PDO::FETCH_ASSOC);
+    $row =  $sth->fetch();
+    if ($row != null) {
+        $devList = $row['devIdxList'];
+        if ($devList != "") {
+            $devArray = explode(",", $devList);
+            for ($index = 0; $index < count($devArray); $index++) {
+                $devIdx = $devArray[$index];
+                $devName = DbGetItem("userName", $devIdx, $db);
+                echo"<tr><td> ".$devName." </td><td>Delete</td></tr>";
+            }
+        } else {
+            echo"<tr><td><i>null</i></td><td></td></tr>";
+        }
+    } else {
+        echo"<tr><td><i>empty</i></td><td></td></tr>";
+    }
     echo "</table>";
-    echo "<input type=\"submit\" value=\"Submit\" name=\"Update name\"></form><br>";
+    echo "<form action='/AddDevToGroup.php/?groupName=",$groupName,"' method='post'>";
+    echo "<p>Add device<select id='devIdx' name='devIdx'>";
+    $result = $db->query("SELECT COUNT(*) FROM Devices");
+    $numDevs = $result->fetchColumn();
+    for ($idx=0; $idx<$numDevs; $idx++) {
+        $userName = DbGetItem("userName", $idx, $db);
+        echo "<option value='",$idx,"'>",$userName,"</option>";
+    }
+    echo "</select><p>";
+    echo "<input type='submit'/>";
+    echo "</form>";
+    echo "</center>";
 }
 ?>

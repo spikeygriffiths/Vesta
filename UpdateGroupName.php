@@ -7,7 +7,7 @@ echo "New name is:", $newGroupName, " to replace old name of:",$oldGroupName, "<
 $dir = "sqlite:/home/pi/hubapp/hubstuff.db";
 $db = new PDO($dir) or die("Cannot open database");
 if ($oldGroupName == "NewGroup") {
-    $query = "INSERT INTO Groups (userName, devIdxList) VALUES (\"".$newGroupName."\",\"[]\")";  # Insert new name
+    $query = "INSERT INTO Groups (userName, devIdxList) VALUES (\"".$newGroupName."\",\"\")";  # Insert new name and empty string for devices
 } else {
     $query = "UPDATE Groups SET userName=\"".$newGroupName."\" WHERE userName=\"".$oldGroupName."\"";
 }
