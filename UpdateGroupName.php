@@ -7,7 +7,7 @@ echo "New name is:", $newGroupName, " to replace old name of:",$oldGroupName, "<
 $dir = "sqlite:/home/pi/hubapp/hubstuff.db";
 $db = new PDO($dir) or die("Cannot open database");
 if ($oldGroupName == "NewGroup") {
-    $query = "INSERT INTO Groups (userName, devIdxList) VALUES (\"".$newGroupName."\",\"[]\")";  # Insert new name
+    $query = "INSERT INTO Groups (userName, devIdxList) VALUES (\"".$newGroupName."\",\"\")";  # Insert new name and empty string for devices
 } else {
     $query = "UPDATE Groups SET userName=\"".$newGroupName."\" WHERE userName=\"".$oldGroupName."\"";
 }
@@ -15,7 +15,7 @@ echo "About to send ",$query, " to DB<br>";
 $count = $db->exec($query);
 if ($count == 1) {
     UpdateRules($oldGroupName, $newGroupName);    // Now go through the rules and make sure the old name is updated to the new
-    echo "<meta http-equiv=\"refresh\" content=\"10;url=/UpdateGroup.php/?groupName=",$newGroupName,"\"/>";
+    echo "<meta http-equiv=\"refresh\" content=\"1;url=/UpdateGroup.php/?groupName=",$newGroupName,"\"/>";
     echo "New name saved";
 } else {
     echo "Update failed, with count of:", $count, "<br>";
@@ -30,9 +30,7 @@ function UpdateRules($oldUserName, $newUserName)
     if ($inHandle && $outHandle) {
         while (!feof($inHandle)) {
             $line = fgets($inHandle);
-            //echo "Read ",$line,"<br>";
             $newLine = str_replace($oldUserName, $newUserName, $line); // Replace old with new name
-            //echo "Writing ",$newLine,"<br>";
             fputs($outHandle, $newLine);
         }
     }
