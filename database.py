@@ -70,19 +70,29 @@ def NewEvent(devIdx, event):
 
 def GetLatestEvent(devIdx):
     global curs
-    curs.execute("SELECT event FROM Events WHERE devIdx="+str(devIdx)+" ORDER BY TIMESTAMP DESC LIMIT 1");  # Get latest event of device
+    curs.execute("SELECT event FROM Events WHERE devIdx="+str(devIdx)+" ORDER BY TIMESTAMP DESC LIMIT 1")  # Get latest event of device
     rows = curs.fetchone()
     if rows != None:
         return rows[0]
     return None
 
 # === Groups ===
+def IsGroupName(checkName): # Return True if checkName is a groupName
+    global curs
+    curs.execute("SELECT userName FROM Groups")
+    while True:
+        rows = curs.fetchone()
+        if rows == None:
+            return False # Didn't find name in Groups
+        if checkName == rows[0]:
+            return True
+
 def GetGroupDevs(userName):
     global curs
-    curs.execute("SELECT devIdxList FROM Groups WHERE userName="+str(userName));
+    curs.execute("SELECT devIdxList FROM Groups WHERE userName="+userName)
     rows = curs.fetchone()
     if rows != None:
-        return rows[0]  # List of devIdxes 
+        return "["+rows[0]+"]"  # List of comma separated devIdxes.  Surrounding square brackets to convert to Python list
     return None
 
 # === Devices ===

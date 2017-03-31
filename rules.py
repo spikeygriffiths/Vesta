@@ -46,6 +46,7 @@ def EventHandler(eventId, eventArg):
                 if oldState != newState:    # NB Might get same state if sensor re-sends, or due to battery report 
                     database.NewEvent(devIdx, newState) # For web page.  Only update event log when state changes
                     Run(userName+"=="+newState) # See if rule exists (when state changes)
+                    # ToDo: Check if device is in any groups and run appropriate rules for each group
                     #log.debug("Door "+ eventArg[1]+ " "+newState)
             elif zoneType == zcl.Zone_Type.PIR:
                 if int(eventArg[3], 16) & 1: # Bottom bit indicates alarm1
@@ -53,9 +54,10 @@ def EventHandler(eventId, eventArg):
                     devices.SetTempVal(devIdx, "PirInactive@", datetime.now()+timedelta(seconds=300))
                 else:
                     newState = "inactive" # Might happen if we get an IAS battery report
-                Run(userName+"=="+newState) # See if rule exists
                 if oldState != newState:
                     database.NewEvent(devIdx, newState) # For web page.  Only update event log when state changes
+                Run(userName+"=="+newState) # See if rule exists
+                # ToDo: Check if device is in any groups and run appropriate rules for each group
             else:
                 log.debug("DevId: "+ eventArg[1]+" zonestatus "+ eventArg[3])
         else:
@@ -66,6 +68,7 @@ def EventHandler(eventId, eventArg):
         #log.debug("Button "+ eventArg[1]+ " "+eventArg[0]) # Arg[0] holds "ON", "OFF" or "TOGGLE" (Case might be wrong)
         database.NewEvent(devIdx, "pressed") # For web page
         Run(userName+"=="+eventArg[0]) # See if rule exists
+    # End of EventHandler
 
 def Run(trigger): # Run through the rules looking to see if we have a match for the trigger
     rulesFile = Path(rulesFilename)
@@ -185,7 +188,7 @@ def Action(actList):
             #cmdStr = " ".join(cmdList)
             #call(cmdStr, shell=True)
             #devices.synopsis = []   # Ready to start a new synopsis mail now
-    elif action == "email": # First arg is recipient, remainder are body of the text.  Fixed subject
+    elif action == "email": # All args are body of the text.  Fixed subject and email address
         emailAddress = config.Get("emailAddress")
         if emailAddress != None:
             emailBody = []
@@ -194,27 +197,36 @@ def Action(actList):
             cmdList = ["echo", "\""+' '.join(emailBody)+"\"", "|", "mail", "-s", "\"Alert from IoT-Hub\"", emailAddress]
             cmdStr = " ".join(cmdList)
             call(cmdStr, shell=True)
-    else: # Must be a command for a device
-        devIdx = database.GetDevIdx("userName", actList[1]) # Second arg is username for device
-        if devIdx == None:
-            log.fault("Device "+actList[1]+" from rules.txt not found in devices")
+    else: # Must be a command for a device, or group of devices
+        name = actList[1]   # Second arg is name
+        if database.IsGroupName(name): # Check if name is a groupName
+            devIdxList = GetGroupDevs(name)
+            for devIdx in devIdxList:
+                CommandDev(action, devIdx, actList) # Command each device in list
         else:
-            if action == "SwitchOn":
-                devices.SwitchOn(devIdx)
-                if len(actList) > 3:
-                    if actList[2] == "for":
-                        SetOnDuration(devIdx, int(actList[3],10))
-            elif action == "SwitchOff":
-                devices.SwitchOff(devIdx)
-            elif action == "Toggle":
-                devices.Toggle(devIdx)
-            elif action == "Dim" and actList[2] == "to":
-                devices.Dim(devIdx,float(actList[3]))
-                if len(actList) > 5:
-                    if actList[4] == "for":
-                        SetOnDuration(devIdx, int(actList[5],10))
-            else:
-                log.debug("Unknown action: "+action +" for device: "+actList[1])
+            devIdx = database.GetDevIdx("userName", name)
+            CommandDev(action, devIdx, actList) # Command one device
+
+def CommandDev(action, devIdx, actList):
+    if devIdx == None:
+        log.fault("Device "+actList[1]+" from rules.txt not found in devices")
+    else:
+        if action == "SwitchOn":
+            devices.SwitchOn(devIdx)
+            if len(actList) > 3:
+                if actList[2] == "for":
+                    SetOnDuration(devIdx, int(actList[3],10))
+        elif action == "SwitchOff":
+            devices.SwitchOff(devIdx)
+        elif action == "Toggle":
+            devices.Toggle(devIdx)
+        elif action == "Dim" and actList[2] == "to":
+            devices.Dim(devIdx,float(actList[3]))
+            if len(actList) > 5:
+                if actList[4] == "for":
+                    SetOnDuration(devIdx, int(actList[5],10))
+        else:
+            log.debug("Unknown action: "+action +" for device: "+actList[1])
 
 def SetOnDuration(devIdx, durationS):
     if durationS>0: # Duration of 0 means "Stay on forever"
