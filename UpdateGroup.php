@@ -30,10 +30,17 @@ function  DevGetItem($item, $devIdx, $db)
 
 function ShowGroupInfo($db, $groupName)
 {
+    $sth = $db->prepare("SELECT * FROM Groups WHERE userName=\"".groupName."\"");
+    $sth->execute();
+    $row =  $sth->fetch();
+    $devIdxList = $row['devIdxList'];
     echo "<form action=\"/UpdateGroupName.php/?oldName=",$groupName,"\" method=\"post\">";
     echo "<table>";
-    echo "<tr><td>Name</td><td><input type=\"text\" name=\"NewName\" value=\"", $groupName, "\"></td>";
+    echo "<tr><td>Name</td><td><input type=\"text\" name=\"NewName\" value=\"", $groupName, "\"></td></tr>";
+    while ($devIdxList != "") {
+        echo "<tr><td>Device</td><td></td></tr>";
+    }
     echo "</table>";
-    echo "<input type=\"submit\" value=\"Submit\" name=\"Update name\"></form><br>";
+    echo "<input type=\"submit\" value=\"Update Name\"></form><br>";
 }
 ?>

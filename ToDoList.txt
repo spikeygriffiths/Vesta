@@ -8,7 +8,7 @@
 * Colour lamp control
 * Multiple device ZigBee endpoints?
  
-# *** Burglar alarm? ***
+# *** Burglar alarm? ***  Probably best done in Python
 # if keyfob==arm do Set AlarmState=StartArming
 # if AlarmState==StartArming do Set AlarmTimeout=30, Set AlarmState=Arming
 # if AlarmState==Arming do repeat play ArmingAlarm.mp3
@@ -23,7 +23,7 @@
 # if Alarm==Activated do email Intruder Alert!
 # if keyfob==disarm do Set AlarmState=Disarm
 
-# *** Activity Pretence ***
+# *** Activity Pretence ***   Probably best done in Python
 # if Alarm==Armed and sunset<time<23:59 do SwitchOn SpikeyLampPlug
 # if time==00:30 and Alarm==Armed do SwitchOff SpikeyLampPlug
 # if InternalPirs==unoccupied and 0:00<time<sunset and HallLight_OnOff==off and rand(30)==0 do SwitchOn HallLight for 300
