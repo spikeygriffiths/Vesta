@@ -39,9 +39,8 @@ for ($idx=0; $idx<$numDevs; $idx++) {
 echo "</select><p>";
 echo "<input type='submit' name='submit'/>";
 echo "</form>";
-
 ShowActivity($db, $dbTime, $titleTime, $devIdx);
-echo "<center><a href=\"/index.php\">Home</a></center>";
+echo "<br><a href=\"/index.php\">Home</a></center>";
 echo "</body></html>";
 
 function  DbGetItem($item, $devIdx, $db)
@@ -54,7 +53,7 @@ function  DbGetItem($item, $devIdx, $db)
 
 function ShowActivity($db, $dbTime, $titleTime, $devIdx)
 {
-    echo "Show Activity for devIdx:", $devIdx, "<br>";
+    //echo "Show Activity for devIdx:", $devIdx, "<br>";    // Debugging
     if ($devIdx==-1) {
         echo "<h3>Showing all activity from ",$titleTime,"</h3>";
         $sth = $db->prepare("SELECT * FROM Events WHERE timestamp > ".$dbTime);

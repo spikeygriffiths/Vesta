@@ -45,6 +45,8 @@ def EventHandler(eventId, eventArg):
         HandleSerial(ser)
         if len(rxBuf):
             Parse(rxBuf.popleft())
+    elif eventId == events.ids.RADIO_INFO:
+        print(ourChannel+","+ourPowLvl+","+ourPan+","+ourExtPan) # Formatted to make it easy to extract in php
     elif eventId == events.ids.INFO:
         print("TxBuf: ", str(txBuf))
     # end eventId handler

@@ -1,10 +1,8 @@
 #!ToDoList.txt
 
 ***** Features: *****
-* Group devices, eg StairsLamp & landingLamp as "StairLamps".  Use Groups table in database to have a userName and list of devIdxs - on web page as drop-down list?
 * Daily synopsis to use HTML email to show UpTime & snapshot of devices page, plus last day's activity log.  Customise and improve synopsis, so that we can have different synopses daily, weekly or monthly...
 * Power monitoring (clamp & smartplugs) 
-* New command to report channel, PAN id, Ext PAN id for ShowOneDevice page to use when displaying hub info
 * Auto-start network ("AT+EN") if ATN shows none available at start up
 * Colour lamp control
 * Multiple device ZigBee endpoints?

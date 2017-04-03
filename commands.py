@@ -80,6 +80,11 @@ class Commands(cmd.Cmd):
         upTime = datetime.now() - iottime.appStartTime
         print("%d days, %.2d:%.2d" % (upTime.days, upTime.seconds//3600, (upTime.seconds//60)%60))  # Used by web page
 
+    def do_radio(self, item):
+        """radio
+        Shows info about the radio (channel, power, PAN id)"""
+        events.Issue(events.ids.RADIO_INFO) # Used by web page for hub info
+
     def do_vars(self, item):
         """vars [item]
         Show all variables, or just variables that contain item"""

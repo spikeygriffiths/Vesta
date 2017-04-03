@@ -33,6 +33,7 @@ class ids:
     WEATHER = 15 # No arg.  Issued once/hour.  Various variables ("cloudCover", "rain", "windSpeed", "outsideTemperature") hold current weather
     TIMEOFDAY = 16 # Arg is string "morning", "lunchtime", etc.
     ALARM = 17 # Arg is string, one of "Arming", "Armed", Elevated", "Activated", "Disarmed" 
+    RADIO_INFO = 18 # No arg, just displays info about the radio (channel, power, PAN id)
 
 def Issue(eventId, eventArg=0):
     # Tell all interested parties about the new event

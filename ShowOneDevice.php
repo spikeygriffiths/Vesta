@@ -1,5 +1,6 @@
 <?php
 error_reporting(E_ALL); 
+include "HubCmd.php";
 
 echo "<html>";
 echo "<head><style>table {font-family:arial, sans-serif;border-collapse: collapse;width: 100 % }";
@@ -10,10 +11,10 @@ $devIdx=$_GET['devIdx'];
 $dir = "sqlite:/home/pi/hubapp/hubstuff.db";
 $db = new PDO($dir) or die("Cannot open database");
 $username = DevGetItem("userName", $devIdx,$db);
-echo "<center><h1>",$username,"</h1></center>";
+echo "<center><h1>",$username,"</h1>";
 ShowDeviceInfo($db, $devIdx, $username);
-echo "<center><a href=\"/ShowAllDevices.php\">All Devices</a> </center><br>";
-echo "<center><a href=\"/index.php\">Home</a> </center>";
+echo "<a href=\"/ShowAllDevices.php\">All Devices</a><br><br>";
+echo "<a href=\"/index.php\">Home</a>";
 echo "</body></html>";
 
 function  DevGetItem($item, $devIdx, $db)
@@ -69,7 +70,7 @@ function ShowEvent($devIdx, $db)
 
 function ShowDeviceInfo($db, $devIdx, $username)
 {
-    echo "<form action=\"/UpdateDeviceName.php/?devIdx=",$devIdx,"\" method=\"post\">";
+    echo "<center><form action=\"/UpdateDeviceName.php/?devIdx=",$devIdx,"\" method=\"post\">";
     echo "<table>";
     echo "<tr><td>Name</td><td><input type=\"text\" name=\"UserName\" value=\"", $username, "\"></td>";
     ShowDevStatus("signal", "Radio Signal %", $devIdx, $db);
@@ -85,13 +86,22 @@ function ShowDeviceInfo($db, $devIdx, $username)
     ShowDevItem("nwkId", "Network Id", $devIdx, $db);
     ShowDevItem("devType", "Device Type", $devIdx, $db);
     ShowDevItem("endPoints", "Endpoints", $devIdx, $db);
-    ShowDevItem("inClusters", "In Clusters", $devIdx, $db);
-    ShowDevItem("outClusters", "Out Clusters", $devIdx, $db);
-    ShowDevItem("binding", "Binding", $devIdx, $db);
-    ShowDevItem("reporting", "Reporting", $devIdx, $db);
-    ShowDevItem("iasZoneType", "IAS Zone Type", $devIdx, $db);
+    if ($devIdx != 0) {
+        ShowDevItem("inClusters", "In Clusters", $devIdx, $db);
+        ShowDevItem("outClusters", "Out Clusters", $devIdx, $db);
+        ShowDevItem("binding", "Binding", $devIdx, $db);
+        ShowDevItem("reporting", "Reporting", $devIdx, $db);
+        ShowDevItem("iasZoneType", "IAS Zone Type", $devIdx, $db);
+    } else {    // Is hub
+        $radioStr = HubCmd("radio", True);
+        $radioInfo = explode(",", $radioStr);
+        echo "<tr><td>Radio Channel</td><td>",$radioInfo[0],"</td></tr>";
+        echo "<tr><td>Radio Power</td><td>",$radioInfo[1],"</td></tr>";
+        echo "<tr><td>PAN Id</td><td>",$radioInfo[2],"</td></tr>";
+        echo "<tr><td>Extended PAN Id</td><td>",$radioInfo[3],"</td></tr>";
+    }
     echo "</table>";
-    echo "<input type=\"submit\" value=\"Submit\" name=\"Update name\"></form><br>";
+    echo "<input type=\"submit\" value=\"Update name\"></form><br>";
     $inClusters = DevGetItem("inClusters", $devIdx, $db);
     if (strpos($inClusters, "0006") !== false) { // Is switchable, eg smartplug, bulb, etc.
         echo "<A href=\"/Command.php/?cmd=toggle ",$username,"\">Toggle</A><br>";
