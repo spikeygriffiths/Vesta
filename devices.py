@@ -117,8 +117,9 @@ def EventHandler(eventId, eventArg):
             if devIdx != None:
                 if pendingBinding != None:
                     binding = eval(database.GetDeviceItem(devIdx, "binding"))
-                    binding.append(pendingBinding)
-                    database.SetDeviceItem(devIdx, "binding", str(binding))
+                    if pendingBinding not in binding:   # Only put it in once, even if we get multiple responses
+                        binding.append(pendingBinding)
+                        database.SetDeviceItem(devIdx, "binding", str(binding))
                     pendingBinding = None
         if eventArg[0] == "CFGRPTRSP":   # Configure Report Response from device
             devIdx = GetIdx(eventArg[1])
@@ -272,7 +273,7 @@ def Check(devIdx):
     binding = database.GetDeviceItem(devIdx, "binding")
     rprtg = database.GetDeviceItem(devIdx, "reporting")
     if inClstr != None:
-        if binding != None:
+        if binding != None and pendingBinding == None:  # Only try to add one binding at once
             if zcl.Cluster.PollCtrl in inClstr and zcl.Cluster.PollCtrl not in binding:
                 return SetBinding(devIdx, zcl.Cluster.PollCtrl, "01") # 01 is our endpoint we want messages to come to
             if zcl.Cluster.OnOff in outClstr and zcl.Cluster.OnOff not in binding: # If device sends OnOff commands...

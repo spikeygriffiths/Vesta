@@ -69,10 +69,9 @@ def EventHandler(eventId, eventArg):
 def DeviceRun(devIdx, restOfRule): # Run rule for specified device
     userName = database.GetDeviceItem(devIdx, "userName")
     Run(userName+restOfRule)
-    groupList = GetGroupsWithDev(devIdx)    # Check if device is in any groups and run appropriate rules for each group
-    for devIdx in groupList:
-        userName = database.GetDeviceItem(devIdx, "userName")
-        Run(userName+restOfRule)
+    groupList = database.GetGroupsWithDev(devIdx)    # Check if device is in any groups and run appropriate rules for each group
+    for name in groupList:
+        Run(name+restOfRule)
 
 def Run(trigger): # Run through the rules looking to see if we have a match for the trigger
     rulesFile = Path(rulesFilename)

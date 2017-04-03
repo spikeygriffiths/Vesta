@@ -97,12 +97,12 @@ def GetGroupsWithDev(devIdx):   # Return list of all group names that include sp
             return groups # This is the end of the loop
         groupName = rows[0]
         devList = GetGroupDevs(groupName)
-        if devIdx in devList:
+        if str(devIdx) in devList:
             groups.append(groupName)    # Append name of each group that features our device
 
 def GetGroupDevs(userName): # Get list of devices that belong to specified group
     global curs
-    curs.execute("SELECT devIdxList FROM Groups WHERE userName="+userName)
+    curs.execute("SELECT devIdxList FROM Groups WHERE userName=\""+userName+"\"")
     rows = curs.fetchone()
     if rows != None:
         return "["+rows[0]+"]"  # List of comma separated devIdxes.  Surrounding square brackets to convert to Python list

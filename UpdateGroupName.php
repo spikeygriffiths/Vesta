@@ -3,12 +3,13 @@ error_reporting(E_ALL);
 ini_set('display_errors', '1');
 $oldGroupName=$_GET['oldName'];
 $newGroupName = $_POST["NewName"];  // Get new user name from form
-echo "New name is:", $newGroupName, " to replace old name of:",$oldGroupName, "<br>";
 $dir = "sqlite:/home/pi/hubapp/hubstuff.db";
 $db = new PDO($dir) or die("Cannot open database");
 if ($oldGroupName == "NewGroup") {
+    echo "New name is:", $newGroupName, "to be created<br>";
     $query = "INSERT INTO Groups (userName, devIdxList) VALUES (\"".$newGroupName."\",\"\")";  # Insert new name and empty string for devices
 } else {
+    echo "New name is:", $newGroupName, " to replace old name of:",$oldGroupName, "<br>";
     $query = "UPDATE Groups SET userName=\"".$newGroupName."\" WHERE userName=\"".$oldGroupName."\"";
 }
 echo "About to send ",$query, " to DB<br>";
