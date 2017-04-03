@@ -77,17 +77,30 @@ def GetLatestEvent(devIdx):
     return None
 
 # === Groups ===
-def IsGroupName(checkName): # Return True if checkName is a groupName
+def IsGroupName(checkName): # Return True if arg is a group name
     global curs
     curs.execute("SELECT userName FROM Groups")
-    while True:
+    while True: # Do...while, Python-style
         rows = curs.fetchone()
         if rows == None:
             return False # Didn't find name in Groups
         if checkName == rows[0]:
             return True
 
-def GetGroupDevs(userName):
+def GetGroupsWithDev(devIdx):   # Return list of all group names that include specified device
+    global curs
+    groups = []
+    curs.execute("SELECT userName FROM Groups")
+    while True: # Do...while, Python-style
+        rows = curs.fetchone()
+        if rows == None:
+            return groups # This is the end of the loop
+        groupName = rows[0]
+        devList = GetGroupDevs(groupName)
+        if devIdx in devList:
+            groups.append(groupName)    # Append name of each group that features our device
+
+def GetGroupDevs(userName): # Get list of devices that belong to specified group
     global curs
     curs.execute("SELECT devIdxList FROM Groups WHERE userName="+userName)
     rows = curs.fetchone()

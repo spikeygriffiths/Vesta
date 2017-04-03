@@ -34,7 +34,6 @@ def EventHandler(eventId, eventArg):
         devIdx = devices.GetIdx(eventArg[1]) # Lookup device from network address in eventArg[1]
         now = datetime.now()
         nowStr = now.strftime("%H:%M")
-        userName = database.GetDeviceItem(devIdx, "userName")
         zoneType = database.GetDeviceItem(devIdx, "iasZoneType") # Device type
         if zoneType != None:
             oldState = database.GetLatestEvent(devIdx)
@@ -45,8 +44,7 @@ def EventHandler(eventId, eventArg):
                     newState = "closed"
                 if oldState != newState:    # NB Might get same state if sensor re-sends, or due to battery report 
                     database.NewEvent(devIdx, newState) # For web page.  Only update event log when state changes
-                    Run(userName+"=="+newState) # See if rule exists (when state changes)
-                    # ToDo: Check if device is in any groups and run appropriate rules for each group
+                    DeviceRun(devIdx, "=="+newState) # See if rule exists (when state changes)
                     #log.debug("Door "+ eventArg[1]+ " "+newState)
             elif zoneType == zcl.Zone_Type.PIR:
                 if int(eventArg[3], 16) & 1: # Bottom bit indicates alarm1
@@ -56,19 +54,25 @@ def EventHandler(eventId, eventArg):
                     newState = "inactive" # Might happen if we get an IAS battery report
                 if oldState != newState:
                     database.NewEvent(devIdx, newState) # For web page.  Only update event log when state changes
-                Run(userName+"=="+newState) # See if rule exists
-                # ToDo: Check if device is in any groups and run appropriate rules for each group
+                DeviceRun(devIdx, "=="+newState) # See if rule exists
             else:
                 log.debug("DevId: "+ eventArg[1]+" zonestatus "+ eventArg[3])
         else:
             log.fault("Unknown IAS device type for devId "+eventArg[1])
     elif eventId == events.ids.BUTTON:
         devIdx = devices.GetIdx(eventArg[1]) # Lookup device from network address in eventArg[1]
-        userName = database.GetDeviceItem(devIdx, "userName")
         #log.debug("Button "+ eventArg[1]+ " "+eventArg[0]) # Arg[0] holds "ON", "OFF" or "TOGGLE" (Case might be wrong)
         database.NewEvent(devIdx, "pressed") # For web page
-        Run(userName+"=="+eventArg[0]) # See if rule exists
+        DeviceRun(devIdx, "=="+eventArg[0]) # See if rule exists
     # End of EventHandler
+
+def DeviceRun(devIdx, restOfRule): # Run rule for specified device
+    userName = database.GetDeviceItem(devIdx, "userName")
+    Run(userName+restOfRule)
+    groupList = GetGroupsWithDev(devIdx)    # Check if device is in any groups and run appropriate rules for each group
+    for devIdx in groupList:
+        userName = database.GetDeviceItem(devIdx, "userName")
+        Run(userName+restOfRule)
 
 def Run(trigger): # Run through the rules looking to see if we have a match for the trigger
     rulesFile = Path(rulesFilename)
