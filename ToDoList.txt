@@ -1,10 +1,10 @@
 #!ToDoList.txt
 
 ***** Features: *****
+* Power monitoring (clamp & smartplugs).  Using default reporting rates of 6 seconds.  Might work now (Smartplugs should just start reporting on cluster 0702, attributes 0000 (summation) and 0400 (instantaneous))
+* Colour lamp control - Use new devices.Colour() command from rules
 * Daily synopsis to use HTML email to show UpTime & snapshot of devices page, plus last day's activity log.  Customise and improve synopsis, so that we can have different synopses daily, weekly or monthly...
-* Power monitoring (clamp & smartplugs) 
 * Auto-start network ("AT+EN") if ATN shows none available at start up
-* Colour lamp control
 * Multiple device ZigBee endpoints?
  
 # *** Burglar alarm? ***  Probably best done in Python

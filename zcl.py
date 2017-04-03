@@ -13,16 +13,21 @@ class Cluster():
     Temperature = "0402"
     Occupancy = "0406"
     IAS_Zone = "0500"
+    SimpleMetering = "0702"
 
 class Attribute():
-    Manuf_Name = "0004" # Basic cluster, string
-    Model_Name = "0005" # Basic cluster, string
-    Batt_Voltage = "0020" # Power_Config cluster, 8 bit in 0.1V steps
-    Batt_Percentage = "0021" # Power_Config cluster, 8-bit in 0.5% steps
+    Manuf_Name = "0004" # Basic cluster, string (Read Only)
+    Model_Name = "0005" # Basic cluster, string (Read Only)
+    Batt_Voltage = "0020" # Power_Config cluster, 8 bit in 0.1V steps (Read Only)
+    Batt_Percentage = "0021" # Power_Config cluster, 8-bit in 0.5% steps (Read Only)
     OnOffState = "0000" # OnOff cluster, 8 bit bool
-    Log_Lux = "0000" # Illuminance cluster, 16-bit as 10000 x log(10)Lux + 1
-    Celsius = "0000" # Temperature cluster, 16-bit in 0.01'C steps
-    Zone_Type = "0001" # IAS Zone cluster, enum list - see below
+    Hue = "0000" # For ColorCtrl (Read Only)
+    Saturation = "0001"# For ColorCtrl (Read Only)
+    Log_Lux = "0000" # Illuminance cluster, 16-bit as 10000 x log(10)Lux + 1 (Read Only)
+    Celsius = "0000" # Temperature cluster, 16-bit in 0.01'C steps (Read Only)
+    Zone_Type = "0001" # IAS Zone cluster, enum list - see below (Read Only)
+    CurrentSummationDelivered = "0000" # Simple Metering cluster. value in Wh (Read Only)
+    InstantaneousDemand =  "0400"  # Simple Metering cluster. value in W (Read Only)
 
 class AttributeTypes():
     Boolean = "10"
@@ -30,9 +35,11 @@ class AttributeTypes():
     Uint8 = "20"
     Uint16 = "21"
     Uint32 = "23"
+    Uint48 = "25"   # For CurrentSummation
     Sint8 = "28"
     Sint16 = "29"
     Sint32 = "2B"
+    Sint16 = "2D"   # For InstantaneousDemand
     Enum8 = "30"
     Enum16 = "31"
     OctStr = "41"

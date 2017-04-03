@@ -276,9 +276,11 @@ def Check(devIdx):
             if zcl.Cluster.PollCtrl in inClstr and zcl.Cluster.PollCtrl not in binding:
                 return SetBinding(devIdx, zcl.Cluster.PollCtrl, "01") # 01 is our endpoint we want messages to come to
             if zcl.Cluster.OnOff in outClstr and zcl.Cluster.OnOff not in binding: # If device sends OnOff commands...
-                return SetBinding(devIdx, zcl.Cluster.OnOff, "0A") # 0A is our endpoint we want messages to come to
+                return SetBinding(devIdx, zcl.Cluster.OnOff, "0A") # 0A is our endpoint we want messages to come to (so that we get TOGGLE, ON and OFF commands)
             if zcl.Cluster.Temperature in inClstr and zcl.Cluster.Temperature not in binding:
                 return SetBinding(devIdx, zcl.Cluster.Temperature, "01") # 01 is our endpoint we want messages to come to
+            if zcl.Cluster.SimpleMetering in inClstr and zcl.Cluster.SimpleMetering not in binding:
+                return SetBinding(devIdx, zcl.Cluster.SimpleMetering, "01") # 01 is our endpoint we want messages to come to
         else:
             database.SetDeviceItem(devIdx, "binding", "[]")
         if zcl.Cluster.IAS_Zone in inClstr:
@@ -364,6 +366,15 @@ def Dim(devIdx, levelFraction):
     if devId and ep:
         levelStr = format(int(levelFraction * 254), 'X')
         EnqueueCmd(devIdx, ["AT+LCMVTOLEV:"+devId+","+ep+",0,1,"+levelStr+",000A", "OK"]) # Fade over 1 sec (in 10ths)
+
+def Colour(devIdx, hueDegree, satFraction):
+    devId = database.GetDeviceItem(devIdx, "nwkId")
+    ep = database.GetDeviceItem(devIdx, "endPoints")
+    if devId and ep:
+        hueStr = format(int((float(hueDegree)/360) * 254), 'X')
+        satStr = format(int(hueFraction * 254), 'X')
+        EnqueueCmd(devIdx, ["AT+CCMVTOHUE:"+devId+","+ep+",0,"+hueStr+",000A", "OK"]) # Fade over 1 sec (in 10ths)
+        EnqueueCmd(devIdx, ["AT+CCMVTOSAT:"+devId+","+ep+",0,"+satStr+",000A", "OK"]) # Fade over 1 sec (in 10ths)
 
 def InitQueue(devIdx):
     global txQueue, expRsp, expRspTimeoutS
