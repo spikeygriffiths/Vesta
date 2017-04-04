@@ -43,10 +43,10 @@ function ShowGroups($db)
         } else {
             $devs = "<i>empty</i>";
         }
-        echo "<tr><td><a href=\"UpdateGroup.php/?groupName=",$groupName,"\">",$groupName,"</a></td>";
+        echo "<tr><td><a href=\"/UpdateGroup.php/?groupName=",$groupName,"\">",$groupName,"</a></td>";
         echo"<td> ".$devs." </td></tr>";
     }
-    echo"<tr><td> <a href=\"UpdateGroup.php/?groupName=NewGroup\"><i>New Group</i></a> </td><td> <i>empty</i> </td></tr>";
+    echo"<tr><td> <a href=\"/UpdateGroup.php/?groupName=NewGroup\"><i>New Group</i></a> </td><td> <i>empty</i> </td></tr>";
     echo "</table>";
 }
 

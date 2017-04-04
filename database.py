@@ -20,7 +20,7 @@ def EventHandler(eventId, eventArg):
             db.commit() # Flush events to disk
             flushDB = False
     #if eventId == events.ids.NEWDAY:
-    #    curs.execute("DELETE FROM Events WHERE timestamp <= date('now', '-7 day')") # Flush all events older than a week to avoid filling database
+    #    curs.execute("DELETE FROM Events WHERE timestamp <= date('now', '-30 day')") # Flush all events older than a month to avoid filling database..?
 # end of EventHandler
 
 # === Status ===

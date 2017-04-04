@@ -228,6 +228,8 @@ def CommandDev(action, devIdx, actList):
             if len(actList) > 5:
                 if actList[4] == "for":
                     SetOnDuration(devIdx, int(actList[5],10))
+        elif action == "HueSat":    # Syntax is "do HueSat <Hue in degrees>,<fractional saturation>
+            devices.Colour(devIdx, int(actList[3],10), float(actList[4]))
         else:
             log.debug("Unknown action: "+action +" for device: "+actList[1])
 

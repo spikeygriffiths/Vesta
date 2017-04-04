@@ -1,13 +1,15 @@
 #!ToDoList.txt
 
-***** Features: *****
+***** Features to Add *****
 * Power monitoring (clamp & smartplugs).  Once reporting works, show instantaneous power on web
-* Colour lamp control - Use new devices.Colour() command from rules
-* Groups aren't updating via web
 * Daily synopsis to use HTML email to show UpTime & snapshot of devices page, plus last day's activity log.  Customise and improve synopsis, so that we can have different synopses daily, weekly or monthly...
 * Auto-start network ("AT+EN") if ATN shows none available at start up
 * Multiple device ZigBee endpoints?
  
+***** Features to Test *****
+* Colour lamp control - Test Set rule to do HueSat lamp,0,0.5 to see whether we get solid red
+* Groups aren't updating via web (at home, but work fine at work.  Hmm.)
+
 # *** Burglar alarm? ***  Probably best done in Python
 # if keyfob==arm do Set AlarmState=StartArming
 # if AlarmState==StartArming do Set AlarmTimeout=30, Set AlarmState=Arming

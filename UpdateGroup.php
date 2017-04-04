@@ -9,10 +9,11 @@ echo "<body>";
 $groupName=$_GET['groupName'];
 $dir = "sqlite:/home/pi/hubapp/hubstuff.db";
 $db = new PDO($dir) or die("Cannot open database");
-echo "<center><h1>",$groupName,"</h1></center>";
+echo "<center><h1>",$groupName,"</h1>";
+echo "<button type=\"button\" onclick=\"window.location.href='/DelGroup.php/?groupName=",$groupName,"'\">Remove all of ",$groupName,"</button><br><br>";
 ShowGroupInfo($db, $groupName);
-echo "<center><a href=\"/Groups.php\">Groups</a> </center><br>";
-echo "<center><a href=\"/index.php\">Home</a> </center>";
+echo "<a href=\"/Groups.php\">Groups</a><br>";
+echo "<br><a href=\"/index.php\">Home</a> </center>";
 echo "</body></html>";
 
 function  DbGetItem($item, $devIdx, $db)
@@ -25,7 +26,7 @@ function  DbGetItem($item, $devIdx, $db)
 
 function ShowGroupInfo($db, $groupName)
 {
-    echo "<center><table>";
+    echo "<table>";
     echo "<form action=\"/UpdateGroupName.php/?oldName=",$groupName,"\" method=\"post\">";
     echo "<tr><td><input type=\"text\" name=\"NewName\" value=\"", $groupName, "\"></td>";
     echo "<td><input type=\"submit\" value=\"Update name\"></form></td></tr>";
@@ -60,6 +61,5 @@ function ShowGroupInfo($db, $groupName)
     echo "</select><p>";
     echo "<input type='submit'/>";
     echo "</form>";
-    echo "</center>";
 }
 ?>
