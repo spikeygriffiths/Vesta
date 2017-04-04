@@ -107,5 +107,11 @@ function ShowDeviceInfo($db, $devIdx, $username)
     if (strpos($inClusters, "0006") !== false) { // Is switchable, eg smartplug, bulb, etc.
         echo "<A href=\"/Command.php/?cmd=toggle ",$username,"\">Toggle</A><br><br>";
     }
+    if (strpos($inClusters, "0008") !== false) { // Is dimmable, eg lamp, bulb
+        // Could have "ramp" image here, to allow user to select dimness
+    }
+    if (strpos($inClusters, "0300") !== false) { // ColorCtrl cluster, eg lamp, RGB bulbs
+        echo "<a href=\"/HueSatSender.php\"><img src=\"/hsvPicker.png\" width=360 height=100 alt=\"Colour Selector\" ismap=\"ismap\"></a><br>";  // Php page will GET x,y, according to stackoverflow.com/questions/358387.  X is Hue, Y is Saturation
+    }
 }
 ?>

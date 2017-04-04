@@ -1,14 +1,18 @@
 #!ToDoList.txt
 
 ***** Features to Add *****
-* (Add "alter table Devices add column powerReading INTEGER;" via SQL)
-* Once reporting works, show instantaneous power on web
+* HueSatSender.php page needed to get X,Y coordinates from colour picker
+* New command in commands.py to take hue & sat and send on to devices.Colour(), so that web page can use it...
+* Update ShowOneDevice if state changes (eg switched On, power reading), but not if editing name...  Perhaps have separate page to edit name?
+* Identify command, so we can get devices to show themselves.  Also via web
+* Energy table in database (updated hourly, daily?)
 * Daily synopsis to use HTML email to show UpTime & snapshot of devices page, plus last day's activity log.  Customise and improve synopsis, so that we can have different synopses daily, weekly or monthly...
 * Auto-start network ("AT+EN") if ATN shows none available at start up
 * Multiple device ZigBee endpoints?
  
 ***** Features to Test *****
-* Colour lamp control - Test Set rule to do HueSat lamp,0,0.5 to see whether we get solid red
+* (Add "alter table Devices add column powerReading INTEGER;" via SQL)
+* Colour lamp control via rules - do HueSat lamp,0,0.5 to see whether we get solid red
 * Groups aren't updating via web (at home, but work fine at work.  Hmm.)
 
 # *** Burglar alarm? ***  Probably best done in Python
