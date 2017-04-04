@@ -1,7 +1,8 @@
 #!ToDoList.txt
 
 ***** Features to Add *****
-* Power monitoring (clamp & smartplugs).  Once reporting works, show instantaneous power on web
+* (Add "alter table Devices add column powerReading INTEGER;" via SQL)
+* Once reporting works, show instantaneous power on web
 * Daily synopsis to use HTML email to show UpTime & snapshot of devices page, plus last day's activity log.  Customise and improve synopsis, so that we can have different synopses daily, weekly or monthly...
 * Auto-start network ("AT+EN") if ATN shows none available at start up
 * Multiple device ZigBee endpoints?

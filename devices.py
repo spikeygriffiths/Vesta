@@ -180,10 +180,12 @@ def NoteReporting(devIdx, clusterId, attrId):
 def GetIdx(devId):
     return database.GetDevIdx("nwkId", devId)
 
-def InitDev(devId):
+def InitDev():
     #log.debug("Adding new devId: "+ str(devId))
     ephemera.append([]) # Add parallel ephemeral device list
-    return database.NewDevice(devId)
+    devIdx = database.NewDevice()
+    InitQueue(devIdx)
+    return devIdx
 
 def SetAttrVal(devIdx, clstrId, attrId, value):
     if clstrId == zcl.Cluster.PowerConfig and attrId == zcl.Attribute.Batt_Percentage:
@@ -208,6 +210,9 @@ def SetAttrVal(devIdx, clstrId, attrId, value):
         if oldState != newState:
             database.NewEvent(devIdx, newState)
             Rule(devIdx, newState)
+    if clstrId == zcl.Cluster.SimpleMetering and attrId == zcl.Attribute.InstantaneousDemand:
+        varVal = int(value, 16) # Arrives in Watts, so store it in the same way
+        database.SetDeviceItem(devIdx, "powerReading", varVal)
     if clstrId == zcl.Cluster.IAS_Zone and attrId == zcl.Attribute.Zone_Type:
         database.SetDeviceItem(devIdx, "iasZoneType", value)
     if clstrId == zcl.Cluster.Basic:
@@ -302,7 +307,12 @@ def Check(devIdx):
                 tmpRpt = zcl.Cluster.Temperature+":"+zcl.Attribute.Celsius
                 if zcl.Cluster.Temperature in binding and tmpRpt not in rprtg:
                     pendingRptAttrId = zcl.Attribute.Celsius
-                    return ("AT+CFGRPT:"+devId+","+ep+",0,"+zcl.Cluster.Temperature+",0,"+zcl.Attribute.Celsius+","+zcl.AttributeTypes.Uint16+",012C,0E10,0064", "CFGRPTRP") # 012C is 300==5 mins, 0E10 is 3600==1 hour, 0064 is 100, being 1.00'C
+                    return ("AT+CFGRPT:"+devId+","+ep+",0,"+zcl.Cluster.Temperature+",0,"+zcl.Attribute.Celsius+","+zcl.AttributeTypes.Uint16+",012C,0E10,0064", "CFGRPTRSP") # 012C is 300==5 mins, 0E10 is 3600==1 hour, 0064 is 100, being 1.00'C
+            if zcl.Cluster.SimpleMetering in inClstr:
+                tmpRpt = zcl.Cluster.SimpleMetering+":"+zcl.Attribute.InstantaneousDemand
+                if zcl.Cluster.SimpleMetering in binding and tmpRpt not in rprtg:
+                    pendingRptAttrId = zcl.Attribute.InstantaneousDemand
+                    return ("AT+CFGRPT:"+devId+","+ep+",0,"+zcl.Cluster.SimpleMetering+",0,"+zcl.Attribute.InstantaneousDemand+","+zcl.AttributeTypes.Sint24+",0005,003C,00000A", "CFGRPTRSP") # 5 second minimum, 1 minute maximum, 10 watt change
         else:
             database.SetDeviceItem(devIdx, "reporting", "[]")
     if GetTempVal(devIdx, "JustSentOnOff"):

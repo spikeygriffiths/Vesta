@@ -76,6 +76,7 @@ function ShowDeviceInfo($db, $devIdx, $username)
     ShowDevStatus("signal", "Radio Signal %", $devIdx, $db);
     ShowDevStatus("battery", "Battery %", $devIdx, $db);
     ShowDevStatus("temperature", "Temperature 'C", $devIdx, $db);
+    ShowDevItem("powerReading", "Power (W)", $devIdx, $db);
     ShowDevStatus("presence", "Presence", $devIdx, $db);
     echo "<tr><td>Event</td>";
     ShowEvent($devIdx, $db);
@@ -104,8 +105,7 @@ function ShowDeviceInfo($db, $devIdx, $username)
     echo "<input type=\"submit\" value=\"Update name\"></form><br>";
     $inClusters = DevGetItem("inClusters", $devIdx, $db);
     if (strpos($inClusters, "0006") !== false) { // Is switchable, eg smartplug, bulb, etc.
-        echo "<A href=\"/Command.php/?cmd=toggle ",$username,"\">Toggle</A><br>";
+        echo "<A href=\"/Command.php/?cmd=toggle ",$username,"\">Toggle</A><br><br>";
     }
 }
-
 ?>

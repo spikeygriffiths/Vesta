@@ -38,8 +38,9 @@ class AttributeTypes():
     Uint48 = "25"   # For CurrentSummation
     Sint8 = "28"
     Sint16 = "29"
+    Sint24 = "2A"   # For InstantaneousDemand
     Sint32 = "2B"
-    Sint16 = "2D"   # For InstantaneousDemand
+    Sint48 = "2D"
     Enum8 = "30"
     Enum16 = "31"
     OctStr = "41"
