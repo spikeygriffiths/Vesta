@@ -1,11 +1,10 @@
 #!ToDoList.txt
 
 ***** Features to Add *****
-* HueSatSender.php page needed to get X,Y coordinates from colour picker
-* New command in commands.py to take hue & sat and send on to devices.Colour(), so that web page can use it...
 * Update ShowOneDevice if state changes (eg switched On, power reading), but not if editing name...  Perhaps have separate page to edit name?
 * Identify command, so we can get devices to show themselves.  Also via web
 * Energy table in database (updated hourly, daily?)
+* Rationalise php pages to put all database access into one file (functions.php).  Use global
 * Daily synopsis to use HTML email to show UpTime & snapshot of devices page, plus last day's activity log.  Customise and improve synopsis, so that we can have different synopses daily, weekly or monthly...
 * Auto-start network ("AT+EN") if ATN shows none available at start up
 * Multiple device ZigBee endpoints?
@@ -36,6 +35,7 @@
 # if InternalPirs==unoccupied and 0:00<time<sunset and HallLight_OnOff==off and rand(30)==0 do SwitchOn HallLight for 300
 
 Bugs
+* Reaction time to respond to events increases with uptime, ever since adding queued messages per device
 * Occasionally stalls!  But then recovers as if nothing had happened.  Suspect stalled messages for other devices
 * Still get stupid serial errors!!!  But only when headless...
 

@@ -102,16 +102,17 @@ function ShowDeviceInfo($db, $devIdx, $username)
         echo "<tr><td>Extended PAN Id</td><td>",$radioInfo[3],"</td></tr>";
     }
     echo "</table>";
-    echo "<input type=\"submit\" value=\"Update name\"></form><br>";
+    echo "<input type=\"submit\" value=\"Update name\"></form>";
     $inClusters = DevGetItem("inClusters", $devIdx, $db);
     if (strpos($inClusters, "0006") !== false) { // Is switchable, eg smartplug, bulb, etc.
         echo "<A href=\"/Command.php/?cmd=toggle ",$username,"\">Toggle</A><br><br>";
     }
     if (strpos($inClusters, "0008") !== false) { // Is dimmable, eg lamp, bulb
-        // Could have "ramp" image here, to allow user to select dimness
+        echo "Brightness: <a href=\"/ImageMap.php/?devId=",$username,"&cmd=dim&map=\"><img src=\"/UpRamp.png\" width=100 height=20 alt=\"Level\" ismap=\"ismap\"></a><br><br>";  // Php page will GET x,y,
     }
     if (strpos($inClusters, "0300") !== false) { // ColorCtrl cluster, eg lamp, RGB bulbs
-        echo "<a href=\"/HueSatSender.php\"><img src=\"/hsvPicker.png\" width=360 height=100 alt=\"Colour Selector\" ismap=\"ismap\"></a><br>";  // Php page will GET x,y, according to stackoverflow.com/questions/358387.  X is Hue, Y is Saturation
+        echo "Hue: <a href=\"/ImageMap.php/?devId=",$username,"&cmd=hue&map=\"><img src=\"/Hue.png\" width=360 height=20 alt=\"Hue\" ismap=\"ismap\"></a><br><br>";  // Php page will GET x,y, according to stackoverflow.com/questions/358387
+        echo "Saturation: <a href=\"/ImageMap.php/?devId=",$username,"&cmd=sat&map=\"><img src=\"/Sat.png\" width=100 height=20 alt=\"Saturation\" ismap=\"ismap\"></a><br><br>";
     }
 }
 ?>

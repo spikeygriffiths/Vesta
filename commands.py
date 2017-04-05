@@ -127,17 +127,49 @@ class Commands(cmd.Cmd):
             devices.Toggle(devIdx)
 
     def do_dim(self, line):
-        """dim name fraction
+        """dim name percentage
         Sends level command to named device"""
         argList = line.split()
         if len(argList) >= 2:
             devId = argList[0]
-            fraction = float(argList[1])
-            devIdx = devices.GetIdxFromUserName(name) # Try name first
+            percentage = int(argList[1])
+            devIdx = database.GetDevIdx("userName", devId)
             if devIdx == None:
                 devIdx = devices.GetIdx(name)   # Try devId if no name match
             if devIdx != None:
-                devices.Dim(devIdx, fraction)
+                devices.Dim(devIdx, percentage)
+        else:
+            log.fault("Insufficient Args")
+
+    def do_hue(self, line):
+        """hue name hue
+        Sends ColorCtrl command to named device, where 0<hue<360"""
+        argList = line.split()
+        if len(argList) >= 2:
+            devId = argList[0]
+            hue = int(argList[1])
+            devIdx = database.GetDevIdx("userName", devId)
+            if devIdx == None:
+                devIdx = devices.GetIdx(name)   # Try devId if no name match
+
+            if devIdx != None:
+                devices.Hue(devIdx, hue)
+        else:
+            log.fault("Insufficient Args")
+
+    def do_sat(self, line):
+        """sat name sat
+        Sends ColorCtrl command to named device, where 0<sat<100"""
+        argList = line.split()
+        if len(argList) >= 2:
+            devId = argList[0]
+            sat = int(argList[1])
+            devIdx = database.GetDevIdx("userName", devId)
+            if devIdx == None:
+                devIdx = devices.GetIdx(name)   # Try devId if no name match
+
+            if devIdx != None:
+                devices.Sat(devIdx, sat)
         else:
             log.fault("Insufficient Args")
 

@@ -91,7 +91,7 @@ def EventHandler(eventId, eventArg):
                 NoteMsgDetails(globalDevIdx, eventArg)
                 database.SetDeviceItem(globalDevIdx, "outClusters", str(eventArg[1:])) # Store whole list from arg[1] to arg[n]
             globalDevIdx = None # We've finished with this global for now
-        if eventArg[0] == "RESPATTR":
+        elif eventArg[0] == "RESPATTR":
             devIdx = GetIdx(eventArg[1])
             if devIdx != None:
                 NoteMsgDetails(devIdx, eventArg)
@@ -101,7 +101,7 @@ def EventHandler(eventId, eventArg):
                 if "00" == eventArg[5]:
                     attrVal = eventArg[6]
                     SetAttrVal(devIdx, clusterId, attrId, attrVal)
-        if eventArg[0] == "REPORTATTR":
+        elif eventArg[0] == "REPORTATTR":
             devIdx = GetIdx(eventArg[1])
             if devIdx != None:
                 ep = eventArg[2]
@@ -112,7 +112,7 @@ def EventHandler(eventId, eventArg):
                 NoteMsgDetails(devIdx, eventArg)
                 SetAttrVal(devIdx, clusterId, attrId, attrVal)
                 NoteReporting(devIdx, clusterId, attrId)
-        if eventArg[0] == "Bind":    # Binding Response from device
+        elif eventArg[0] == "Bind":    # Binding Response from device
             devIdx = GetIdx(eventArg[1])
             if devIdx != None:
                 if pendingBinding != None:
@@ -121,13 +121,17 @@ def EventHandler(eventId, eventArg):
                         binding.append(pendingBinding)
                         database.SetDeviceItem(devIdx, "binding", str(binding))
                     pendingBinding = None
-        if eventArg[0] == "CFGRPTRSP":   # Configure Report Response from device
+        elif eventArg[0] == "CFGRPTRSP":   # Configure Report Response from device
             devIdx = GetIdx(eventArg[1])
             status = eventArg[4]
             if devIdx != None and status == "00":
                 clusterId = eventArg[3]
                 attrId = pendingRptAttrId # Need to remember this, since it doesn't appear in CFGRPTRSP
                 NoteReporting(devIdx, clusterId, attrId)
+        else:   # Unrecognised message, but we still want to extract OOB info
+            devIdx = GetIdx(eventArg[1])    # Assume this is sensible
+            if devIdx != None:
+                NoteMsgDetails(devIdx, eventArg)
     if eventId == events.ids.BUTTON:
         devIdx = GetIdx(eventArg[1]) # Lookup device from network address in eventArg[1]
         NoteMsgDetails(devIdx, eventArg)
@@ -371,21 +375,28 @@ def Toggle(devIdx):
         SetTempVal(devIdx, "JustSentOnOff", "True")
         EnqueueCmd(devIdx, ["AT+RONOFF:"+devId+","+ep+",0", "OK"]) # Assume FFD if it supports OnOff cluster
 
-def Dim(devIdx, levelFraction):
+def Dim(devIdx, level):
     devId = database.GetDeviceItem(devIdx, "nwkId")
     ep = database.GetDeviceItem(devIdx, "endPoints")
     if devId and ep:
-        levelStr = format(int(levelFraction * 254), 'X')
-        EnqueueCmd(devIdx, ["AT+LCMVTOLEV:"+devId+","+ep+",0,1,"+levelStr+",000A", "OK"]) # Fade over 1 sec (in 10ths)
+        if level > 1:  # Assume it's a percentage
+            level = level / 100 # Convert to a fraction
+        levelStr = format(int(level * 254), 'X').zfill(2)
+        EnqueueCmd(devIdx, ["AT+LCMVTOLEV:"+devId+","+ep+",0,1,"+levelStr+",000A", "DFTREP"]) # Fade over 1 sec (in 10ths)
 
-def Colour(devIdx, hueDegree, satFraction):
+def Hue(devIdx, hueDegree):
     devId = database.GetDeviceItem(devIdx, "nwkId")
     ep = database.GetDeviceItem(devIdx, "endPoints")
     if devId and ep:
-        hueStr = format(int((float(hueDegree)/360) * 254), 'X')
-        satStr = format(int(hueFraction * 254), 'X')
-        EnqueueCmd(devIdx, ["AT+CCMVTOHUE:"+devId+","+ep+",0,"+hueStr+",000A", "OK"]) # Fade over 1 sec (in 10ths)
-        EnqueueCmd(devIdx, ["AT+CCMVTOSAT:"+devId+","+ep+",0,"+satStr+",000A", "OK"]) # Fade over 1 sec (in 10ths)
+        hueStr = format(int(float(hueDegree/360) * 254), 'X').zfill(2)
+        EnqueueCmd(devIdx, ["AT+CCMVTOHUE:"+devId+","+ep+",0,"+hueStr+",00,0001", "DFTREP"]) # Fade over 100ms (in sec/10)
+
+def Sat(devIdx, satPercentage):
+    devId = database.GetDeviceItem(devIdx, "nwkId")
+    ep = database.GetDeviceItem(devIdx, "endPoints")
+    if devId and ep:
+        satStr = format(int(float(satPercentage/100) * 254), 'X').zfill(2)
+        EnqueueCmd(devIdx, ["AT+CCMVTOSAT:"+devId+","+ep+",0,"+satStr+",0001", "DFTREP"]) # Fade over 100ms (in sec/10)
 
 def InitQueue(devIdx):
     global txQueue, expRsp, expRspTimeoutS
