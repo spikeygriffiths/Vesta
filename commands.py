@@ -48,12 +48,12 @@ def EventHandler(eventId, eventArg):
             if s is sck:
                 cliSck, addr = sck.accept()
                 sckLst.append(cliSck)
-                log.debug("New connection from web page!")
+                #log.debug("New connection from web page!")
             else:
                 cmd = cliSck.recv(100)
                 if cmd:
                     cmd = cmd.decode()
-                    log.debug("Got cmd "+ cmd)
+                    log.debug("Got cmd \""+ cmd+"\" from web page")
                     sys.stdout = open("cmdoutput.txt", "w") # Redirect stdout to file
                     Commands().onecmd(cmd)
                     sys.stdout = sys.__stdout__ # Put stdout back to normal (will hopefully also close the file)
@@ -117,12 +117,22 @@ class Commands(cmd.Cmd):
         Opens network (for 60s) to allow new device to join"""
         devices.EnqueueCmd(0, ["AT+PJOIN", "OK"])
 
-    def do_toggle(self, name):
+    def do_identify(self, line):
+        """identify name seconds
+        Sends identify command to named device.  Use 0 seconds to stop immediately"""
+        argList = line.split()
+        if len(argList) >= 2:
+            devIdx = devices.FindDev(argList[0])
+            if devIdx != None:
+                timeS = int(argList[1])
+                devices.Identify(devIdx, timeS)
+        else:
+            log.fault("Insufficient Args")
+
+    def do_toggle(self, devId):
         """toggle name
         Sends toggle on/off command to named device"""
-        devIdx = database.GetDevIdx("userName", name) # Try name first
-        if devIdx == None:
-            devIdx = devices.GetIdx(name)   # Try devId if no name match
+        devIdx = devices.FindDev(devId)
         if devIdx != None:
             devices.Toggle(devIdx)
 
@@ -131,11 +141,8 @@ class Commands(cmd.Cmd):
         Sends level command to named device"""
         argList = line.split()
         if len(argList) >= 2:
-            devId = argList[0]
             percentage = int(argList[1])
-            devIdx = database.GetDevIdx("userName", devId)
-            if devIdx == None:
-                devIdx = devices.GetIdx(name)   # Try devId if no name match
+            devIdx = devices.FindDev(argList[0])
             if devIdx != None:
                 devices.Dim(devIdx, percentage)
         else:
@@ -146,11 +153,8 @@ class Commands(cmd.Cmd):
         Sends ColorCtrl command to named device, where 0<hue<360"""
         argList = line.split()
         if len(argList) >= 2:
-            devId = argList[0]
             hue = int(argList[1])
-            devIdx = database.GetDevIdx("userName", devId)
-            if devIdx == None:
-                devIdx = devices.GetIdx(name)   # Try devId if no name match
+            devIdx = devices.FindDev(argList[0])
             if devIdx != None:
                 devices.Hue(devIdx, hue)
         else:
@@ -161,11 +165,8 @@ class Commands(cmd.Cmd):
         Sends ColorCtrl command to named device, where 0<sat<100"""
         argList = line.split()
         if len(argList) >= 2:
-            devId = argList[0]
             sat = int(argList[1])
-            devIdx = database.GetDevIdx("userName", devId)
-            if devIdx == None:
-                devIdx = devices.GetIdx(name)   # Try devId if no name match
+            devIdx = devices.FindDev(argList[0])
             if devIdx != None:
                 devices.Sat(devIdx, sat)
         else:
@@ -175,16 +176,4 @@ class Commands(cmd.Cmd):
         """at cmd
         Sends AT command to Telegesis stick"""
         devices.EnqueueCmd(0, ["AT"+line, "OK"])
-        
-    def do_status(self, line):
-        """status <devIdx> <item> <value>
-        Sets status table entry"""
-        argList = line.split()
-        if len(argList) >= 3:
-            devIdx = argList[0]
-            item = argList[1]
-            value = argList[2]
-            database.SetStatus(devIdx, item, value)
-        else:
-            log.fault("Insufficient Args")
 

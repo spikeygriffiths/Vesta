@@ -2,8 +2,7 @@
 
 ***** Features to Add *****
 * Update ShowOneDevice if state changes (eg switched On, power reading), but not if editing name...  Perhaps have separate page to edit name?
-* Identify command, so we can get devices to show themselves.  Also via web
-* Energy table in database (updated hourly, daily?)
+* Energy table in database (updated hourly, I think)
 * Rationalise php pages to put all database access into one file (functions.php).  Use global
 * Daily synopsis to use HTML email to show UpTime & snapshot of devices page, plus last day's activity log.  Customise and improve synopsis, so that we can have different synopses daily, weekly or monthly...
 * Auto-start network ("AT+EN") if ATN shows none available at start up
@@ -11,7 +10,6 @@
  
 ***** Features to Test *****
 * (Add "alter table Devices add column powerReading INTEGER;" via SQL)
-* Colour lamp control via rules - do Sat lamp,1 to see whether we get solid red
 * Groups aren't updating via web (at home, but work fine at work.  Hmm.)
 
 # *** Burglar alarm? ***  Probably best done in Python

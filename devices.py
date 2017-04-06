@@ -186,6 +186,12 @@ def NoteReporting(devIdx, clusterId, attrId):
 def GetIdx(devId):
     return database.GetDevIdx("nwkId", devId)
 
+def FindDev(devId):
+    devIdx = database.GetDevIdx("userName", devId) # Try name first
+    if devIdx:
+        return devIdx
+    return devices.GetIdx(devId)   # Try devId if no name match
+
 def InitDev():
     #log.debug("Adding new devId: "+ str(devId))
     ephemera.append([]) # Add parallel ephemeral device list
@@ -352,6 +358,13 @@ def Prod(devIdx):    # Ask device a question, just to provoke a response
     if devId != None and ep != None:
         cmdRsp = telegesis.ReadAttr(devId, ep, zcl.Cluster.Basic, zcl.Attribute.Model_Name) # Get Basic's Device Name in order to prod it into life
         EnqueueCmd(devIdx, cmdRsp)
+
+def Identify(devIdx, durationS):    # Duration in seconds to flash the device's LED.  Use duration=0 to stop.
+    devId = database.GetDeviceItem(devIdx, "nwkId")
+    ep = database.GetDeviceItem(devIdx, "endPoints")
+    if devId and ep:
+        durationStr = format(int(durationS), 'X').zfill(4)
+        EnqueueCmd(devIdx, ["AT+IDENTIFY:"+devId+","+ep+",0,"+durationStr, "DFTREP"]) # Identify for selected time
 
 def SwitchOn(devIdx):
     devId = database.GetDeviceItem(devIdx, "nwkId")
