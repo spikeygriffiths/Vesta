@@ -1,11 +1,15 @@
 <?php
+$url1 = $_SERVER['REQUEST_URI'];
+header("Refresh: 10;  URL=$url1");
 error_reporting(E_ALL); 
 include "HubCmd.php";
 
 echo "<html>";
 echo "<head><style>table {font-family:arial, sans-serif;border-collapse: collapse;width: 100 % }";
 echo "td, th {border: 2px solid #dddddd;text-align: left;padding: 2px }";
-echo "</style></head>";
+echo "</style>";
+//echo "<meta http-equiv=\"refresh\" content=\"10\">";    // Auto-refresh page every 10 seconds
+echo "</head>";
 echo "<body>";
 $devIdx=$_GET['devIdx'];
 $dir = "sqlite:/home/pi/hubapp/hubstuff.db";
@@ -70,9 +74,9 @@ function ShowEvent($devIdx, $db)
 
 function ShowDeviceInfo($db, $devIdx, $username)
 {
-    echo "<center><form action=\"/UpdateDeviceName.php/?devIdx=",$devIdx,"\" method=\"post\">";
+    //echo "<center><form action=\"/UpdateDeviceName.php/?devIdx=",$devIdx,"\" method=\"post\">";
     echo "<table>";
-    echo "<tr><td>Name</td><td><input type=\"text\" name=\"UserName\" value=\"", $username, "\"></td>";
+    //echo "<tr><td>Name</td><td><input type=\"text\" name=\"UserName\" value=\"", $username, "\"></td>";
     ShowDevStatus("signal", "Radio Signal %", $devIdx, $db);
     ShowDevStatus("battery", "Battery %", $devIdx, $db);
     ShowDevStatus("temperature", "Temperature 'C", $devIdx, $db);
@@ -102,7 +106,8 @@ function ShowDeviceInfo($db, $devIdx, $username)
         echo "<tr><td>Extended PAN Id</td><td>",$radioInfo[3],"</td></tr>";
     }
     echo "</table>";
-    echo "<input type=\"submit\" value=\"Update name\"></form>";
+    //echo "<input type=\"submit\" value=\"Update name\"></form>";
+    echo "<A href=\"/ChangeDevName.php/?devIdx=",$devIdx,"\">Change Name</A><br><br>";
     echo "<A href=\"/Command.php/?cmd=identify ",$username," 30\">Identify for 30s</A><br><br>";
     $inClusters = DevGetItem("inClusters", $devIdx, $db);
     if (strpos($inClusters, "0006") !== false) { // Is switchable, eg smartplug, bulb, etc.

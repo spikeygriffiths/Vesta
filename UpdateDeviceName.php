@@ -12,7 +12,7 @@ echo "About to send ",$query, " to DB<br>";
 $count = $db->exec($query);
 if ($count == 1) {
     UpdateRules($oldUserName, $newUserName);    // Now go through the rules and make sure the old name is updated to the new
-    echo "<meta http-equiv=\"refresh\" content=\"10;url=/ShowOneDevice.php/?devIdx=",$devIdx,"\"/>";
+    echo "<meta http-equiv=\"refresh\" content=\"0;url=/ShowOneDevice.php/?devIdx=",$devIdx,"\"/>";
     echo "New name saved";
 } else {
     echo "Update failed, with count of:", $count, "<br>";
