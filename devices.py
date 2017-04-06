@@ -142,7 +142,9 @@ def EventHandler(eventId, eventArg):
         for devIdx in range(0, numDevs):  # Element 0 is hub, but this can have messages too, so use it
             if IsListening(devIdx):  # True if FFD, ZED or Polling
                 if expRsp[devIdx] == None:  # We don't have a message in flight
-                    EnqueueCmd(devIdx, Check(devIdx))   # Queue up anything we ought to know
+                    cr = Check(devIdx)
+                    if cr:
+                        EnqueueCmd(devIdx, cr)   # Queue up anything we ought to know
                     cmdRsp = DequeueCmd(devIdx) # Pull first item from queue
                     if cmdRsp != None:
                         log.debug("Sending "+str(cmdRsp))
@@ -406,17 +408,22 @@ def InitQueue(devIdx):
 
 def EnqueueCmd(devIdx, cmdRsp):
     global txQueue
-    txQueue[devIdx].insert(0, cmdRsp)     # Insert [cmd,rsp] at the head of device's txQueue
+    if cmdRsp:
+        log.debug("Queuing "+cmdRsp[0]+"  for devIdx "+str(devIdx))
+        txQueue[devIdx].insert(0, cmdRsp)     # Insert [cmd,rsp] at the head of device's txQueue
 
 def JumpQueueCmd(devIdx, cmdRsp):
     global txQueue
-    txQueue[devIdx].append(cmdRsp)     # Append [cmd,rsp] at the head (thus force to the front) of device's txQueue
+    if cmdRsp:
+        log.debug("Jump-queuing "+cmdRsp[0]+"  for devIdx "+str(devIdx))
+        txQueue[devIdx].append(cmdRsp)     # Append [cmd,rsp] at the head (thus force to the front) of device's txQueue
 
 def DequeueCmd(devIdx):
     global txQueue
     if IsQueueEmpty(devIdx):
         return None
     else:
+        log.debug("Un-queuing item for devIdx "+str(devIdx))
         return txQueue[devIdx].pop()    # Get last element
 
 def IsQueueEmpty(devIdx):

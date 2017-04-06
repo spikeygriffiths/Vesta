@@ -151,7 +151,6 @@ class Commands(cmd.Cmd):
             devIdx = database.GetDevIdx("userName", devId)
             if devIdx == None:
                 devIdx = devices.GetIdx(name)   # Try devId if no name match
-
             if devIdx != None:
                 devices.Hue(devIdx, hue)
         else:
@@ -167,7 +166,6 @@ class Commands(cmd.Cmd):
             devIdx = database.GetDevIdx("userName", devId)
             if devIdx == None:
                 devIdx = devices.GetIdx(name)   # Try devId if no name match
-
             if devIdx != None:
                 devices.Sat(devIdx, sat)
         else:
