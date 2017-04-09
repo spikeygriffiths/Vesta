@@ -129,9 +129,10 @@ def EventHandler(eventId, eventArg):
                 attrId = pendingRptAttrId # Need to remember this, since it doesn't appear in CFGRPTRSP
                 NoteReporting(devIdx, clusterId, attrId)
         else:   # Unrecognised message, but we still want to extract OOB info
-            devIdx = GetIdx(eventArg[1])    # Assume this is sensible
-            if devIdx != None:
-                NoteMsgDetails(devIdx, eventArg)
+            if len(eventArg) >= 2:
+                devIdx = GetIdx(eventArg[1])    # Assume this is sensible
+                if devIdx != None:
+                    NoteMsgDetails(devIdx, eventArg)
     if eventId == events.ids.BUTTON:
         devIdx = GetIdx(eventArg[1]) # Lookup device from network address in eventArg[1]
         NoteMsgDetails(devIdx, eventArg)
@@ -263,13 +264,21 @@ def NoteMsgDetails(devIdx, arg):
     if arg[0] == expRsp[devIdx]:
         expRsp[devIdx] = None   # Note that we've found the expected response now, so we're now clear to send
     presence.Set(devIdx, presence.states.present) # Note presence
-    if int(arg[-2]) < 0: # Assume penultimate item is RSSI, and thus that ultimate one is LQI
-        rssi = arg[-2]
-        lqi = arg[-1]
-        signal = int((int(lqi, 16) * 100) / 255)    # Convert 0-255 to 0-100.  Ignore RSSI for now
-        database.SetStatus(devIdx, "signal", signal)
-        arg.remove(rssi)
-        arg.remove(lqi)
+    if isnumeric(arg[-2]):
+        if int(arg[-2]) < 0: # Assume penultimate item is RSSI, and thus that ultimate one is LQI
+            rssi = arg[-2]
+            lqi = arg[-1]
+            signal = int((int(lqi, 16) * 100) / 255)    # Convert 0-255 to 0-100.  Ignore RSSI for now
+            database.SetStatus(devIdx, "signal", signal)
+            arg.remove(rssi)
+            arg.remove(lqi)
+
+def isnumeric(item):
+    try:
+        val = int(item)
+        return True
+    except ValueError:
+        return False
 
 def Check(devIdx):
     global pendingBinding, pendingRptAttrId
