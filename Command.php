@@ -18,6 +18,6 @@ if (isset($_GET['expRsp'])) {
     HubCmd($cmd, false);
 }
 
-header('location:.' . $_SERVER['HTTP_REFERER']);
+header('location:'.$_SERVER['HTTP_REFERER']);
 ?>
 

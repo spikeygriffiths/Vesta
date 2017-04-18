@@ -1,14 +1,15 @@
 <?php
-$url1 = $_SERVER['REQUEST_URI'];
-header("Refresh: 10;  URL=$url1");
 error_reporting(E_ALL); 
 include "HubCmd.php";
 
+$refreshInterval = 5;   // Should probably be 10
+//$url1 = $_SERVER['PHP_SELF'];
+//header("Refresh: $refreshInterval;  URL=$url1");
 echo "<html>";
 echo "<head><style>table {font-family:arial, sans-serif;border-collapse: collapse;width: 100 % }";
 echo "td, th {border: 2px solid #dddddd;text-align: left;padding: 2px }";
 echo "</style>";
-//echo "<meta http-equiv=\"refresh\" content=\"10\">";    // Auto-refresh page every 10 seconds
+echo "<meta http-equiv=\"refresh\" content=\"",$refreshInterval,"\">";    // Auto-refresh page.  NB Must be inside <head>
 echo "</head>";
 echo "<body>";
 $devIdx=$_GET['devIdx'];
