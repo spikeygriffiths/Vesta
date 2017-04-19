@@ -16,7 +16,6 @@ CREATE TABLE Devices (
   binding TEXT,
   reporting TEXT,
   iasZoneType TEXT,
-  powerReading INTEGER,
 );
 
 DROP TABLE IF EXISTS Status;
@@ -26,6 +25,8 @@ CREATE TABLE Status (
   temperature INTEGER, temperature_time DATETIME,
   signal INTEGER, signal_time DATETIME,
   presence TEXT, presence_time DATETIME,
+  powerReadingW INTEGER, powerReadingW_time DATETIME,
+  energyForHourWh INTEGER, energyForHourWh_time DATETIME,
   FOREIGN KEY(devIdx) REFERENCES Devices(devIdx)
 );
 

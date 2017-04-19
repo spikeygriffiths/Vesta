@@ -177,6 +177,16 @@ class Commands(cmd.Cmd):
         Sends AT command to Telegesis stick"""
         devices.EnqueueCmd(0, ["AT"+line, "OK"])
 
+    def do_devat(self, line):
+        """devat name cmd
+        Sends AT command to named device"""
+        argList = line.split()
+        if len(argList) >= 2:
+            cmd = argList[1]
+            devIdx = devices.FindDev(argList[0])
+            if devIdx != None:
+                devices.EnqueueCmd(devIdx, ["AT"+cmd, "OK"])
+
     def do_removeDevice(self, devId):
         """removeDevice id
         Tells device to leave the network and removes it from the database"""

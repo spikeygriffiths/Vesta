@@ -114,6 +114,8 @@ def EventHandler(eventId, eventArg):
                 NoteMsgDetails(devIdx, eventArg)
                 SetAttrVal(devIdx, clusterId, attrId, attrVal)
                 NoteReporting(devIdx, clusterId, attrId)
+            else: # Unknown device, so assume it's been deleted from our database
+                telegesis.TxCmd("AT+DASSR:"+eventArg[1])    # Tell device to leave the network, since we don't know anything about it
         elif eventArg[0] == "Bind":    # Binding Response from device
             devIdx = GetIdx(eventArg[1])
             if devIdx != None:
@@ -228,7 +230,7 @@ def SetAttrVal(devIdx, clstrId, attrId, value):
             Rule(devIdx, newState)
     if clstrId == zcl.Cluster.SimpleMetering and attrId == zcl.Attribute.InstantaneousDemand:
         varVal = int(value, 16) # Arrives in Watts, so store it in the same way
-        database.SetDeviceItem(devIdx, "powerReading", varVal)
+        database.SetStatus(devIdx, "powerReadingW", varVal)
     if clstrId == zcl.Cluster.IAS_Zone and attrId == zcl.Attribute.Zone_Type:
         database.SetDeviceItem(devIdx, "iasZoneType", value)
     if clstrId == zcl.Cluster.Basic:

@@ -1,15 +1,21 @@
 #!ToDoList.txt
 
 ***** Features to Add *****
-* Add a "Remove device" button on web page.  Will remove from database, and if we get a CheckIn from an unknown device, we ask it to leave
-* Energy table in database (updated hourly, I think)
+* After deleting a device, subsequent adds go wrong because devIdx != index for ephemeral tables, etc.
+* Change power storage to use Status table rather than Devices
+* Energy entry for Status in database (updated hourly)
 * Rationalise php pages to put all database access into one file (functions.php).  Use global
 * Daily synopsis to use HTML email to show UpTime & snapshot of devices page, plus last day's activity log.  Customise and improve synopsis, so that we can have different synopses daily, weekly or monthly...
 * Auto-start network ("AT+EN") if ATN shows none available at start up
 * Multiple device ZigBee endpoints?
  
 ***** Features to Test *****
-* (Add "alter table Devices add column powerReading INTEGER;" via SQL)
+* (Add 
+alter table Status add column powerReadingW INTEGER;
+alter table Status add column powerReadingW_time DATETIME;
+alter table Status add column energyForHourWh INTEGER;
+alter table Status add column energyForHourWh_time DATETIME;
+ via SQL)
 * Groups aren't updating via web (at home, but work fine at work.  Hmm.)
 
 # *** Burglar alarm? ***  Probably best done in Python
@@ -33,6 +39,4 @@
 # if InternalPirs==unoccupied and 0:00<time<sunset and HallLight_OnOff==off and rand(30)==0 do SwitchOn HallLight for 300
 
 Bugs
-* Occasionally stalls!  But then recovers as if nothing had happened.  Suspect stalled messages for other devices - maybe fixed?
-* Still get stupid serial errors!!!  But only when headless...
 

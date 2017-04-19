@@ -143,10 +143,11 @@ def GetDevIdx(item, value):
 
 def NewDevice():
     global curs
-    numDevs = GetDevicesCount()
+    #numDevs = GetDevicesCount()
     curs.execute("INSERT INTO Devices DEFAULT VALUES")  # Insert blank row
-    devIdx = numDevs # Because we want devIdx to start from 0, not 1 as rowId does
-    rowId = numDevs +1
+    rowId = curs.lastrowid
+    log.debug("Newly inserted row is ID "+str(rowId))
+    devIdx = rowId-1 # Because we want devIdx to start from 0, not 1 as rowId does
     curs.execute("UPDATE Devices SET devIdx="+str(devIdx)+" WHERE rowId="+str(rowId))
     InitStatus(devIdx)
     flushDB = True # Batch up the commits

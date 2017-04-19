@@ -13,7 +13,8 @@ $db = new PDO($dir) or die("Cannot open database");
 $username = DevGetItem("userName", $devIdx,$db);
 echo "<center><h1>Change ",$username,"</h1>";
 ChangeName($db, $devIdx, $username);
-echo "<a href=/ShowOneDevice.php/?devIdx=",$devIdx,">Show Device</a>";
+echo "<a href=\"/ShowAllDevices.php\">All Devices</a><br><br>";
+echo "<a href=\"/ShowOneDevice.php/?devIdx=",$devIdx,"\">Show Device</a><br><br>";
 echo "<a href=\"/index.php\">Home</a>";
 echo "</body></html>";
 
@@ -36,6 +37,6 @@ function ChangeName($db, $devIdx, $username)
     echo "<table>";
     echo "<tr><td>Name</td><td><input type=\"text\" name=\"UserName\" value=\"", $username, "\"></td>";
     echo "</table>";
-    echo "<input type=\"submit\" value=\"Update name\"></form>";
+    echo "<br><input type=\"submit\" value=\"Update name\"></form>";
 }
 ?>
