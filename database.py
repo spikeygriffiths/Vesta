@@ -152,3 +152,7 @@ def NewDevice():
     flushDB = True # Batch up the commits
     return devIdx    # Return new devIdx for newly added device
 
+def RemoveDevice(devIdx):
+    global curs
+    curs.execute("DELETE FROM Devices WHERE devIdx="+str(devIdx))
+

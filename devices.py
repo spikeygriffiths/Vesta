@@ -38,12 +38,12 @@ def EventHandler(eventId, eventArg):
                 presence.Set(devIdx, presence.states.unknown)
                 SetTempVal(devIdx, "GetNextBatteryAfter", datetime.now())    # Ask for battery shortly after startup
     if eventId == events.ids.DEVICE_ANNOUNCE:
-        devId = eventArg[2]
-        devIdx = GetIdx(devId)
+        nwkId = eventArg[2]
+        devIdx = GetIdx(nwkId)
         if devIdx == None:  # Which will only be the case if this device is actually new, but it may have just reset and announced
             devIdx = InitDev()
-            database.SetDeviceItem(devIdx, "nwkId", devId)
-            database.SetDeviceItem(devIdx, "Username", "(New) "+devId)   # Default username of network ID, since that's unique
+            database.SetDeviceItem(devIdx, "nwkId", nwkId)
+            database.SetDeviceItem(devIdx, "Username", "(New) "+nwkId)   # Default username of network ID, since that's unique
             database.SetDeviceItem(devIdx,"devType",eventArg[0])    # SED, FFD or ZED
             database.SetDeviceItem(devIdx,"eui64",eventArg[1])
             if eventArg[0] == "SED":
@@ -58,15 +58,17 @@ def EventHandler(eventId, eventArg):
             NoteMsgDetails(devIdx, eventArg)
             if database.GetDeviceItem(devIdx, "endPoints") == None:
                 database.SetDeviceItem(devIdx, "endPoints", endPoint) # Note endpoint that CheckIn came from, unless we already know this
-            devId = database.GetDeviceItem(devIdx, "nwkId")
+            nwkId = database.GetDeviceItem(devIdx, "nwkId")
             cmdRsp = Check(devIdx)   # Check to see if we want to know anything about the device
             if cmdRsp != None:
                 log.debug("Want to know "+str(cmdRsp))
-                JumpQueueCmd(devIdx, ["AT+RAWZCL:"+devId+","+endPoint+",0020,11"+seq+"00012800", "DFTREP"]) # Tell device to enter Fast Poll for 40qs (==10s)
+                JumpQueueCmd(devIdx, ["AT+RAWZCL:"+nwkId+","+endPoint+",0020,11"+seq+"00012800", "DFTREP"]) # Tell device to enter Fast Poll for 40qs (==10s)
                 SetTempVal(devIdx,"PollingUntil", datetime.now()+timedelta(seconds=10))
                 EnqueueCmd(devIdx, cmdRsp)  # This will go out after the Fast Poll Set
             else:
-                EnqueueCmd(devIdx, ["AT+RAWZCL:"+devId+","+endPoint+",0020,11"+seq+"00000100", "DFTREP"]) # Tell device to stop Poll
+                EnqueueCmd(devIdx, ["AT+RAWZCL:"+nwkId+","+endPoint+",0020,11"+seq+"00000100", "DFTREP"]) # Tell device to stop Poll
+        else: # Unknown device, so assume it's been deleted from our database
+            telegesis.TxCmd("AT+DASSR:"+eventArg[1])    # Tell device to leave the network, since we don't know anything about it
     if eventId == events.ids.RXMSG:
         if eventArg[0] == "AddrResp" and eventArg[1] == "00":
             devIdx = GetIdx(eventArg[2])
@@ -141,32 +143,33 @@ def EventHandler(eventId, eventArg):
     if eventId == events.ids.SECONDS:
         numDevs = database.GetDevicesCount()
         for devIdx in range(0, numDevs):  # Element 0 is hub, but this can have messages too, so use it
-            if IsListening(devIdx):  # True if FFD, ZED or Polling
-                if expRsp[devIdx] == None:  # We don't have a message in flight
-                    cr = Check(devIdx)
-                    if cr:
-                        EnqueueCmd(devIdx, cr)   # Queue up anything we ought to know
-                    cmdRsp = DequeueCmd(devIdx) # Pull first item from queue
-                    if cmdRsp != None:
-                        log.debug("Sending "+str(cmdRsp))
-                        expRsp[devIdx] = cmdRsp[1]  # Note response
-                        expRspTimeoutS[devIdx] = 2  # If we've not heard back after 2 seconds, it's probably got lost, so try again
-                        telegesis.TxCmd(cmdRsp[0])  # Send command directly
-                else:   # We're expecting a response, so time it out
-                    expRspTimeoutS[devIdx] = expRspTimeoutS[devIdx] - eventArg
-                    if expRspTimeoutS[devIdx] <= 0:
-                        expRsp[devIdx] = None
-            offAt = GetTempVal(devIdx, "SwitchOff@")
-            if offAt:
-                if datetime.now() >= offAt:
-                    SwitchOff(devIdx)
-            pirOffAt = GetTempVal(devIdx, "PirInactive@")
-            if pirOffAt:
-                if datetime.now() >= pirOffAt:
-                    DelTempVal(devIdx, "PirInactive@")
-                    newState = "inactive"
-                    database.NewEvent(devIdx, newState)
-                    Rule(devIdx, newState)
+            if devIdx != None:
+                if IsListening(devIdx):  # True if FFD, ZED or Polling
+                    if expRsp[devIdx] == None:  # We don't have a message in flight
+                        cr = Check(devIdx)
+                        if cr:
+                            EnqueueCmd(devIdx, cr)   # Queue up anything we ought to know
+                        cmdRsp = DequeueCmd(devIdx) # Pull first item from queue
+                        if cmdRsp != None:
+                            log.debug("Sending "+str(cmdRsp))
+                            expRsp[devIdx] = cmdRsp[1]  # Note response
+                            expRspTimeoutS[devIdx] = 2  # If we've not heard back after 2 seconds, it's probably got lost, so try again
+                            telegesis.TxCmd(cmdRsp[0])  # Send command directly
+                    else:   # We're expecting a response, so time it out
+                        expRspTimeoutS[devIdx] = expRspTimeoutS[devIdx] - eventArg
+                        if expRspTimeoutS[devIdx] <= 0:
+                            expRsp[devIdx] = None
+                offAt = GetTempVal(devIdx, "SwitchOff@")
+                if offAt:
+                    if datetime.now() >= offAt:
+                        SwitchOff(devIdx)
+                pirOffAt = GetTempVal(devIdx, "PirInactive@")
+                if pirOffAt:
+                    if datetime.now() >= pirOffAt:
+                        DelTempVal(devIdx, "PirInactive@")
+                        newState = "inactive"
+                        database.NewEvent(devIdx, newState)
+                        Rule(devIdx, newState)
     if eventId == events.ids.MINUTES:
         presence.Check()   # For all devices
     # End event handler
@@ -184,17 +187,17 @@ def NoteReporting(devIdx, clusterId, attrId):
     print ("Reporting = "+reporting)
     database.SetDeviceItem(devIdx, "reporting", reporting) # Ready for next time
 
-def GetIdx(devId):
-    return database.GetDevIdx("nwkId", devId)
+def GetIdx(nwkId):
+    return database.GetDevIdx("nwkId", nwkId)
 
-def FindDev(devId):
-    devIdx = database.GetDevIdx("userName", devId) # Try name first
+def FindDev(nwkId):
+    devIdx = database.GetDevIdx("userName", nwkId) # Try name first
     if devIdx:
         return devIdx
-    return devices.GetIdx(devId)   # Try devId if no name match
+    return GetIdx(nwkId)   # Try nwkId if no name match
 
 def InitDev():
-    #log.debug("Adding new devId: "+ str(devId))
+    #log.debug("Adding new nwkId: "+ str(nwkId))
     ephemera.append([]) # Add parallel ephemeral device list
     devIdx = database.NewDevice()
     InitQueue(devIdx)
@@ -284,18 +287,20 @@ def Check(devIdx):
     global pendingBinding, pendingRptAttrId
     if devIdx == 0:
         return  # We don't need anything from the hub
-    devId = database.GetDeviceItem(devIdx, "nwkId")
+    nwkId = database.GetDeviceItem(devIdx, "nwkId")
+    if nwkId == None:
+        return  # Make sure it's a real device before continuing (it may have just been deleted)
     ep = database.GetDeviceItem(devIdx, "endPoints")
     eui = database.GetDeviceItem(devIdx, "eui64")
     inClstr = database.GetDeviceItem(devIdx, "inClusters") # Assume we have a list of clusters if we get this far
     outClstr = database.GetDeviceItem(devIdx, "outClusters")
     if None == ep:
-        return ("AT+ACTEPDESC:"+devId+","+devId, "ActEpDesc")
+        return ("AT+ACTEPDESC:"+nwkId+","+nwkId, "ActEpDesc")
     if None == eui:
-        return ("AT+EUIREQ:"+devId+","+devId, "AddrResp")
+        return ("AT+EUIREQ:"+nwkId+","+nwkId, "AddrResp")
     if None == inClstr or None == outClstr:
         database.SetDeviceItem(devIdx, "outClusters", "[]") # Some devices have no outclusters...
-        return ("AT+SIMPLEDESC:"+devId+","+devId+","+ep, "OutCluster")
+        return ("AT+SIMPLEDESC:"+nwkId+","+nwkId+","+ep, "OutCluster")
     binding = database.GetDeviceItem(devIdx, "binding")
     rprtg = database.GetDeviceItem(devIdx, "reporting")
     if inClstr != None:
@@ -312,33 +317,33 @@ def Check(devIdx):
             database.SetDeviceItem(devIdx, "binding", "[]")
         if zcl.Cluster.IAS_Zone in inClstr:
             if None == database.GetDeviceItem(devIdx, "iasZoneType"):
-                return telegesis.ReadAttr(devId, ep, zcl.Cluster.IAS_Zone, zcl.Attribute.Zone_Type) # Get IAS device type (PIR or contact, etc.)
+                return telegesis.ReadAttr(nwkId, ep, zcl.Cluster.IAS_Zone, zcl.Attribute.Zone_Type) # Get IAS device type (PIR or contact, etc.)
         if zcl.Cluster.Basic in inClstr:
             if None == database.GetDeviceItem(devIdx, "modelName"):
-                return telegesis.ReadAttr(devId, ep, zcl.Cluster.Basic, zcl.Attribute.Model_Name) # Get Basic's Device Name
+                return telegesis.ReadAttr(nwkId, ep, zcl.Cluster.Basic, zcl.Attribute.Model_Name) # Get Basic's Device Name
             if None == database.GetDeviceItem(devIdx, "manufName"):
-                return telegesis.ReadAttr(devId, ep, zcl.Cluster.Basic, zcl.Attribute.Manuf_Name) # Get Basic's Manufacturer Name
+                return telegesis.ReadAttr(nwkId, ep, zcl.Cluster.Basic, zcl.Attribute.Manuf_Name) # Get Basic's Manufacturer Name
         if zcl.Cluster.PowerConfig in inClstr and "SED"== database.GetDeviceItem(devIdx, "devType"):
             checkBatt = GetTempVal(devIdx, "GetNextBatteryAfter")
             if checkBatt != None:
                 if datetime.now() > checkBatt:
-                    return telegesis.ReadAttr(devId, ep, zcl.Cluster.PowerConfig, zcl.Attribute.Batt_Percentage) # Get Battery percentage
+                    return telegesis.ReadAttr(nwkId, ep, zcl.Cluster.PowerConfig, zcl.Attribute.Batt_Percentage) # Get Battery percentage
         if rprtg != None:
             if zcl.Cluster.Temperature in inClstr:
                 tmpRpt = zcl.Cluster.Temperature+":"+zcl.Attribute.Celsius
                 if zcl.Cluster.Temperature in binding and tmpRpt not in rprtg:
                     pendingRptAttrId = zcl.Attribute.Celsius
-                    return ("AT+CFGRPT:"+devId+","+ep+",0,"+zcl.Cluster.Temperature+",0,"+zcl.Attribute.Celsius+","+zcl.AttributeTypes.Uint16+",012C,0E10,0064", "CFGRPTRSP") # 012C is 300==5 mins, 0E10 is 3600==1 hour, 0064 is 100, being 1.00'C
+                    return ("AT+CFGRPT:"+nwkId+","+ep+",0,"+zcl.Cluster.Temperature+",0,"+zcl.Attribute.Celsius+","+zcl.AttributeTypes.Uint16+",012C,0E10,0064", "CFGRPTRSP") # 012C is 300==5 mins, 0E10 is 3600==1 hour, 0064 is 100, being 1.00'C
             if zcl.Cluster.SimpleMetering in inClstr:
                 tmpRpt = zcl.Cluster.SimpleMetering+":"+zcl.Attribute.InstantaneousDemand
                 if zcl.Cluster.SimpleMetering in binding and tmpRpt not in rprtg:
                     pendingRptAttrId = zcl.Attribute.InstantaneousDemand
-                    return ("AT+CFGRPT:"+devId+","+ep+",0,"+zcl.Cluster.SimpleMetering+",0,"+zcl.Attribute.InstantaneousDemand+","+zcl.AttributeTypes.Sint24+",0005,003C,00000A", "CFGRPTRSP") # 5 second minimum, 1 minute maximum, 10 watt change
+                    return ("AT+CFGRPT:"+nwkId+","+ep+",0,"+zcl.Cluster.SimpleMetering+",0,"+zcl.Attribute.InstantaneousDemand+","+zcl.AttributeTypes.Sint24+",0005,003C,00000A", "CFGRPTRSP") # 5 second minimum, 1 minute maximum, 10 watt change
         else:
             database.SetDeviceItem(devIdx, "reporting", "[]")
     if GetTempVal(devIdx, "JustSentOnOff"):
         DelTempVal(devIdx, "JustSentOnOff")
-        return telegesis.ReadAttr(devId, ep, zcl.Cluster.OnOff, zcl.Attribute.OnOffState) # Get OnOff state after sending toggle
+        return telegesis.ReadAttr(nwkId, ep, zcl.Cluster.OnOff, zcl.Attribute.OnOffState) # Get OnOff state after sending toggle
     return None
 
 def IsListening(devIdx):
@@ -354,73 +359,74 @@ def IsListening(devIdx):
 
 def SetBinding(devIdx, cluster, ourEp):
     global pendingBinding
-    devId = database.GetDeviceItem(devIdx, "nwkId")
+    nwkId = database.GetDeviceItem(devIdx, "nwkId")
     ep = database.GetDeviceItem(devIdx, "endPoints")
     eui = database.GetDeviceItem(devIdx, "eui64")
     if None != ep and None != eui: 
         pendingBinding = cluster
-        return ("AT+BIND:"+devId+",3,"+eui+","+ep+","+cluster+","+database.GetDeviceItem(0, "eui64")+","+ourEp, "Bind")
+        return ("AT+BIND:"+nwkId+",3,"+eui+","+ep+","+cluster+","+database.GetDeviceItem(0, "eui64")+","+ourEp, "Bind")
 
 def Prod(devIdx):    # Ask device a question, just to provoke a response                        
-    devId = database.GetDeviceItem(devIdx, "nwkId")
+    nwkId = database.GetDeviceItem(devIdx, "nwkId")
     ep = database.GetDeviceItem(devIdx, "endPoints")
-    if devId != None and ep != None:
-        cmdRsp = telegesis.ReadAttr(devId, ep, zcl.Cluster.Basic, zcl.Attribute.Model_Name) # Get Basic's Device Name in order to prod it into life
+    if nwkId != None and ep != None:
+        cmdRsp = telegesis.ReadAttr(nwkId, ep, zcl.Cluster.Basic, zcl.Attribute.Model_Name) # Get Basic's Device Name in order to prod it into life
         EnqueueCmd(devIdx, cmdRsp)
 
 def Identify(devIdx, durationS):    # Duration in seconds to flash the device's LED.  Use duration=0 to stop.
-    devId = database.GetDeviceItem(devIdx, "nwkId")
+    nwkId = database.GetDeviceItem(devIdx, "nwkId")
     ep = database.GetDeviceItem(devIdx, "endPoints")
-    if devId and ep:
+    if nwkId and ep:
         durationStr = format(int(durationS), 'X').zfill(4)
-        EnqueueCmd(devIdx, ["AT+IDENTIFY:"+devId+","+ep+",0,"+durationStr, "DFTREP"]) # Identify for selected time
+        EnqueueCmd(devIdx, ["AT+IDENTIFY:"+nwkId+","+ep+",0,"+durationStr, "DFTREP"]) # Identify for selected time
 
 def SwitchOn(devIdx):
-    devId = database.GetDeviceItem(devIdx, "nwkId")
+    nwkId = database.GetDeviceItem(devIdx, "nwkId")
     ep = database.GetDeviceItem(devIdx, "endPoints")
-    if devId and ep:
+    if nwkId and ep:
         SetTempVal(devIdx, "JustSentOnOff", "True")
-        EnqueueCmd(devIdx, ["AT+RONOFF:"+devId+","+ep+",0,1", "OK"]) # Assume FFD if it supports OnOff cluster
+        EnqueueCmd(devIdx, ["AT+RONOFF:"+nwkId+","+ep+",0,1", "OK"]) # Assume FFD if it supports OnOff cluster
+        # Only queue up a dimming command if that cluster is available on device
+        EnqueueCmd(devIdx, ["AT+LCMVTOLEV:"+nwkId+","+ep+",0,0,FE,0001", "OK"]) # Ensure fully bright ready to be turned on later
 
 def SwitchOff(devIdx):
-    devId = database.GetDeviceItem(devIdx, "nwkId")
+    nwkId = database.GetDeviceItem(devIdx, "nwkId")
     ep = database.GetDeviceItem(devIdx, "endPoints")
-    if devId and ep:
+    if nwkId and ep:
         DelTempVal(devIdx,"SwitchOff@") # Remove any pending "Off" events if we're turning the device off directly
-        EnqueueCmd(devIdx, ["AT+LCMVTOLEV:"+devId+","+ep+",0,0,FE,0001", "OK"]) # Ensure fully bright ready to be turned on later
         SetTempVal(devIdx, "JustSentOnOff", "True")
-        EnqueueCmd(devIdx, ["AT+RONOFF:"+devId+","+ep+",0,0", "OK"]) # Assume FFD if it supports OnOff cluster
+        EnqueueCmd(devIdx, ["AT+RONOFF:"+nwkId+","+ep+",0,0", "OK"]) # Assume FFD if it supports OnOff cluster
 
 def Toggle(devIdx):
-    devId = database.GetDeviceItem(devIdx, "nwkId")
+    nwkId = database.GetDeviceItem(devIdx, "nwkId")
     ep = database.GetDeviceItem(devIdx, "endPoints")
-    if devId and ep:
+    if nwkId and ep:
         DelTempVal(devIdx,"SwitchOff@") # Remove any pending "Off" events if we're handling the device directly
         SetTempVal(devIdx, "JustSentOnOff", "True")
-        EnqueueCmd(devIdx, ["AT+RONOFF:"+devId+","+ep+",0", "OK"]) # Assume FFD if it supports OnOff cluster
+        EnqueueCmd(devIdx, ["AT+RONOFF:"+nwkId+","+ep+",0", "OK"]) # Assume FFD if it supports OnOff cluster
 
 def Dim(devIdx, level):
-    devId = database.GetDeviceItem(devIdx, "nwkId")
+    nwkId = database.GetDeviceItem(devIdx, "nwkId")
     ep = database.GetDeviceItem(devIdx, "endPoints")
-    if devId and ep:
+    if nwkId and ep:
         if level > 1:  # Assume it's a percentage
             level = level / 100 # Convert to a fraction
         levelStr = format(int(level * 254), 'X').zfill(2)
-        EnqueueCmd(devIdx, ["AT+LCMVTOLEV:"+devId+","+ep+",0,1,"+levelStr+",000A", "DFTREP"]) # Fade over 1 sec (in 10ths)
+        EnqueueCmd(devIdx, ["AT+LCMVTOLEV:"+nwkId+","+ep+",0,1,"+levelStr+",000A", "DFTREP"]) # Fade over 1 sec (in 10ths)
 
 def Hue(devIdx, hueDegree):
-    devId = database.GetDeviceItem(devIdx, "nwkId")
+    nwkId = database.GetDeviceItem(devIdx, "nwkId")
     ep = database.GetDeviceItem(devIdx, "endPoints")
-    if devId and ep:
+    if nwkId and ep:
         hueStr = format(int(float(hueDegree/360) * 254), 'X').zfill(2)
-        EnqueueCmd(devIdx, ["AT+CCMVTOHUE:"+devId+","+ep+",0,"+hueStr+",00,0001", "DFTREP"]) # Fade over 100ms (in sec/10)
+        EnqueueCmd(devIdx, ["AT+CCMVTOHUE:"+nwkId+","+ep+",0,"+hueStr+",00,0001", "DFTREP"]) # Fade over 100ms (in sec/10)
 
 def Sat(devIdx, satPercentage):
-    devId = database.GetDeviceItem(devIdx, "nwkId")
+    nwkId = database.GetDeviceItem(devIdx, "nwkId")
     ep = database.GetDeviceItem(devIdx, "endPoints")
-    if devId and ep:
+    if nwkId and ep:
         satStr = format(int(float(satPercentage/100) * 254), 'X').zfill(2)
-        EnqueueCmd(devIdx, ["AT+CCMVTOSAT:"+devId+","+ep+",0,"+satStr+",0001", "DFTREP"]) # Fade over 100ms (in sec/10)
+        EnqueueCmd(devIdx, ["AT+CCMVTOSAT:"+nwkId+","+ep+",0,"+satStr+",0001", "DFTREP"]) # Fade over 100ms (in sec/10)
 
 def InitQueue(devIdx):
     global txQueue, expRsp, expRspTimeoutS
@@ -450,4 +456,10 @@ def DequeueCmd(devIdx):
 
 def IsQueueEmpty(devIdx):
     return txQueue[devIdx] == []
+
+def Remove(devIdx):
+    nwkId = database.GetDeviceItem(devIdx, "nwkId")
+    if nwkId:
+        telegesis.TxCmd("AT+DASSR:"+nwkId)  # Tell device to leave the network immediately (assuming it's listening)
+        database.RemoveDevice(devIdx)
 

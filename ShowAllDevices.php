@@ -13,6 +13,20 @@ ShowDevices();
 echo "<br><a href=\"/index.php\">Home</a></center>";
 echo "</body></html>";
 
+function GetDevIdx($index, $db)
+{
+    $item = "devIdx";
+    $result = $db->query("SELECT ".$item." from Devices LIMIT 1 OFFSET ".$index);
+    if ($result != null) {
+        $result->setFetchMode(PDO::FETCH_ASSOC);
+        $fetch = $result->fetch();
+        if ($fetch != null) {
+            return $fetch[$item];
+        }
+    }
+    return null;
+}
+
 function DevGetItem($item, $devIdx, $db)
 {
     $result = $db->query("SELECT ".$item." FROM Devices WHERE devIdx=".$devIdx);
@@ -66,7 +80,8 @@ function ShowDevices()
     $numDevs = $result->fetchColumn();
     echo "<table>";
     echo "<tr><th>Name</th><th>Battery %</th><th>Signal %</th><th>Presence</th><th>Notes</th></tr>";
-    for ($devIdx = 0; $devIdx < $numDevs; $devIdx++) {
+    for ($index = 0; $index < $numDevs; $index++) {
+        $devIdx = GetDevIdx($index, $db);
         echo "<tr>";
         $username = DevGetItem("userName", $devIdx, $db);
         echo "<td><a href=\"ShowOneDevice.php/?devIdx=",$devIdx,"\">",$username,"</a></td>";

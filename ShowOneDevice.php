@@ -3,7 +3,7 @@ error_reporting(E_ALL);
 include "HubCmd.php";
 
 $refreshInterval = 5;   // Should probably be 10
-//$url1 = $_SERVER['PHP_SELF'];
+//$url1 = $_SERVER['PHP_SELF']; // Seems to lose args on URL line when refreshing?
 //header("Refresh: $refreshInterval;  URL=$url1");
 echo "<html>";
 echo "<head><style>table {font-family:arial, sans-serif;border-collapse: collapse;width: 100 % }";
@@ -75,6 +75,7 @@ function ShowEvent($devIdx, $db)
 
 function ShowDeviceInfo($db, $devIdx, $username)
 {
+    echo "<A href=\"/DelDevice.php/?devId=",$username,"\">Remove Device</A><br><br>";    // Make sure this won't be accidentally pressed
     //echo "<center><form action=\"/UpdateDeviceName.php/?devIdx=",$devIdx,"\" method=\"post\">";
     echo "<table>";
     //echo "<tr><td>Name</td><td><input type=\"text\" name=\"UserName\" value=\"", $username, "\"></td>";

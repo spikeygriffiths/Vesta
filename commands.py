@@ -177,3 +177,10 @@ class Commands(cmd.Cmd):
         Sends AT command to Telegesis stick"""
         devices.EnqueueCmd(0, ["AT"+line, "OK"])
 
+    def do_removeDevice(self, devId):
+        """removeDevice id
+        Tells device to leave the network and removes it from the database"""
+        devIdx = devices.FindDev(devId)
+        if devIdx != None:
+            devices.Remove(devIdx)
+
