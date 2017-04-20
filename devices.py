@@ -15,6 +15,7 @@ import zcl
 import iottime
 import database
 import presence
+import config
 
 globalDevIdx = None
 pendingBinding = None # Needed because the BIND response doesn't include the cluster
@@ -37,6 +38,8 @@ def EventHandler(eventId, eventArg):
             if devIdx > 0:
                 presence.Set(devIdx, presence.states.unknown)
                 SetTempVal(devIdx, "GetNextBatteryAfter", datetime.now())    # Ask for battery shortly after startup
+    if eventId == events.ids.INIT:
+        msp_ota = config.Get("MSP_OTA")
     if eventId == events.ids.DEVICE_ANNOUNCE:
         nwkId = eventArg[2]
         devIdx = GetIdx(nwkId)
@@ -102,6 +105,17 @@ def EventHandler(eventId, eventArg):
                 attrId = eventArg[4]
                 if "00" == eventArg[5]:
                     attrVal = eventArg[6]
+                    SetAttrVal(devIdx, clusterId, attrId, attrVal)
+        elif eventArg[0] == "RESPMATTR":
+            devIdx = GetIdx(eventArg[1])
+            if devIdx != None:
+                NoteMsgDetails(devIdx, eventArg)
+                ep = eventArg[2]
+                mfgId = eventArg[3]
+                clusterId = eventArg[4]
+                attrId = eventArg[5]
+                if "00" == eventArg[6]:
+                    attrVal = eventArg[7]
                     SetAttrVal(devIdx, clusterId, attrId, attrVal)
         elif eventArg[0] == "REPORTATTR":
             devIdx = GetIdx(eventArg[1])
@@ -238,7 +252,7 @@ def SetAttrVal(devIdx, clstrId, attrId, value):
             database.SetDeviceItem(devIdx, "modelName", value)
         if attrId == zcl.Attribute.Manuf_Name:
             database.SetDeviceItem(devIdx, "manufName", value)
-    if clstrId == zcl.Cluster.OTA:
+    if clstrId == zcl.Cluster.OTA or clstrId == msp_ota:
         if attrId == zcl.Attribute.firmwareVersion:
             database.SetDeviceItem(devIdx, "firmwareVersion", value)
 
@@ -336,6 +350,9 @@ def Check(devIdx):
         if zcl.Cluster.OTA in outClstr:
             if None == database.GetDeviceItem(devIdx, "firmwareVersion"):
                 return ("AT+READCATR:"+nwkId+","+ep+",0,"+zcl.Cluster.OTA+","+zcl.Attribute.firmwareVersion, "RESPATTR") # Get OTA's Version number as a string of hex digits
+        if msp_ota != None and msp_ota in outClstr:
+            if None == database.GetDeviceItem(devIdx, "firmwareVersion"):
+                return ("AT+READMCATR:"+nwkId+","+ep+",0,"+config.Get(mfgId)+","+msp_ota+","+zcl.Attribute.firmwareVersion, "RESPMATTR") # Get OTA's Version number as a string of hex digits
         if rprtg != None:
             if zcl.Cluster.Temperature in inClstr:
                 tmpRpt = zcl.Cluster.Temperature+":"+zcl.Attribute.Celsius

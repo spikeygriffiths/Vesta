@@ -2,7 +2,6 @@
 
 ***** Features to Add *****
 * After deleting a device, subsequent adds go wrong because devIdx != index for ephemeral tables, etc.
-* Extend firmware reporting to work with AlertMe MSP OTA cluster as well
 * Change power storage to use Status table rather than Devices
 * Energy entry for Status in database (updated hourly)
 * Rationalise php pages to put all database access into one file (functions.php).  Use global
