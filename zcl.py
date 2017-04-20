@@ -21,6 +21,7 @@ class Attribute():
     Batt_Voltage = "0020" # Power_Config cluster, 8 bit in 0.1V steps (Read Only)
     Batt_Percentage = "0021" # Power_Config cluster, 8-bit in 0.5% steps (Read Only)
     OnOffState = "0000" # OnOff cluster, 8 bit bool
+    firmwareVersion = "0002" # OTA version number
     Hue = "0000" # For ColorCtrl (Read Only)
     Saturation = "0001"# For ColorCtrl (Read Only)
     Log_Lux = "0000" # Illuminance cluster, 16-bit as 10000 x log(10)Lux + 1 (Read Only)

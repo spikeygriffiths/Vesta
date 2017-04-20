@@ -238,6 +238,9 @@ def SetAttrVal(devIdx, clstrId, attrId, value):
             database.SetDeviceItem(devIdx, "modelName", value)
         if attrId == zcl.Attribute.Manuf_Name:
             database.SetDeviceItem(devIdx, "manufName", value)
+    if clstrId == zcl.Cluster.OTA:
+        if attrId == zcl.Attribute.firmwareVersion:
+            database.SetDeviceItem(devIdx, "firmwareVersion", value)
 
 def Rule(devIdx, state):
     rules.Run(database.GetDeviceItem(devIdx, "userName")+"=="+state)
@@ -330,6 +333,9 @@ def Check(devIdx):
             if checkBatt != None:
                 if datetime.now() > checkBatt:
                     return telegesis.ReadAttr(nwkId, ep, zcl.Cluster.PowerConfig, zcl.Attribute.Batt_Percentage) # Get Battery percentage
+        if zcl.Cluster.OTA in outClstr:
+            if None == database.GetDeviceItem(devIdx, "firmwareVersion"):
+                return ("AT+READCATR:"+nwkId+","+ep+",0,"+zcl.Cluster.OTA+","+zcl.Attribute.firmwareVersion, "RESPATTR") # Get OTA's Version number as a string of hex digits
         if rprtg != None:
             if zcl.Cluster.Temperature in inClstr:
                 tmpRpt = zcl.Cluster.Temperature+":"+zcl.Attribute.Celsius

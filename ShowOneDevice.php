@@ -93,6 +93,7 @@ function ShowDeviceInfo($db, $devIdx, $username)
     ShowDevItem("nwkId", "Network Id", $devIdx, $db);
     ShowDevItem("devType", "Device Type", $devIdx, $db);
     ShowDevItem("endPoints", "Endpoints", $devIdx, $db);
+    ShowDevItem("firmwareVersion", "Firmware Version", $devIdx, $db);
     if ($devIdx != 0) {
         ShowDevItem("inClusters", "In Clusters", $devIdx, $db);
         ShowDevItem("outClusters", "Out Clusters", $devIdx, $db);

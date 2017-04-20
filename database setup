@@ -16,6 +16,7 @@ CREATE TABLE Devices (
   binding TEXT,
   reporting TEXT,
   iasZoneType TEXT,
+  firmwareVersion TEXT
 );
 
 DROP TABLE IF EXISTS Status;

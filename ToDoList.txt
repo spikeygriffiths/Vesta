@@ -2,6 +2,7 @@
 
 ***** Features to Add *****
 * After deleting a device, subsequent adds go wrong because devIdx != index for ephemeral tables, etc.
+* Extend firmware reporting to work with AlertMe MSP OTA cluster as well
 * Change power storage to use Status table rather than Devices
 * Energy entry for Status in database (updated hourly)
 * Rationalise php pages to put all database access into one file (functions.php).  Use global
@@ -11,6 +12,7 @@
  
 ***** Features to Test *****
 * (Add 
+alter table Devices add column firmwareVersion TEXT;
 alter table Status add column powerReadingW INTEGER;
 alter table Status add column powerReadingW_time DATETIME;
 alter table Status add column energyForHourWh INTEGER;
