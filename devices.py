@@ -26,9 +26,10 @@ ephemera = [] # Don't bother saving this
 txQueue = [] # Queue of outbound messages & responses for each device
 expRsp = [] # List of expected responses for each device
 expRspTimeoutS = array('f',[]) # Array of timeouts if we're expecting a response, one per device
+msp_ota = None  # Until filled in from config
 
 def EventHandler(eventId, eventArg):
-    global ephemera, globalDevIdx, pendingBinding, pendingRptAttrId
+    global ephemera, globalDevIdx, pendingBinding, pendingRptAttrId, msp_ota
     if eventId == events.ids.PREINIT:
         numDevs = database.GetDevicesCount()
         for devIdx in range(0, numDevs):  # Element 0 is hub, rest are devices
@@ -220,6 +221,7 @@ def InitDev():
     return devIdx
 
 def SetAttrVal(devIdx, clstrId, attrId, value):
+    global msp_ota
     if clstrId == zcl.Cluster.PowerConfig and attrId == zcl.Attribute.Batt_Percentage:
         SetTempVal(devIdx, "GetNextBatteryAfter", datetime.now()+timedelta(seconds=86400))    # Ask for battery every day
         if value != "FF":
@@ -303,7 +305,7 @@ def isnumeric(item):
         return False
 
 def Check(devIdx):
-    global pendingBinding, pendingRptAttrId
+    global pendingBinding, pendingRptAttrId, msp_ota
     if devIdx == 0:
         return  # We don't need anything from the hub
     nwkId = database.GetDeviceItem(devIdx, "nwkId")
