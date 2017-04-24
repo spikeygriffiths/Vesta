@@ -7,20 +7,20 @@ echo "<head><style>table {font-family:arial, sans-serif;border-collapse: collaps
 echo "td, th {border: 2px solid #dddddd;text-align: left;padding: 2px }";
 echo "</style></head>";
 echo "<body>";
-$devIdx=$_GET['devIdx'];
+$devKey=$_GET['devKey'];
 $dir = "sqlite:/home/pi/hubapp/hubstuff.db";
 $db = new PDO($dir) or die("Cannot open database");
-$username = DevGetItem("userName", $devIdx,$db);
+$username = DevGetItem("userName", $devKey,$db);
 echo "<center><h1>Change ",$username,"</h1>";
-ChangeName($db, $devIdx, $username);
+ChangeName($db, $devKey, $username);
 echo "<a href=\"/ShowAllDevices.php\">All Devices</a><br><br>";
-echo "<a href=\"/ShowOneDevice.php/?devIdx=",$devIdx,"\">Show Device</a><br><br>";
+echo "<a href=\"/ShowOneDevice.php/?devKey=",$devKey,"\">Show Device</a><br><br>";
 echo "<a href=\"/index.php\">Home</a>";
 echo "</body></html>";
 
-function  DevGetItem($item, $devIdx, $db)
+function  DevGetItem($item, $devKey, $db)
 {
-    $result = $db->query("SELECT ".$item." FROM Devices WHERE devIdx=".$devIdx);
+    $result = $db->query("SELECT ".$item." FROM Devices WHERE devKey=".$devKey);
     if ($result != null) {
         $result->setFetchMode(PDO::FETCH_ASSOC);
         $fetch = $result->fetch();
@@ -31,9 +31,9 @@ function  DevGetItem($item, $devIdx, $db)
     return null;
 }
 
-function ChangeName($db, $devIdx, $username)
+function ChangeName($db, $devKey, $username)
 {
-    echo "<center><form action=\"/UpdateDeviceName.php/?devIdx=",$devIdx,"\" method=\"post\">";
+    echo "<center><form action=\"/UpdateDeviceName.php/?devKey=",$devKey,"\" method=\"post\">";
     echo "<table>";
     echo "<tr><td>Name</td><td><input type=\"text\" name=\"UserName\" value=\"", $username, "\"></td>";
     echo "</table>";

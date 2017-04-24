@@ -15,6 +15,6 @@ if ($timePeriod=="today") {
     $dbTime = "date('now', '-31 days')";
     $titleTime = "Last month";
 }
-$devIdx=$_POST["devIdx"];
-echo "<meta http-equiv=\"refresh\" content=\"0;url=/activity.php/?dbTime=",$dbTime,"&titleTime=",$titleTime,"&devIdx=",$devIdx,"\"/>";
+$devKey=$_POST["devKey"];
+echo "<meta http-equiv=\"refresh\" content=\"0;url=/activity.php/?dbTime=",$dbTime,"&titleTime=",$titleTime,"&devKey=",$devKey,"\"/>";
 ?>

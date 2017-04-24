@@ -16,9 +16,9 @@ echo "<a href=\"/Groups.php\">Groups</a><br>";
 echo "<br><a href=\"/index.php\">Home</a> </center>";
 echo "</body></html>";
 
-function  DbGetItem($item, $devIdx, $db)
+function  DbGetItem($item, $devKey, $db)
 {
-    $result = $db->query("SELECT ".$item." FROM Devices WHERE devIdx=".$devIdx);
+    $result = $db->query("SELECT ".$item." FROM Devices WHERE devKey=".$devKey);
     $result->setFetchMode(PDO::FETCH_ASSOC);
     $fetch = $result->fetch();
     return $fetch[$item];
@@ -30,18 +30,18 @@ function ShowGroupInfo($db, $groupName)
     echo "<form action=\"/UpdateGroupName.php/?oldName=",$groupName,"\" method=\"post\">";
     echo "<tr><td><input type=\"text\" name=\"NewName\" value=\"", $groupName, "\"></td>";
     echo "<td><input type=\"submit\" value=\"Update name\"></form></td></tr>";
-    $sth = $db->prepare("SELECT devIdxList FROM Groups WHERE userName=\"".$groupName."\"");
+    $sth = $db->prepare("SELECT devKeyList FROM Groups WHERE userName=\"".$groupName."\"");
     $sth->execute();
     $sth->setFetchMode(PDO::FETCH_ASSOC);
     $row =  $sth->fetch();
     if ($row != null) {
-        $devList = $row['devIdxList'];
+        $devList = $row['devKeyList'];
         if ($devList != "") {
             $devArray = explode(",", $devList);
             for ($index = 0; $index < count($devArray); $index++) {
-                $devIdx = $devArray[$index];
-                $devName = DbGetItem("userName", $devIdx, $db);
-                echo"<tr><td> ".$devName." </td><td><a href='/DelDevFromGroup.php/?groupName=",$groupName,"&devIdx=",$devIdx,"'>Delete</a></td></tr>";
+                $devKey = $devArray[$index];
+                $devName = DbGetItem("userName", $devKey, $db);
+                echo"<tr><td> ".$devName." </td><td><a href='/DelDevFromGroup.php/?groupName=",$groupName,"&devKey=",$devKey,"'>Delete</a></td></tr>";
             }
         } else {
             echo"<tr><td><i>null</i></td><td></td></tr>";
@@ -51,7 +51,7 @@ function ShowGroupInfo($db, $groupName)
     }
     echo "</table>";
     echo "<form action='/AddDevToGroup.php/?groupName=",$groupName,"' method='post'>";
-    echo "<p>Add device<select id='devIdx' name='devIdx'>";
+    echo "<p>Add device<select id='devKey' name='devKey'>";
     $result = $db->query("SELECT COUNT(*) FROM Devices");
     $numDevs = $result->fetchColumn();
     for ($idx=0; $idx<$numDevs; $idx++) {

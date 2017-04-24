@@ -12,9 +12,9 @@ if (empty($dbTime)) {
     $dbTime = "date('now', 'start of day')";
     $titleTime = "Today";
 }
-$devIdx=$_GET['devIdx'];
-if (empty($devIdx)) {
-    $devIdx = -1;   // Means "Get all devices"
+$devKey=$_GET['devKey'];
+if (empty($devKey)) {
+    $devKey = -1;   // Means "Get all devices"
 }
 echo "<center><h1>Activity</h1>";
 $dir = "sqlite:/home/pi/hubapp/hubstuff.db";
@@ -28,7 +28,7 @@ echo "<option value='week'>Last week</option>";
 echo "<option value='month'>Last 30 days</option>";
 echo "</select>";
 // Now see if user wants to select device
-echo "<p>Show events for:<select id='devIdx' name='devIdx'>";
+echo "<p>Show events for:<select id='devKey' name='devKey'>";
 echo "<option value=-1>All devices</option>";
 $result = $db->query("SELECT COUNT(*) FROM Devices");
 $numDevs = $result->fetchColumn();
@@ -39,33 +39,33 @@ for ($idx=0; $idx<$numDevs; $idx++) {
 echo "</select><p>";
 echo "<input type='submit' name='submit'/>";
 echo "</form>";
-ShowActivity($db, $dbTime, $titleTime, $devIdx);
+ShowActivity($db, $dbTime, $titleTime, $devKey);
 echo "<br><a href=\"/index.php\">Home</a></center>";
 echo "</body></html>";
 
-function  DbGetItem($item, $devIdx, $db)
+function  DbGetItem($item, $devKey, $db)
 {
-    $result = $db->query("SELECT ".$item." FROM Devices WHERE devIdx=".$devIdx);
+    $result = $db->query("SELECT ".$item." FROM Devices WHERE devKey=".$devKey);
     $result->setFetchMode(PDO::FETCH_ASSOC);
     $fetch = $result->fetch();
     return $fetch[$item];
 }
 
-function ShowActivity($db, $dbTime, $titleTime, $devIdx)
+function ShowActivity($db, $dbTime, $titleTime, $devKey)
 {
-    //echo "Show Activity for devIdx:", $devIdx, "<br>";    // Debugging
-    if ($devIdx==-1) {
+    //echo "Show Activity for devKey:", $devKey, "<br>";    // Debugging
+    if ($devKey==-1) {
         echo "<h3>Showing all activity from ",$titleTime,"</h3>";
         $sth = $db->prepare("SELECT * FROM Events WHERE timestamp > ".$dbTime);
     } else {
-        $userName = DbGetItem("userName", $devIdx, $db);
+        $userName = DbGetItem("userName", $devKey, $db);
         echo "<h3>Showing activity for ",$userName," from ",$titleTime,"</h3>";
-        $sth = $db->prepare("SELECT * FROM Events WHERE devIdx=".$devIdx." AND timestamp > ".$dbTime);
+        $sth = $db->prepare("SELECT * FROM Events WHERE devKey=".$devKey." AND timestamp > ".$dbTime);
     }
     $sth->execute();
     echo "<table>";
     while ($row =  $sth->fetch()) {
-        $userName = DbGetItem("userName", $row['devIdx'],$db);        // Use $row['devIdx'] as key into Devices table to get $userName
+        $userName = DbGetItem("userName", $row['devKey'],$db);        // Use $row['devKey'] as key into Devices table to get $userName
         echo"<tr><td> ".$row['timestamp']." </td><td>".$userName." </td><td> ".$row['event']." </td></tr>";
     }
     echo "</table>";

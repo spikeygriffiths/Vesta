@@ -24,8 +24,8 @@ function ShowNewDevices()
     $result = $db->query("SELECT COUNT(*) FROM Devices");
     $numDevs = $result->fetchColumn();
     $foundNothing = True;
-    for ($devIdx = 1; $devIdx < $numDevs; $devIdx++) {
-        $result = $db->query("SELECT userName, manufName, modelName FROM devices WHERE devIdx=".$devIdx);
+    for ($devKey = 1; $devKey < $numDevs; $devKey++) {
+        $result = $db->query("SELECT userName, manufName, modelName FROM devices WHERE devKey=".$devKey);
         $result->setFetchMode(PDO::FETCH_ASSOC);
         $fetch = $result->fetch();
         $userName = $fetch[userName];

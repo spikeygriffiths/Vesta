@@ -1,22 +1,22 @@
 <?php
 error_reporting(E_ALL);
 ini_set('display_errors', '1');
-$devIdx=$_POST['devIdx'];   // Get new device to add from form
+$devKey=$_POST['devKey'];   // Get new device to add from form
 $groupName = $_GET['groupName'];  // Get Group's user name from URL
 $dir = "sqlite:/home/pi/hubapp/hubstuff.db";
 $db = new PDO($dir) or die("Cannot open database");
-$query = "SELECT devIdxList FROM Groups WHERE userName=\"".$groupName."\"";
+$query = "SELECT devKeyList FROM Groups WHERE userName=\"".$groupName."\"";
 echo $query, "<br>";
 $sth = $db->prepare($query);
 $sth->execute();
 $sth->setFetchMode(PDO::FETCH_ASSOC);
 $row =  $sth->fetch();
-$devList = $row['devIdxList'];
+$devList = $row['devKeyList'];
 if ($devList != "") {
     $devList .= ",";
 }
-$devList .= $devIdx;
-$query = "UPDATE Groups SET devIdxList=\"".$devList."\" WHERE userName=\"".$groupName."\"";
+$devList .= $devKey;
+$query = "UPDATE Groups SET devKeyList=\"".$devList."\" WHERE userName=\"".$groupName."\"";
 echo $query, "<br>";
 $count = $db->exec($query);
 if ($count == 1) {

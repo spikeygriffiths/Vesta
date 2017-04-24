@@ -12,19 +12,19 @@ echo "</style>";
 echo "<meta http-equiv=\"refresh\" content=\"",$refreshInterval,"\">";    // Auto-refresh page.  NB Must be inside <head>
 echo "</head>";
 echo "<body>";
-$devIdx=$_GET['devIdx'];
+$devKey=$_GET['devKey'];
 $dir = "sqlite:/home/pi/hubapp/hubstuff.db";
 $db = new PDO($dir) or die("Cannot open database");
-$username = DevGetItem("userName", $devIdx,$db);
+$username = DevGetItem("userName", $devKey,$db);
 echo "<center><h1>",$username,"</h1>";
-ShowDeviceInfo($db, $devIdx, $username);
+ShowDeviceInfo($db, $devKey, $username);
 echo "<a href=\"/ShowAllDevices.php\">All Devices</a><br><br>";
 echo "<a href=\"/index.php\">Home</a>";
 echo "</body></html>";
 
-function  DevGetItem($item, $devIdx, $db)
+function  DevGetItem($item, $devKey, $db)
 {
-    $result = $db->query("SELECT ".$item." FROM Devices WHERE devIdx=".$devIdx);
+    $result = $db->query("SELECT ".$item." FROM Devices WHERE devKey=".$devKey);
     if ($result != null) {
         $result->setFetchMode(PDO::FETCH_ASSOC);
         $fetch = $result->fetch();
@@ -35,9 +35,9 @@ function  DevGetItem($item, $devIdx, $db)
     return null;
 }
 
-function  DevGetStatus($item, $devIdx, $db)
+function  DevGetStatus($item, $devKey, $db)
 {
-    $result = $db->query("SELECT ".$item." FROM Status WHERE devIdx=".$devIdx);
+    $result = $db->query("SELECT ".$item." FROM Status WHERE devKey=".$devKey);
     if ($result != null) {
         $result->setFetchMode(PDO::FETCH_ASSOC);
         $fetch = $result->fetch();
@@ -48,58 +48,58 @@ function  DevGetStatus($item, $devIdx, $db)
     return null;
 }
 
-function ShowDevStatus($item, $name, $devIdx, $db)
+function ShowDevStatus($item, $name, $devKey, $db)
 {
-    $val = DevGetStatus($item, $devIdx,$db);
+    $val = DevGetStatus($item, $devKey,$db);
     if ($val != null) {
         echo "<tr><td>",$name,"</td><td>$val</td></tr>";
     }
 }
 
-function ShowDevItem($item, $name, $devIdx, $db)
+function ShowDevItem($item, $name, $devKey, $db)
 {
-    $val = DevGetItem($item, $devIdx,$db);
+    $val = DevGetItem($item, $devKey,$db);
     if ($val != null) {
         echo "<tr><td>",$name,"</td><td>$val</td></tr>";
     }
 }
 
-function ShowEvent($devIdx, $db)
+function ShowEvent($devKey, $db)
 {
-    $result = $db->query("SELECT event FROM Events WHERE devIdx=".$devIdx." ORDER BY TIMESTAMP DESC LIMIT 1");
+    $result = $db->query("SELECT event FROM Events WHERE devKey=".$devKey." ORDER BY TIMESTAMP DESC LIMIT 1");
     $result->setFetchMode(PDO::FETCH_ASSOC);
     $fetch = $result->fetch();
     $val = $fetch[event];
     if ($val != "") echo "<td>",$val,"</td>"; else echo "<td>N/A</td>";
 }
 
-function ShowDeviceInfo($db, $devIdx, $username)
+function ShowDeviceInfo($db, $devKey, $username)
 {
     echo "<A href=\"/DelDevice.php/?devId=",$username,"\">Remove Device</A><br><br>";    // Make sure this won't be accidentally pressed
-    //echo "<center><form action=\"/UpdateDeviceName.php/?devIdx=",$devIdx,"\" method=\"post\">";
+    //echo "<center><form action=\"/UpdateDeviceName.php/?devKey=",$devKey,"\" method=\"post\">";
     echo "<table>";
     //echo "<tr><td>Name</td><td><input type=\"text\" name=\"UserName\" value=\"", $username, "\"></td>";
-    ShowDevStatus("signal", "Radio Signal %", $devIdx, $db);
-    ShowDevStatus("battery", "Battery %", $devIdx, $db);
-    ShowDevStatus("temperature", "Temperature 'C", $devIdx, $db);
-    ShowDevItem("powerReading", "Power (W)", $devIdx, $db);
-    ShowDevStatus("presence", "Presence", $devIdx, $db);
+    ShowDevStatus("signal", "Radio Signal %", $devKey, $db);
+    ShowDevStatus("battery", "Battery %", $devKey, $db);
+    ShowDevStatus("temperature", "Temperature 'C", $devKey, $db);
+    ShowDevItem("powerReading", "Power (W)", $devKey, $db);
+    ShowDevStatus("presence", "Presence", $devKey, $db);
     echo "<tr><td>Event</td>";
-    ShowEvent($devIdx, $db);
+    ShowEvent($devKey, $db);
     echo "</tr>";
-    ShowDevItem("manufName", "Manufacturer", $devIdx, $db);
-    ShowDevItem("modelName", "Model", $devIdx, $db);
-    ShowDevItem("eui64", "EUI", $devIdx, $db);
-    ShowDevItem("nwkId", "Network Id", $devIdx, $db);
-    ShowDevItem("devType", "Device Type", $devIdx, $db);
-    ShowDevItem("endPoints", "Endpoints", $devIdx, $db);
-    ShowDevItem("firmwareVersion", "Firmware Version", $devIdx, $db);
-    if ($devIdx != 0) {
-        ShowDevItem("inClusters", "In Clusters", $devIdx, $db);
-        ShowDevItem("outClusters", "Out Clusters", $devIdx, $db);
-        ShowDevItem("binding", "Binding", $devIdx, $db);
-        ShowDevItem("reporting", "Reporting", $devIdx, $db);
-        ShowDevItem("iasZoneType", "IAS Zone Type", $devIdx, $db);
+    ShowDevItem("manufName", "Manufacturer", $devKey, $db);
+    ShowDevItem("modelName", "Model", $devKey, $db);
+    ShowDevItem("eui64", "EUI", $devKey, $db);
+    ShowDevItem("nwkId", "Network Id", $devKey, $db);
+    ShowDevItem("devType", "Device Type", $devKey, $db);
+    ShowDevItem("endPoints", "Endpoints", $devKey, $db);
+    ShowDevItem("firmwareVersion", "Firmware Version", $devKey, $db);
+    if ($devKey != 0) {
+        ShowDevItem("inClusters", "In Clusters", $devKey, $db);
+        ShowDevItem("outClusters", "Out Clusters", $devKey, $db);
+        ShowDevItem("binding", "Binding", $devKey, $db);
+        ShowDevItem("reporting", "Reporting", $devKey, $db);
+        ShowDevItem("iasZoneType", "IAS Zone Type", $devKey, $db);
     } else {    // Is hub
         $radioStr = HubCmd("radio", True);
         $radioInfo = explode(",", $radioStr);
@@ -110,9 +110,9 @@ function ShowDeviceInfo($db, $devIdx, $username)
     }
     echo "</table>";
     //echo "<input type=\"submit\" value=\"Update name\"></form>";
-    echo "<A href=\"/ChangeDevName.php/?devIdx=",$devIdx,"\">Change Name</A><br><br>";
+    echo "<A href=\"/ChangeDevName.php/?devKey=",$devKey,"\">Change Name</A><br><br>";
     echo "<A href=\"/Command.php/?cmd=identify ",$username," 30\">Identify for 30s</A><br><br>";
-    $inClusters = DevGetItem("inClusters", $devIdx, $db);
+    $inClusters = DevGetItem("inClusters", $devKey, $db);
     if (strpos($inClusters, "0006") !== false) { // Is switchable, eg smartplug, bulb, etc.
         echo "<A href=\"/Command.php/?cmd=toggle ",$username,"\">Toggle</A><br><br>";
     }

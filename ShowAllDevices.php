@@ -15,7 +15,7 @@ echo "</body></html>";
 
 function GetDevIdx($index, $db)
 {
-    $item = "devIdx";
+    $item = "devKey";
     $result = $db->query("SELECT ".$item." from Devices LIMIT 1 OFFSET ".$index);
     if ($result != null) {
         $result->setFetchMode(PDO::FETCH_ASSOC);
@@ -27,9 +27,9 @@ function GetDevIdx($index, $db)
     return null;
 }
 
-function DevGetItem($item, $devIdx, $db)
+function DevGetItem($item, $devKey, $db)
 {
-    $result = $db->query("SELECT ".$item." FROM Devices WHERE devIdx=".$devIdx);
+    $result = $db->query("SELECT ".$item." FROM Devices WHERE devKey=".$devKey);
     if ($result != null) {
         $result->setFetchMode(PDO::FETCH_ASSOC);
         $fetch = $result->fetch();
@@ -40,9 +40,9 @@ function DevGetItem($item, $devIdx, $db)
     return null;
 }
 
-function  DevGetStatus($item, $devIdx, $db)
+function  DevGetStatus($item, $devKey, $db)
 {
-    $result = $db->query("SELECT ".$item." FROM Status WHERE devIdx=".$devIdx);
+    $result = $db->query("SELECT ".$item." FROM Status WHERE devKey=".$devKey);
     if ($result != null) {
         $result->setFetchMode(PDO::FETCH_ASSOC);
         $fetch = $result->fetch();
@@ -53,9 +53,9 @@ function  DevGetStatus($item, $devIdx, $db)
     return null;
 }
 
-function ShowDevStatus($item, $devIdx, $db)
+function ShowDevStatus($item, $devKey, $db)
 {
-    $val = DevGetStatus($item, $devIdx,$db);
+    $val = DevGetStatus($item, $devKey,$db);
     if ($val != null) {
         echo "<td>$val</td>";
     } else {
@@ -63,9 +63,9 @@ function ShowDevStatus($item, $devIdx, $db)
     }
 }
 
-function ShowEvent($devIdx, $db)
+function ShowEvent($devKey, $db)
 {
-    $result = $db->query("SELECT event FROM Events WHERE devIdx=".$devIdx." ORDER BY TIMESTAMP DESC LIMIT 1");
+    $result = $db->query("SELECT event FROM Events WHERE devKey=".$devKey." ORDER BY TIMESTAMP DESC LIMIT 1");
     $result->setFetchMode(PDO::FETCH_ASSOC);
     $fetch = $result->fetch();
     $val = $fetch[event];
@@ -81,14 +81,14 @@ function ShowDevices()
     echo "<table>";
     echo "<tr><th>Name</th><th>Battery %</th><th>Signal %</th><th>Presence</th><th>Notes</th></tr>";
     for ($index = 0; $index < $numDevs; $index++) {
-        $devIdx = GetDevIdx($index, $db);
+        $devKey = GetDevIdx($index, $db);
         echo "<tr>";
-        $username = DevGetItem("userName", $devIdx, $db);
-        echo "<td><a href=\"ShowOneDevice.php/?devIdx=",$devIdx,"\">",$username,"</a></td>";
-	    ShowDevStatus("battery", $devIdx, $db);
-	    ShowDevStatus("signal", $devIdx, $db);
-  	    ShowDevStatus("presence", $devIdx, $db);
-        ShowEvent($devIdx, $db);
+        $username = DevGetItem("userName", $devKey, $db);
+        echo "<td><a href=\"ShowOneDevice.php/?devKey=",$devKey,"\">",$username,"</a></td>";
+	    ShowDevStatus("battery", $devKey, $db);
+	    ShowDevStatus("signal", $devKey, $db);
+  	    ShowDevStatus("presence", $devKey, $db);
+        ShowEvent($devKey, $db);
         echo "</tr>";
     }
     echo "</table>";

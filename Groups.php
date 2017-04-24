@@ -13,9 +13,9 @@ ShowGroups($db);
 echo "<p><center><a href=\"/index.php\">Home</a></center>";
 echo "</body></html>";
 
-function  DbGetItem($item, $devIdx, $db)
+function  DbGetItem($item, $devKey, $db)
 {
-    $result = $db->query("SELECT ".$item." FROM Devices WHERE devIdx=".$devIdx);
+    $result = $db->query("SELECT ".$item." FROM Devices WHERE devKey=".$devKey);
     $result->setFetchMode(PDO::FETCH_ASSOC);
     $fetch = $result->fetch();
     return $fetch[$item];
@@ -28,13 +28,13 @@ function ShowGroups($db)
     echo "<table>";
     while ($row =  $sth->fetch()) {
         $groupName = $row['userName'];
-        $devList = $row['devIdxList'];
+        $devList = $row['devKeyList'];
         if ($devList != "") {
             $devArray = explode(",", $devList);
             $devs = "";
             for ($index = 0; $index < count($devArray); $index++) {
-                $devIdx = $devArray[$index];
-                $devName = DbGetItem("userName", $devIdx, $db);
+                $devKey = $devArray[$index];
+                $devName = DbGetItem("userName", $devKey, $db);
                 if ($devs != "") {
                     $devs .= ", ";
                 }
