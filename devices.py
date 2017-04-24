@@ -38,7 +38,7 @@ def EventHandler(eventId, eventArg):
             log.debug("Initialising devKey "+str(devKey)+" in keylist "+str(keyList))
             database.InitStatus(devKey)
             Init(devKey) # Initialise dictionary and associated ephemera
-            if devKey != 0:  # Ignore hub
+            if devKey != 0:  # Ignore hub.  ToDo: Need better test for hub.  Could use nwkId=0000
                 presence.Set(devKey, presence.states.unknown)
                 SetTempVal(devKey, "GetNextBatteryAfter", datetime.now())    # Ask for battery shortly after startup
     if eventId == events.ids.INIT:
@@ -48,6 +48,7 @@ def EventHandler(eventId, eventArg):
         devKey = GetKey(nwkId)
         if devKey == None:  # Which will only be the case if this device is actually new, but it may have just reset and announced
             devKey = Add()
+            log.debug("New key for new device is "+ str(devKey))
             database.SetDeviceItem(devKey, "nwkId", nwkId)
             database.SetDeviceItem(devKey, "Username", "(New) "+nwkId)   # Default username of network ID, since that's unique
             database.SetDeviceItem(devKey,"devType",eventArg[0])    # SED, FFD or ZED
@@ -160,36 +161,34 @@ def EventHandler(eventId, eventArg):
     if eventId == events.ids.RXERROR:
         globalDevIdx = None # We've finished with this global if we get an error
     if eventId == events.ids.SECONDS:
-        numDevs = len(devDict)
         for devKey in devDict:  # Go through devDict, pulling out each entry
-            #devKey = GetKeyFromIndex(devIndex)
-            if devKey != None:
-                if IsListening(devKey):  # True if FFD, ZED or Polling
-                    if expRsp[devKey] == None:  # We don't have a message in flight
-                        cr = Check(devKey)
-                        if cr:
-                            queue.EnqueueCmd(devKey, cr)   # Queue up anything we ought to know
-                        cmdRsp = queue.DequeueCmd(devKey) # Pull first item from queue
-                        if cmdRsp != None:
-                            log.debug("Sending "+str(cmdRsp))
-                            expRsp[devKey] = cmdRsp[1]  # Note response
-                            expRspTimeoutS[devKey] = 2  # If we've not heard back after 2 seconds, it's probably got lost, so try again
-                            telegesis.TxCmd(cmdRsp[0])  # Send command directly
-                    else:   # We're expecting a response, so time it out
-                        expRspTimeoutS[devKey] = expRspTimeoutS[devKey] - eventArg
-                        if expRspTimeoutS[devKey] <= 0:
-                            expRsp[devKey] = None
-                offAt = GetTempVal(devKey, "SwitchOff@")
-                if offAt:
-                    if datetime.now() >= offAt:
-                        SwitchOff(devKey)
-                pirOffAt = GetTempVal(devKey, "PirInactive@")
-                if pirOffAt:
-                    if datetime.now() >= pirOffAt:
-                        DelTempVal(devKey, "PirInactive@")
-                        newState = "inactive"
-                        database.NewEvent(devKey, newState)
-                        Rule(devKey, newState)
+            if IsListening(devKey):  # True if FFD, ZED or Polling
+                devIndex = GetIndexFromKey(devKey)
+                if expRsp[devIndex] == None:  # We don't have a message in flight
+                    cmdRsp = Check(devKey)
+                    if cmdRsp:
+                        queue.EnqueueCmd(devKey, cmdRsp)   # Queue up anything we ought to know
+                    cmdRsp = queue.DequeueCmd(devKey) # Pull first item from queue
+                    if cmdRsp != None:
+                        log.debug("Sending "+str(cmdRsp))
+                        expRsp[devIndex] = cmdRsp[1]  # Note response
+                        expRspTimeoutS[devIndex] = 2  # If we've not heard back after 2 seconds, it's probably got lost, so try again
+                        telegesis.TxCmd(cmdRsp[0])  # Send command directly
+                else:   # We're expecting a response, so time it out
+                    expRspTimeoutS[devIndex] = expRspTimeoutS[devIndex] - eventArg
+                    if expRspTimeoutS[devIndex] <= 0:
+                        expRsp[devIndex] = None
+            offAt = GetTempVal(devKey, "SwitchOff@")
+            if offAt:
+                if datetime.now() >= offAt:
+                    SwitchOff(devKey)
+            pirOffAt = GetTempVal(devKey, "PirInactive@")
+            if pirOffAt:
+                if datetime.now() >= pirOffAt:
+                    DelTempVal(devKey, "PirInactive@")
+                    newState = "inactive"
+                    database.NewEvent(devKey, newState)
+                    Rule(devKey, newState)
     if eventId == events.ids.MINUTES:
         presence.Check()   # For all devices
     # End event handler
@@ -259,30 +258,34 @@ def Rule(devKey, state):
 
 def SetTempVal(devKey, name, value):
     global ephemera
-    for item in ephemera[devKey]:
+    devIndex = GetIndexFromKey(devKey)
+    for item in ephemera[devIndex]:
         if item[0] == name:
-            ephemera[devKey].remove(item) # Remove old tuple if necessary
-    ephemera[devKey].append((name, value)) # Add new one regardless
+            ephemera[devIndex].remove(item) # Remove old tuple if necessary
+    ephemera[devIndex].append((name, value)) # Add new one regardless
     
 def GetTempVal(devKey, name):
     global ephemera
-    for item in ephemera[devKey]:
+    devIndex = GetIndexFromKey(devKey)
+    for item in ephemera[devIndex]:
         if item[0] == name:
             return item[1] # Just return value associated with name
     return None # Indicate item not found
 
 def DelTempVal(devKey, name):
     global ephemera
-    for item in ephemera[devKey]:
+    devIndex = GetIndexFromKey(devKey)
+    for item in ephemera[devIndex]:
         if item[0] == name:
             oldValue = item[1]
-            ephemera[devKey].remove(item) # Remove old tuple if necessary
+            ephemera[devIndex].remove(item) # Remove old tuple if necessary
             return oldValue # Just return old value associated with name before it was deleted
     return None # Indicate item not found
 
 def NoteMsgDetails(devKey, arg):
-    if arg[0] == expRsp[devKey]:
-        expRsp[devKey] = None   # Note that we've found the expected response now, so we're now clear to send
+    devIndex = GetIndexFromKey(devKey)
+    if arg[0] == expRsp[devIndex]:
+        expRsp[devIndex] = None   # Note that we've found the expected response now, so we're now clear to send
     presence.Set(devKey, presence.states.present) # Note presence
     if isnumeric(arg[-2]):
         if int(arg[-2]) < 0: # Assume penultimate item is RSSI, and thus that ultimate one is LQI
@@ -395,12 +398,13 @@ def GetKeyFromIndex(idx):
             return key
 
 def GetIndexFromKey(key):
-    #log.debug("Key "+str(key)+" = Index "+str(devDict[key]))
+    #log.debug("Looking up index for Key "+str(key))
     return devDict[key]
 
 def Add():
     devKey = database.NewDevice()
     Init(devKey)
+    return devKey
 
 def Init(devKey):
     global expRsp, expRspTimeoutS

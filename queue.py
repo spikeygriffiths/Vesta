@@ -28,7 +28,7 @@ def Jump(devKey, cmdRsp):
 def DequeueCmd(devKey):
     global txQueue
     devIndex = devices.GetIndexFromKey(devKey)
-    if IsEmpty(devIndex):
+    if IsEmpty(devKey):
         return None
     else:
         log.debug("Un-queuing item for devKey "+str(devKey))
