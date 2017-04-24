@@ -34,11 +34,11 @@ def EventHandler(eventId, eventArg):
     global ephemera, globalDevIdx, pendingBinding, pendingRptAttrId, msp_ota
     if eventId == events.ids.PREINIT:
         keyList = database.GetAllDevKeys()  # Get a list of all the device identifiers from the database
-        for devKey in keyList:  # Element 0 is hub, rest are devices
+        for devKey in keyList:  # Hub and devices
             log.debug("Initialising devKey "+str(devKey)+" in keylist "+str(keyList))
             database.InitStatus(devKey)
             Init(devKey) # Initialise dictionary and associated ephemera
-            if devKey != 0:  # Ignore hub.  ToDo: Need better test for hub.  Could use nwkId=0000
+            if database.GetDeviceItem(devKey, "nwkId") != "0000":  # Ignore hub
                 presence.Set(devKey, presence.states.unknown)
                 SetTempVal(devKey, "GetNextBatteryAfter", datetime.now())    # Ask for battery shortly after startup
     if eventId == events.ids.INIT:
@@ -162,22 +162,23 @@ def EventHandler(eventId, eventArg):
         globalDevIdx = None # We've finished with this global if we get an error
     if eventId == events.ids.SECONDS:
         for devKey in devDict:  # Go through devDict, pulling out each entry
-            if IsListening(devKey):  # True if FFD, ZED or Polling
-                devIndex = GetIndexFromKey(devKey)
-                if expRsp[devIndex] == None:  # We don't have a message in flight
-                    cmdRsp = Check(devKey)
-                    if cmdRsp:
-                        queue.EnqueueCmd(devKey, cmdRsp)   # Queue up anything we ought to know
-                    cmdRsp = queue.DequeueCmd(devKey) # Pull first item from queue
-                    if cmdRsp != None:
-                        log.debug("Sending "+str(cmdRsp))
-                        expRsp[devIndex] = cmdRsp[1]  # Note response
-                        expRspTimeoutS[devIndex] = 2  # If we've not heard back after 2 seconds, it's probably got lost, so try again
-                        telegesis.TxCmd(cmdRsp[0])  # Send command directly
-                else:   # We're expecting a response, so time it out
-                    expRspTimeoutS[devIndex] = expRspTimeoutS[devIndex] - eventArg
-                    if expRspTimeoutS[devIndex] <= 0:
-                        expRsp[devIndex] = None
+            if devDict[devKey] >= 0:    # Make sure device hasn't been deleted
+                if IsListening(devKey):  # True if FFD, ZED or Polling
+                    devIndex = GetIndexFromKey(devKey)
+                    if expRsp[devIndex] == None:  # We don't have a message in flight
+                        cmdRsp = Check(devKey)
+                        if cmdRsp:
+                            queue.EnqueueCmd(devKey, cmdRsp)   # Queue up anything we ought to know
+                        cmdRsp = queue.DequeueCmd(devKey) # Pull first item from queue
+                        if cmdRsp != None:
+                            log.debug("Sending "+str(cmdRsp))
+                            expRsp[devIndex] = cmdRsp[1]  # Note response
+                            expRspTimeoutS[devIndex] = 2  # If we've not heard back after 2 seconds, it's probably got lost, so try again
+                            telegesis.TxCmd(cmdRsp[0])  # Send command directly
+                    else:   # We're expecting a response, so time it out
+                        expRspTimeoutS[devIndex] = expRspTimeoutS[devIndex] - eventArg
+                        if expRspTimeoutS[devIndex] <= 0:
+                            expRsp[devIndex] = None
             offAt = GetTempVal(devKey, "SwitchOff@")
             if offAt:
                 if datetime.now() >= offAt:
