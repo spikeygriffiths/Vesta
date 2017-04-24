@@ -3,7 +3,7 @@ sqlite3 hubstuff.db
 BEGIN;
 DROP TABLE IF EXISTS Devices;
 CREATE TABLE Devices (
-  devIdx INTEGER,
+  devKey INTEGER,
   userName TEXT,
   modelName TEXT,
   manufName TEXT,
@@ -21,28 +21,28 @@ CREATE TABLE Devices (
 
 DROP TABLE IF EXISTS Status;
 CREATE TABLE Status (
-  devIdx INTEGER,
+  devKey INTEGER,
   battery INTEGER, battery_time DATETIME,
   temperature INTEGER, temperature_time DATETIME,
   signal INTEGER, signal_time DATETIME,
   presence TEXT, presence_time DATETIME,
   powerReadingW INTEGER, powerReadingW_time DATETIME,
   energyForHourWh INTEGER, energyForHourWh_time DATETIME,
-  FOREIGN KEY(devIdx) REFERENCES Devices(devIdx)
+  FOREIGN KEY(devKey) REFERENCES Devices(devKey)
 );
 
 DROP TABLE IF EXISTS Events;
 CREATE TABLE Events (
   timestamp DATETIME,
   event TEXT,
-  devIdx INTEGER,
-  FOREIGN KEY(devIdx) REFERENCES Devices(devIdx)
+  devKey INTEGER,
+  FOREIGN KEY(devKey) REFERENCES Devices(devKey)
 );
 
 DROP TABLE IF EXISTS Groups;
 CREATE TABLE Groups (
   userName TEXT,
-  devIdxList TEXT
+  devKeyList TEXT
 );
 COMMIT;
 .quit

@@ -5,6 +5,7 @@ import serial
 from collections import deque
 # App-specific Python modules
 import devices
+import queue
 import log
 import events
 import database
@@ -37,10 +38,10 @@ def EventHandler(eventId, eventArg):
         serSpeed = config.Get("baud", '19200')
         ser = serial.Serial(serPort, int(serSpeed), timeout=0)
         ser.flushInput()
-        devices.EnqueueCmd(0, ["ATS63=0007", "OK"]) # Request RSSI & LQI on every received message, also disable automatic checkIn responses
+        queue.EnqueueCmd(0, ["ATS63=0007", "OK"]) # Request RSSI & LQI on every received message, also disable automatic checkIn responses
         if database.GetDeviceItem(0, "modelName") == None:
-            devices.EnqueueCmd(0, ["ATI", "OK"]) # Request our EUI, as well as our Telegesis version
-        devices.EnqueueCmd(0, ["AT+N", "OK"]) # Get network information, to see whether to start new network or use existing one
+            queue.EnqueueCmd(0, ["ATI", "OK"]) # Request our EUI, as well as our Telegesis version
+        queue.EnqueueCmd(0, ["AT+N", "OK"]) # Get network information, to see whether to start new network or use existing one
     elif eventId == events.ids.SECONDS:
         HandleSerial(ser)
         if len(rxBuf):

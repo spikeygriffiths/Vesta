@@ -15,6 +15,8 @@ from datetime import timedelta
 from subprocess import call
 # App-specific Python modules
 import devices
+import devcmds
+import queue
 import events
 import telegesis
 import variables
@@ -115,26 +117,26 @@ class Commands(cmd.Cmd):
     def do_open(self, line):
         """open
         Opens network (for 60s) to allow new device to join"""
-        devices.EnqueueCmd(0, ["AT+PJOIN", "OK"])
+        queue.EnqueueCmd(0, ["AT+PJOIN", "OK"])
 
     def do_identify(self, line):
         """identify name seconds
         Sends identify command to named device.  Use 0 seconds to stop immediately"""
         argList = line.split()
         if len(argList) >= 2:
-            devIdx = devices.FindDev(argList[0])
-            if devIdx != None:
+            devKey = devices.FindDev(argList[0])
+            if devKey != None:
                 timeS = int(argList[1])
-                devices.Identify(devIdx, timeS)
+                devcmds.Identify(devKey, timeS)
         else:
             log.fault("Insufficient Args")
 
     def do_toggle(self, devId):
         """toggle name
         Sends toggle on/off command to named device"""
-        devIdx = devices.FindDev(devId)
-        if devIdx != None:
-            devices.Toggle(devIdx)
+        devKey = devices.FindDev(devId)
+        if devKey != None:
+            devcmds.Toggle(devKey)
 
     def do_dim(self, line):
         """dim name percentage
@@ -142,9 +144,9 @@ class Commands(cmd.Cmd):
         argList = line.split()
         if len(argList) >= 2:
             percentage = int(argList[1])
-            devIdx = devices.FindDev(argList[0])
-            if devIdx != None:
-                devices.Dim(devIdx, percentage)
+            devKey = devices.FindDev(argList[0])
+            if devKey != None:
+                devcmds.Dim(devKey, percentage)
         else:
             log.fault("Insufficient Args")
 
@@ -154,9 +156,9 @@ class Commands(cmd.Cmd):
         argList = line.split()
         if len(argList) >= 2:
             hue = int(argList[1])
-            devIdx = devices.FindDev(argList[0])
-            if devIdx != None:
-                devices.Hue(devIdx, hue)
+            devKey = devices.FindDev(argList[0])
+            if devKey != None:
+                devcmds.Hue(devKey, hue)
         else:
             log.fault("Insufficient Args")
 
@@ -166,16 +168,16 @@ class Commands(cmd.Cmd):
         argList = line.split()
         if len(argList) >= 2:
             sat = int(argList[1])
-            devIdx = devices.FindDev(argList[0])
-            if devIdx != None:
-                devices.Sat(devIdx, sat)
+            devKey = devices.FindDev(argList[0])
+            if devKey != None:
+                devcmds.Sat(devKey, sat)
         else:
             log.fault("Insufficient Args")
 
     def do_at(self, line):
         """at cmd
         Sends AT command to Telegesis stick"""
-        devices.EnqueueCmd(0, ["AT"+line, "OK"])
+        queue.EnqueueCmd(0, ["AT"+line, "OK"])
 
     def do_devat(self, line):
         """devat name cmd
@@ -183,14 +185,14 @@ class Commands(cmd.Cmd):
         argList = line.split()
         if len(argList) >= 2:
             cmd = argList[1]
-            devIdx = devices.FindDev(argList[0])
-            if devIdx != None:
-                devices.EnqueueCmd(devIdx, ["AT"+cmd, "OK"])
+            devKey = devices.FindDev(argList[0])
+            if devKey != None:
+                queue.EnqueueCmd(devKey, ["AT"+cmd, "OK"])
 
     def do_removeDevice(self, devId):
         """removeDevice id
-        Tells device to leave the network and removes it from the database"""
-        devIdx = devices.FindDev(devId)
-        if devIdx != None:
-            devices.Remove(devIdx)
+        Tells device to leave the network and remove it from the database"""
+        devKey = devices.FindDev(devId)
+        if devKey != None:
+            devices.Remove(devKey)
 

@@ -8,6 +8,7 @@ from subprocess import call
 import events
 import log
 import devices
+import devcmds
 import zcl
 import variables
 import iottime
@@ -31,45 +32,45 @@ rulesFilename = "rules.txt"
 
 def EventHandler(eventId, eventArg):
     if eventId == events.ids.TRIGGER:
-        devIdx = devices.GetIdx(eventArg[1]) # Lookup device from network address in eventArg[1]
+        devKey = devices.GetKey(eventArg[1]) # Lookup device from network address in eventArg[1]
         now = datetime.now()
         nowStr = now.strftime("%H:%M")
-        zoneType = database.GetDeviceItem(devIdx, "iasZoneType") # Device type
+        zoneType = database.GetDeviceItem(devKey, "iasZoneType") # Device type
         if zoneType != None:
-            oldState = database.GetLatestEvent(devIdx)
+            oldState = database.GetLatestEvent(devKey)
             if zoneType == zcl.Zone_Type.Contact:
                 if int(eventArg[3], 16) & 1: # Bottom bit indicates alarm1
                     newState = "opened"
                 else:
                     newState = "closed"
                 if oldState != newState:    # NB Might get same state if sensor re-sends, or due to battery report 
-                    database.NewEvent(devIdx, newState) # For web page.  Only update event log when state changes
-                    DeviceRun(devIdx, "=="+newState) # See if rule exists (when state changes)
+                    database.NewEvent(devKey, newState) # For web page.  Only update event log when state changes
+                    DeviceRun(devKey, "=="+newState) # See if rule exists (when state changes)
                     #log.debug("Door "+ eventArg[1]+ " "+newState)
             elif zoneType == zcl.Zone_Type.PIR:
                 if int(eventArg[3], 16) & 1: # Bottom bit indicates alarm1
                     newState = "active"
-                    devices.SetTempVal(devIdx, "PirInactive@", datetime.now()+timedelta(seconds=300))
+                    devices.SetTempVal(devKey, "PirInactive@", datetime.now()+timedelta(seconds=300))
                 else:
                     newState = "inactive" # Might happen if we get an IAS battery report
                 if oldState != newState:
-                    database.NewEvent(devIdx, newState) # For web page.  Only update event log when state changes
-                DeviceRun(devIdx, "=="+newState) # See if rule exists
+                    database.NewEvent(devKey, newState) # For web page.  Only update event log when state changes
+                DeviceRun(devKey, "=="+newState) # See if rule exists
             else:
                 log.debug("DevId: "+ eventArg[1]+" zonestatus "+ eventArg[3])
         else:
             log.fault("Unknown IAS device type for devId "+eventArg[1])
     elif eventId == events.ids.BUTTON:
-        devIdx = devices.GetIdx(eventArg[1]) # Lookup device from network address in eventArg[1]
+        devKey = devices.GetKey(eventArg[1]) # Lookup device from network address in eventArg[1]
         #log.debug("Button "+ eventArg[1]+ " "+eventArg[0]) # Arg[0] holds "ON", "OFF" or "TOGGLE" (Case might be wrong)
-        database.NewEvent(devIdx, "pressed") # For web page
-        DeviceRun(devIdx, "=="+eventArg[0]) # See if rule exists
+        database.NewEvent(devKey, "pressed") # For web page
+        DeviceRun(devKey, "=="+eventArg[0]) # See if rule exists
     # End of EventHandler
 
-def DeviceRun(devIdx, restOfRule): # Run rule for specified device
-    userName = database.GetDeviceItem(devIdx, "userName")
+def DeviceRun(devKey, restOfRule): # Run rule for specified device
+    userName = database.GetDeviceItem(devKey, "userName")
     Run(userName+restOfRule)
-    groupList = database.GetGroupsWithDev(devIdx)    # Check if device is in any groups and run appropriate rules for each group
+    groupList = database.GetGroupsWithDev(devKey)    # Check if device is in any groups and run appropriate rules for each group
     for name in groupList:
         Run(name+restOfRule)
 
@@ -203,38 +204,38 @@ def Action(actList):
     else: # Must be a command for a device, or group of devices
         name = actList[1]   # Second arg is name
         if database.IsGroupName(name): # Check if name is a groupName
-            devIdxList = GetGroupDevs(name)
-            for devIdx in devIdxList:
-                CommandDev(action, devIdx, actList) # Command each device in list
+            devKeyList = GetGroupDevs(name)
+            for devKey in devKeyList:
+                CommandDev(action, devKey, actList) # Command each device in list
         else:
-            devIdx = database.GetDevIdx("userName", name)
-            CommandDev(action, devIdx, actList) # Command one device
+            devKey = database.GetDevKey("userName", name)
+            CommandDev(action, devKey, actList) # Command one device
 
-def CommandDev(action, devIdx, actList):
-    if devIdx == None:
+def CommandDev(action, devKey, actList):
+    if devKey == None:
         log.fault("Device "+actList[1]+" from rules.txt not found in devices")
     else:
         if action == "SwitchOn":
-            devices.SwitchOn(devIdx)
+            devcmds.SwitchOn(devKey)
             if len(actList) > 3:
                 if actList[2] == "for":
-                    SetOnDuration(devIdx, int(actList[3],10))
+                    SetOnDuration(devKey, int(actList[3],10))
         elif action == "SwitchOff":
-            devices.SwitchOff(devIdx)
+            devcmds.SwitchOff(devKey)
         elif action == "Toggle":
-            devices.Toggle(devIdx)
+            devcmds.Toggle(devKey)
         elif action == "Dim" and actList[2] == "to":
-            devices.Dim(devIdx,float(actList[3]))
+            devcmds.Dim(devKey,float(actList[3]))
             if len(actList) > 5:
                 if actList[4] == "for":
-                    SetOnDuration(devIdx, int(actList[5],10))
+                    SetOnDuration(devKey, int(actList[5],10))
         elif action == "HueSat":    # Syntax is "do HueSat <Hue in degrees>,<fractional saturation>
-            devices.Colour(devIdx, int(actList[3],10), float(actList[4]))
+            devcmds.Colour(devKey, int(actList[3],10), float(actList[4]))
         else:
             log.debug("Unknown action: "+action +" for device: "+actList[1])
 
-def SetOnDuration(devIdx, durationS):
+def SetOnDuration(devKey, durationS):
     if durationS>0: # Duration of 0 means "Stay on forever"
         log.debug("Switching off after "+str(durationS))
-        devices.SetTempVal(devIdx, "SwitchOff@", datetime.now()+timedelta(seconds=durationS))
+        devices.SetTempVal(devKey, "SwitchOff@", datetime.now()+timedelta(seconds=durationS))
 

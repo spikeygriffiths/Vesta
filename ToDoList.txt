@@ -1,6 +1,7 @@
 #!ToDoList.txt
 
 ***** Features to Add *****
+* Devices don't add properly - When adding a PIR I see it enqueuing one message, but dequeuing another
 * After deleting a device, subsequent adds go wrong because devIdx != index for ephemeral tables, etc.
 * Change power storage to use Status table rather than Devices
 * Energy entry for Status in database (updated hourly)
@@ -16,6 +17,13 @@ alter table Status add column powerReadingW INTEGER;
 alter table Status add column powerReadingW_time DATETIME;
 alter table Status add column energyForHourWh INTEGER;
 alter table Status add column energyForHourWh_time DATETIME;
+
+BEGIN;
+PRAGMA writable_schema=1;
+UPDATE sqlite_master SET SQL=REPLACE(SQL, 'devIdx', 'devKey');
+PRAGMA writable_schema=0;
+COMMIT;
+
  via SQL)
 * Groups aren't updating via web (at home, but work fine at work.  Hmm.)
 

@@ -4,6 +4,7 @@ from datetime import datetime
 from datetime import timedelta
 # App-specific modules
 import devices
+import devcmds
 import database
 import log
 
@@ -13,18 +14,18 @@ class states():
     present = "Present"
 
 def Check():  # Expected to be called infrequently - ie once/minute
-    numDevs = database.GetDevicesCount()
-    for devIdx in range(1, numDevs):  # Element 0 is hub, so skip that
-        presence, lastSeen = Get(devIdx)
+    keyList = database.GetAllDevKeys()  # Get a list of all the device identifiers from the database
+    for devKey in keyList:  # Element 0 is hub, rest are devices
+        presence, lastSeen = Get(devKey)
         if presence != states.absent:
-            if datetime.now() > lastSeen+timedelta(seconds=900) or (presence == states.unknown and "SED"!= database.GetDeviceItem(devIdx, "devType")): # More than 15 minutes since we last heard from device, or it's unknown and listening
-                devices.Prod(devIdx)    # Ask device a question, just to provoke a response                        
+            if datetime.now() > lastSeen+timedelta(seconds=900) or (presence == states.unknown and "SED"!= database.GetDeviceItem(devKey, "devType")): # More than 15 minutes since we last heard from device, or it's unknown and listening
+                devcmds.Prod(devKey)    # Ask device a question, just to provoke a response                        
             if datetime.now() > lastSeen+timedelta(seconds=1800): # More than 30 minutes since we last heard from device
-                Set(devIdx, states.absent)
+                Set(devKey, states.absent)
 
-def Set(devIdx, newState):
-    database.SetStatus(devIdx, "presence", newState)
+def Set(devKey, newState):
+    database.SetStatus(devKey, "presence", newState)
 
-def Get(devIdx):
-    return database.GetStatus(devIdx, "presence")
+def Get(devKey):
+    return database.GetStatus(devKey, "presence")
 

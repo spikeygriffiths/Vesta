@@ -19,43 +19,36 @@ def EventHandler(eventId, eventArg):
         if flushDB:
             db.commit() # Flush events to disk
             flushDB = False
-    #if eventId == events.ids.NEWDAY:
-    #    curs.execute("DELETE FROM Events WHERE timestamp <= date('now', '-30 day')") # Flush all events older than a month to avoid filling database..?
 # end of EventHandler
 
 # === Status ===
-def KillStatus():
-    global curs
-    curs.execute("DROP TABLE IF EXISTS Status")
-    curs.execute("CREATE TABLE Status (devIdx INTEGER,battery INTEGER, battery_time DATETIME,temperature INTEGER, temperature_time DATETIME,signal INTEGER, signal_time DATETIME,presence TEXT, presence_time DATETIME,FOREIGN KEY(devIdx) REFERENCES Devices(devIdx))")
-
-def InitStatus(devIdx):
+def InitStatus(devKey):
     global curs, flushDB
-    curs.execute("SELECT presence FROM Status WHERE devIdx="+ str(devIdx))
+    curs.execute("SELECT presence FROM Status WHERE devKey="+ str(devKey))
     rows = curs.fetchone()
     if rows == None:    # If row doesn't exist, create it now
         curs.execute("INSERT INTO Status DEFAULT VALUES")  # Insert blank row for status
-        rowId = devIdx + 1  # NB Rely on Status table being created alongside Device, or at least in sequential order
-        curs.execute("UPDATE Status SET devIdx="+str(devIdx)+" WHERE rowId="+str(rowId))
+        rowId = curs.lastrowid
+        curs.execute("UPDATE Status SET devKey="+str(devKey)+" WHERE rowId="+str(rowId))
     flushDB = True # Batch up the commits
 
-def SetStatus(devIdx, item, value):
+def SetStatus(devKey, item, value):
     global curs, flushDB
-    log.debug("Setting status for "+item+" with "+str(value)+" for "+str(devIdx))
-    curs.execute("UPDATE Status SET "+item+"_time=datetime('now', 'localtime') WHERE devIdx="+str(devIdx))
+    log.debug("Setting status for "+item+" with "+str(value)+" for "+str(devKey))
+    curs.execute("UPDATE Status SET "+item+"_time=datetime('now', 'localtime') WHERE devKey="+str(devKey))
     if type(value) is str:
-        curs.execute("UPDATE Status SET "+item+"=\""+value+"\" WHERE devIdx="+str(devIdx))
+        curs.execute("UPDATE Status SET "+item+"=\""+value+"\" WHERE devKey="+str(devKey))
     else: # Assume number (Integer or Float)
-        curs.execute("UPDATE Status SET "+item+"="+str(value)+" WHERE devIdx="+str(devIdx))
+        curs.execute("UPDATE Status SET "+item+"="+str(value)+" WHERE devKey="+str(devKey))
     flushDB = True # Batch up the commits.  Commit status table for web access
 
-def GetStatus(devIdx, item): 
+def GetStatus(devKey, item): 
     global curs
-    curs.execute("SELECT "+item+" FROM Status WHERE devIdx="+str(devIdx))
+    curs.execute("SELECT "+item+" FROM Status WHERE devKey="+str(devKey))
     rows = curs.fetchone()
     if rows != None:
         value = rows[0]
-        curs.execute("SELECT "+item+"_time FROM Status WHERE devIdx="+str(devIdx))
+        curs.execute("SELECT "+item+"_time FROM Status WHERE devKey="+str(devKey))
         rows = curs.fetchone()
         time = datetime.strptime(rows[0], "%Y-%m-%d %H:%M:%S")
         #log.debug("value="+value+", time="+str(time))
@@ -63,14 +56,14 @@ def GetStatus(devIdx, item):
     return None
 
 # === Events ===
-def NewEvent(devIdx, event):
+def NewEvent(devKey, event):
     global curs, flushDB
-    curs.execute("INSERT INTO Events VALUES(datetime('now', 'localtime'),(?), (?))", (event, devIdx))  # Insert event with local timestamp
+    curs.execute("INSERT INTO Events VALUES(datetime('now', 'localtime'),(?), (?))", (event, devKey))  # Insert event with local timestamp
     flushDB = True # Batch up the commits
 
-def GetLatestEvent(devIdx):
+def GetLatestEvent(devKey):
     global curs
-    curs.execute("SELECT event FROM Events WHERE devIdx="+str(devIdx)+" ORDER BY TIMESTAMP DESC LIMIT 1")  # Get latest event of device
+    curs.execute("SELECT event FROM Events WHERE devKey="+str(devKey)+" ORDER BY TIMESTAMP DESC LIMIT 1")  # Get latest event of device
     rows = curs.fetchone()
     if rows != None:
         return rows[0]
@@ -87,7 +80,7 @@ def IsGroupName(checkName): # Return True if arg is a group name
         if checkName == rows[0]:
             return True
 
-def GetGroupsWithDev(devIdx):   # Return list of all group names that include specified device
+def GetGroupsWithDev(devKey):   # Return list of all group names that include specified device
     global curs
     groups = []
     curs.execute("SELECT userName FROM Groups")
@@ -97,15 +90,15 @@ def GetGroupsWithDev(devIdx):   # Return list of all group names that include sp
             return groups # This is the end of the loop
         groupName = rows[0]
         devList = GetGroupDevs(groupName)
-        if str(devIdx) in devList:
+        if str(devKey) in devList:
             groups.append(groupName)    # Append name of each group that features our device
 
 def GetGroupDevs(userName): # Get list of devices that belong to specified group
     global curs
-    curs.execute("SELECT devIdxList FROM Groups WHERE userName=\""+userName+"\"")
+    curs.execute("SELECT devKeyList FROM Groups WHERE userName=\""+userName+"\"")
     rows = curs.fetchone()
     if rows != None:
-        return "["+rows[0]+"]"  # List of comma separated devIdxes.  Surrounding square brackets to convert to Python list
+        return "["+rows[0]+"]"  # List of comma separated devKeys.  Surrounding square brackets to convert to Python list
     return None
 
 # === Devices ===
@@ -117,25 +110,33 @@ def GetDevicesCount():
         return rows[0]
     return 0
 
-def GetDeviceItem(devIdx, item):
+def GetAllDevKeys():
     global curs
-    curs.execute("SELECT "+item+" FROM Devices WHERE devIdx="+str(devIdx));
+    keyList = []
+    curs.execute("SELECT devKey FROM Devices")
+    for row in curs:
+        keyList.append(row[0])
+    return keyList
+
+def GetDeviceItem(devKey, item):
+    global curs
+    curs.execute("SELECT "+item+" FROM Devices WHERE devKey="+str(devKey))
     rows = curs.fetchone()
     if rows != None:
         return rows[0]
     return None
 
-def SetDeviceItem(devIdx, item, value):
+def SetDeviceItem(devKey, item, value):
     global curs
     if type(value) is str:
-        curs.execute("UPDATE Devices SET "+item+"=\""+value+"\" WHERE devIdx="+str(devIdx))
+        curs.execute("UPDATE Devices SET "+item+"=\""+value+"\" WHERE devKey="+str(devKey))
     else: # Assume number (Integer or Float)
-        curs.execute("UPDATE Devices SET "+item+"="+str(value)+" WHERE devIdx="+str(devIdx))
+        curs.execute("UPDATE Devices SET "+item+"="+str(value)+" WHERE devKey="+str(devKey))
     flushDB = True # Batch up the commits
 
-def GetDevIdx(item, value):
+def GetDevKey(item, value):
     global curs
-    curs.execute("SELECT devIdx FROM Devices WHERE "+item+"=\""+value+"\"");
+    curs.execute("SELECT devKey FROM Devices WHERE "+item+"=\""+value+"\"");
     rows = curs.fetchone()
     if rows != None:
         return rows[0]
@@ -143,17 +144,16 @@ def GetDevIdx(item, value):
 
 def NewDevice():
     global curs
-    #numDevs = GetDevicesCount()
     curs.execute("INSERT INTO Devices DEFAULT VALUES")  # Insert blank row
     rowId = curs.lastrowid
     log.debug("Newly inserted row is ID "+str(rowId))
-    devIdx = rowId-1 # Because we want devIdx to start from 0, not 1 as rowId does
-    curs.execute("UPDATE Devices SET devIdx="+str(devIdx)+" WHERE rowId="+str(rowId))
-    InitStatus(devIdx)
+    devKey = rowId # Just need a unique key
+    curs.execute("UPDATE Devices SET devKey="+str(devKey)+" WHERE rowId="+str(rowId))   # Define device key first, since that's used everywhere!
+    InitStatus(devKey)
     flushDB = True # Batch up the commits
-    return devIdx    # Return new devIdx for newly added device
+    return devKey    # Return new devKey for newly added device
 
-def RemoveDevice(devIdx):
+def RemoveDevice(devKey):
     global curs
-    curs.execute("DELETE FROM Devices WHERE devIdx="+str(devIdx))
+    curs.execute("DELETE FROM Devices WHERE devKey="+str(devKey))
 
