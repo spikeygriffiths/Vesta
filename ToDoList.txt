@@ -1,8 +1,8 @@
 #!ToDoList.txt
 
 ***** Features to Add *****
-* Devices don't add properly - When adding a PIR I see it enqueuing one message, but dequeuing another
-* After deleting a device, subsequent adds go wrong because devIdx != index for ephemeral tables, etc.
+* Devices don't add properly - When adding a PIR I see it enqueuing one message, but dequeuing another.  Might be fixed now...
+* After deleting a device, subsequent adds go wrong because devKey != index for ephemeral tables, etc.  Might be fixed now...
 * Change power storage to use Status table rather than Devices
 * Energy entry for Status in database (updated hourly)
 * Rationalise php pages to put all database access into one file (functions.php).  Use global

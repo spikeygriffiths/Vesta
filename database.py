@@ -143,14 +143,14 @@ def GetDevKey(item, value):
     return None
 
 def NewDevice():
-    global curs
+    global curs, db
     curs.execute("INSERT INTO Devices DEFAULT VALUES")  # Insert blank row
     rowId = curs.lastrowid
     log.debug("Newly inserted row is ID "+str(rowId))
     devKey = rowId # Just need a unique key
     curs.execute("UPDATE Devices SET devKey="+str(devKey)+" WHERE rowId="+str(rowId))   # Define device key first, since that's used everywhere!
     InitStatus(devKey)
-    flushDB = True # Batch up the commits
+    db.commit() # Flush db to disk immediately
     return devKey    # Return new devKey for newly added device
 
 def RemoveDevice(devKey):
