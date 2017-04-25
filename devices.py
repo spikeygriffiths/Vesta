@@ -36,7 +36,6 @@ def EventHandler(eventId, eventArg):
         keyList = database.GetAllDevKeys()  # Get a list of all the device identifiers from the database
         for devKey in keyList:  # Hub and devices
             log.debug("Initialising devKey "+str(devKey)+" in keylist "+str(keyList))
-            database.InitStatus(devKey)
             Init(devKey) # Initialise dictionary and associated ephemera
             if database.GetDeviceItem(devKey, "nwkId") != "0000":  # Ignore hub
                 presence.Set(devKey, presence.states.unknown)

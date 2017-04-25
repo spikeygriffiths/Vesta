@@ -110,6 +110,14 @@ def GetDevicesCount():
         return rows[0]
     return 0
 
+def GetDevKey(item, value):
+    global curs
+    curs.execute("SELECT devKey FROM Devices WHERE "+item+"=\""+value+"\"");
+    rows = curs.fetchone()
+    if rows != None:
+        return rows[0]
+    return None
+
 def GetAllDevKeys():
     global curs
     keyList = []
@@ -134,14 +142,6 @@ def SetDeviceItem(devKey, item, value):
         curs.execute("UPDATE Devices SET "+item+"="+str(value)+" WHERE devKey="+str(devKey))
     flushDB = True # Batch up the commits
 
-def GetDevKey(item, value):
-    global curs
-    curs.execute("SELECT devKey FROM Devices WHERE "+item+"=\""+value+"\"");
-    rows = curs.fetchone()
-    if rows != None:
-        return rows[0]
-    return None
-
 def NewDevice():
     global curs, db
     curs.execute("INSERT INTO Devices DEFAULT VALUES")  # Insert blank row
@@ -154,6 +154,10 @@ def NewDevice():
     return devKey    # Return new devKey for newly added device
 
 def RemoveDevice(devKey):
-    global curs
+    global curs, db
+    curs.execute("DELETE FROM Groups WHERE devKey="+str(devKey))
+    curs.execute("DELETE FROM Status WHERE devKey="+str(devKey))
+    curs.execute("DELETE FROM Events WHERE devKey="+str(devKey))
     curs.execute("DELETE FROM Devices WHERE devKey="+str(devKey))
+    db.commit() # Flush db to disk immediately
 
