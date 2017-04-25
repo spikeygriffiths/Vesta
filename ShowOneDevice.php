@@ -1,6 +1,7 @@
 <?php
 error_reporting(E_ALL); 
 include "HubCmd.php";
+include "database.php";
 
 $refreshInterval = 5;   // Should probably be 10
 //$url1 = $_SERVER['PHP_SELF']; // Seems to lose args on URL line when refreshing?
@@ -13,44 +14,17 @@ echo "<meta http-equiv=\"refresh\" content=\"",$refreshInterval,"\">";    // Aut
 echo "</head>";
 echo "<body>";
 $devKey=$_GET['devKey'];
-$dir = "sqlite:/home/pi/hubapp/hubstuff.db";
-$db = new PDO($dir) or die("Cannot open database");
-$username = DevGetItem("userName", $devKey,$db);
+$db = DatabaseInit();
+$username = GetDevItem("userName", $devKey,$db);
 echo "<center><h1>",$username,"</h1>";
 ShowDeviceInfo($db, $devKey, $username);
 echo "<a href=\"/ShowAllDevices.php\">All Devices</a><br><br>";
 echo "<a href=\"/index.php\">Home</a>";
 echo "</body></html>";
 
-function  DevGetItem($item, $devKey, $db)
-{
-    $result = $db->query("SELECT ".$item." FROM Devices WHERE devKey=".$devKey);
-    if ($result != null) {
-        $result->setFetchMode(PDO::FETCH_ASSOC);
-        $fetch = $result->fetch();
-        if ($fetch != null) {
-            return $fetch[$item];
-        }
-    }
-    return null;
-}
-
-function  DevGetStatus($item, $devKey, $db)
-{
-    $result = $db->query("SELECT ".$item." FROM Status WHERE devKey=".$devKey);
-    if ($result != null) {
-        $result->setFetchMode(PDO::FETCH_ASSOC);
-        $fetch = $result->fetch();
-        if ($fetch != null) {
-            return $fetch[$item];
-        }
-    }
-    return null;
-}
-
 function ShowDevStatus($item, $name, $devKey, $db)
 {
-    $val = DevGetStatus($item, $devKey,$db);
+    $val = GetDevStatus($item, $devKey,$db);
     if ($val != null) {
         echo "<tr><td>",$name,"</td><td>$val</td></tr>";
     }
@@ -58,7 +32,7 @@ function ShowDevStatus($item, $name, $devKey, $db)
 
 function ShowDevItem($item, $name, $devKey, $db)
 {
-    $val = DevGetItem($item, $devKey,$db);
+    $val = GetDevItem($item, $devKey,$db);
     if ($val != null) {
         echo "<tr><td>",$name,"</td><td>$val</td></tr>";
     }
@@ -112,7 +86,7 @@ function ShowDeviceInfo($db, $devKey, $username)
     //echo "<input type=\"submit\" value=\"Update name\"></form>";
     echo "<A href=\"/ChangeDevName.php/?devKey=",$devKey,"\">Change Name</A><br><br>";
     echo "<A href=\"/Command.php/?cmd=identify ",$username," 30\">Identify for 30s</A><br><br>";
-    $inClusters = DevGetItem("inClusters", $devKey, $db);
+    $inClusters = GetDevItem("inClusters", $devKey, $db);
     if (strpos($inClusters, "0006") !== false) { // Is switchable, eg smartplug, bulb, etc.
         echo "<A href=\"/Command.php/?cmd=toggle ",$username,"\">Toggle</A><br><br>";
     }

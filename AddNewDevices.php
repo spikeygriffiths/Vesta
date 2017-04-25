@@ -1,5 +1,6 @@
 <?php
 include "HubCmd.php";
+include "database.php";
 
 $url1 = $_SERVER['REQUEST_URI'];
 header("Refresh: 10;  URL=$url1");
@@ -19,18 +20,14 @@ echo "</html>";
 
 function ShowNewDevices()
 {
-    $dir = "sqlite:/home/pi/hubapp/hubstuff.db";
-    $db = new PDO($dir) or die("Cannot open database");
-    $result = $db->query("SELECT COUNT(*) FROM Devices");
-    $numDevs = $result->fetchColumn();
+    $db = DatabaseInit();
+    $numDevs = GetDevCount($db);
     $foundNothing = True;
-    for ($devKey = 1; $devKey < $numDevs; $devKey++) {
-        $result = $db->query("SELECT userName, manufName, modelName FROM devices WHERE devKey=".$devKey);
-        $result->setFetchMode(PDO::FETCH_ASSOC);
-        $fetch = $result->fetch();
-        $userName = $fetch[userName];
-        $manufName = $fetch[manufName];
-        $modelName = $fetch[modelName];
+    for ($index = 0; $index < $numDevs; $index++) {
+        $devKey = GetDevKey($index, $db);
+        $userName = GetDevItem("userName", $devKey, $db);
+        $manufName = GetDevItem("manufName", $devKey, $db);
+        $modelName = GetDevItem("modelName", $devKey, $db);
         if (substr($userName, 0, 5)=="(New)") {
             $foundNothing = False;
             if (modelName != "") {

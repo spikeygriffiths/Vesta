@@ -1,5 +1,7 @@
 <?php 
-//error_reporting(E_ALL); 
+// ShowAllDevices.php
+error_reporting(E_ALL); 
+include "database.php";
 
 echo "<html>";
 echo "<head><style>table {font-family:arial, sans-serif;border-collapse: collapse;width: 100 % }";
@@ -13,49 +15,9 @@ ShowDevices();
 echo "<br><a href=\"/index.php\">Home</a></center>";
 echo "</body></html>";
 
-function GetDevIdx($index, $db)
-{
-    $item = "devKey";
-    $result = $db->query("SELECT ".$item." from Devices LIMIT 1 OFFSET ".$index);
-    if ($result != null) {
-        $result->setFetchMode(PDO::FETCH_ASSOC);
-        $fetch = $result->fetch();
-        if ($fetch != null) {
-            return $fetch[$item];
-        }
-    }
-    return null;
-}
-
-function DevGetItem($item, $devKey, $db)
-{
-    $result = $db->query("SELECT ".$item." FROM Devices WHERE devKey=".$devKey);
-    if ($result != null) {
-        $result->setFetchMode(PDO::FETCH_ASSOC);
-        $fetch = $result->fetch();
-        if ($fetch != null) {
-            return $fetch[$item];
-        }
-    }
-    return null;
-}
-
-function  DevGetStatus($item, $devKey, $db)
-{
-    $result = $db->query("SELECT ".$item." FROM Status WHERE devKey=".$devKey);
-    if ($result != null) {
-        $result->setFetchMode(PDO::FETCH_ASSOC);
-        $fetch = $result->fetch();
-        if ($fetch != null) {
-            return $fetch[$item];
-        }
-    }
-    return null;
-}
-
 function ShowDevStatus($item, $devKey, $db)
 {
-    $val = DevGetStatus($item, $devKey,$db);
+    $val = GetDevStatus($item, $devKey,$db);
     if ($val != null) {
         echo "<td>$val</td>";
     } else {
@@ -74,23 +36,25 @@ function ShowEvent($devKey, $db)
 
 function ShowDevices()
 {
-    $dir = "sqlite:/home/pi/hubapp/hubstuff.db";
-    $db = new PDO($dir) or die("Cannot open database");
-    $result = $db->query("SELECT COUNT(*) FROM Devices");
-    $numDevs = $result->fetchColumn();
-    echo "<table>";
-    echo "<tr><th>Name</th><th>Battery %</th><th>Signal %</th><th>Presence</th><th>Notes</th></tr>";
-    for ($index = 0; $index < $numDevs; $index++) {
-        $devKey = GetDevIdx($index, $db);
-        echo "<tr>";
-        $username = DevGetItem("userName", $devKey, $db);
-        echo "<td><a href=\"ShowOneDevice.php/?devKey=",$devKey,"\">",$username,"</a></td>";
-	    ShowDevStatus("battery", $devKey, $db);
-	    ShowDevStatus("signal", $devKey, $db);
-  	    ShowDevStatus("presence", $devKey, $db);
-        ShowEvent($devKey, $db);
-        echo "</tr>";
+    $db = DatabaseInit();
+    $numDevs = GetDevCount($db);
+    if ($numDevs > 0) {
+        echo "<table>";
+        echo "<tr><th>Name</th><th>Battery %</th><th>Signal %</th><th>Presence</th><th>Notes</th></tr>";
+        for ($index = 0; $index < $numDevs; $index++) {
+            $devKey = GetDevKey($index, $db);
+            echo "<tr>";
+            $username = GetDevItem("userName", $devKey, $db);
+            echo "<td><a href=\"ShowOneDevice.php/?devKey=",$devKey,"\">",$username,"</a></td>";
+	        ShowDevStatus("battery", $devKey, $db);
+	        ShowDevStatus("signal", $devKey, $db);
+      	    ShowDevStatus("presence", $devKey, $db);
+            ShowEvent($devKey, $db);
+            echo "</tr>";
+        }
+        echo "</table>";
+    } else {
+        echo "<br>No devices yet...<br>";
     }
-    echo "</table>";
 }
 ?>

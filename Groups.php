@@ -1,4 +1,5 @@
 <?php 
+include "database.php";
 error_reporting(E_ALL); 
 
 echo "<html>";
@@ -7,19 +8,10 @@ echo "td, th {border: 2px solid #dddddd;text-align: left;padding: 2px }";
 echo "</style></head>";
 echo "<body>";
 echo "<center><h1>Groups</h1>";
-$dir = "sqlite:/home/pi/hubapp/hubstuff.db";
-$db = new PDO($dir) or die("Cannot open database");
+$db = DatabaseInit();
 ShowGroups($db);
 echo "<p><center><a href=\"/index.php\">Home</a></center>";
 echo "</body></html>";
-
-function  DbGetItem($item, $devKey, $db)
-{
-    $result = $db->query("SELECT ".$item." FROM Devices WHERE devKey=".$devKey);
-    $result->setFetchMode(PDO::FETCH_ASSOC);
-    $fetch = $result->fetch();
-    return $fetch[$item];
-}
 
 function ShowGroups($db)
 {
@@ -34,7 +26,7 @@ function ShowGroups($db)
             $devs = "";
             for ($index = 0; $index < count($devArray); $index++) {
                 $devKey = $devArray[$index];
-                $devName = DbGetItem("userName", $devKey, $db);
+                $devName = GetDevItem("userName", $devKey, $db);
                 if ($devs != "") {
                     $devs .= ", ";
                 }

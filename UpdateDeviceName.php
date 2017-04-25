@@ -1,12 +1,13 @@
 <?php
 error_reporting(E_ALL);
+include "database.php";
+
 ini_set('display_errors', '1');
 $devKey=$_GET['devKey'];
 $newUserName = $_POST["UserName"];  // Get new user name from form
 echo "New name is:", $newUserName, " for device Id:",$devKey, "<br>";
-$dir = "sqlite:/home/pi/hubapp/hubstuff.db";
-$db = new PDO($dir) or die("Cannot open database");
-$oldUserName = DevGetItem("userName", $devKey,$db);
+$db = DatabaseInit();
+$oldUserName = GetDevItem("userName", $devKey,$db);
 $query = "UPDATE Devices SET userName=\"".$newUserName."\" WHERE devKey=".$devKey;
 echo "About to send ",$query, " to DB<br>";
 $count = $db->exec($query);
@@ -18,19 +19,6 @@ if ($count == 1) {
     echo "Update failed, with count of:", $count, "<br>";
 }
 echo "<a href=/ShowOneDevice.php/?devKey=",$devKey,">Show Device</a>";
-
-function  DevGetItem($item, $devKey, $db)
-{
-    $result = $db->query("SELECT ".$item." FROM Devices WHERE devKey=".$devKey);
-    if ($result != null) {
-        $result->setFetchMode(PDO::FETCH_ASSOC);
-        $fetch = $result->fetch();
-        if ($fetch != null) {
-            return $fetch[$item];
-        }
-    }
-    return null;
-}
 
 function UpdateRules($oldUserName, $newUserName)
 {

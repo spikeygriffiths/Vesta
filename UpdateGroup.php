@@ -1,4 +1,5 @@
 <?php
+include "database.php";
 error_reporting(E_ALL); 
 
 echo "<html>";
@@ -7,22 +8,13 @@ echo "td, th {border: 2px solid #dddddd;text-align: left;padding: 2px }";
 echo "</style></head>";
 echo "<body>";
 $groupName=$_GET['groupName'];
-$dir = "sqlite:/home/pi/hubapp/hubstuff.db";
-$db = new PDO($dir) or die("Cannot open database");
+$db = DatabaseInit();
 echo "<center><h1>",$groupName,"</h1>";
 echo "<button type=\"button\" onclick=\"window.location.href='/DelGroup.php/?groupName=",$groupName,"'\">Remove all of ",$groupName,"</button><br><br>";
 ShowGroupInfo($db, $groupName);
 echo "<a href=\"/Groups.php\">Groups</a><br>";
 echo "<br><a href=\"/index.php\">Home</a> </center>";
 echo "</body></html>";
-
-function  DbGetItem($item, $devKey, $db)
-{
-    $result = $db->query("SELECT ".$item." FROM Devices WHERE devKey=".$devKey);
-    $result->setFetchMode(PDO::FETCH_ASSOC);
-    $fetch = $result->fetch();
-    return $fetch[$item];
-}
 
 function ShowGroupInfo($db, $groupName)
 {
@@ -40,7 +32,7 @@ function ShowGroupInfo($db, $groupName)
             $devArray = explode(",", $devList);
             for ($index = 0; $index < count($devArray); $index++) {
                 $devKey = $devArray[$index];
-                $devName = DbGetItem("userName", $devKey, $db);
+                $devName = GetDevItem("userName", $devKey, $db);
                 echo"<tr><td> ".$devName." </td><td><a href='/DelDevFromGroup.php/?groupName=",$groupName,"&devKey=",$devKey,"'>Delete</a></td></tr>";
             }
         } else {
@@ -52,10 +44,10 @@ function ShowGroupInfo($db, $groupName)
     echo "</table>";
     echo "<form action='/AddDevToGroup.php/?groupName=",$groupName,"' method='post'>";
     echo "<p>Add device<select id='devKey' name='devKey'>";
-    $result = $db->query("SELECT COUNT(*) FROM Devices");
-    $numDevs = $result->fetchColumn();
+    $numDevs = GetDevCount($db);
     for ($idx=0; $idx<$numDevs; $idx++) {
-        $userName = DbGetItem("userName", $idx, $db);
+        $devKey = GetDevKey($idx, $db);
+        $userName = GetDevItem("userName", $devKey, $db);
         echo "<option value='",$idx,"'>",$userName,"</option>";
     }
     echo "</select><p>";

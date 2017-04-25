@@ -91,6 +91,9 @@ def Parse(atLine):
         events.Issue(events.ids.RXMSG, atList)
     # end Parse
 
+def Leave(nwkId):    # Tell device to leave the network
+    TxCmd("AT+DASSR:"+nwkId)
+
 def TxCmd(cmd):  # Takes command to send
     txBuf.append(cmd)  # Append command
 

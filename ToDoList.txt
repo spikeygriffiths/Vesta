@@ -1,11 +1,8 @@
 #!ToDoList.txt
 
 ***** Features to Add *****
-* Devices don't add properly - When adding a PIR I see it enqueuing one message, but dequeuing another.  Might be fixed now...
-* After deleting a device, subsequent adds go wrong because devKey != index for ephemeral tables, etc.  Might be fixed now...
 * Change power storage to use Status table rather than Devices
 * Energy entry for Status in database (updated hourly)
-* Rationalise php pages to put all database access into one file (functions.php).  Use global
 * Daily synopsis to use HTML email to show UpTime & snapshot of devices page, plus last day's activity log.  Customise and improve synopsis, so that we can have different synopses daily, weekly or monthly...
 * Auto-start network ("AT+EN") if ATN shows none available at start up
 * Multiple device ZigBee endpoints?
@@ -47,5 +44,5 @@ COMMIT;
 # if time==00:30 and Alarm==Armed do SwitchOff SpikeyLampPlug
 # if InternalPirs==unoccupied and 0:00<time<sunset and HallLight_OnOff==off and rand(30)==0 do SwitchOn HallLight for 300
 
-Bugs
-
+******** Bugs ********
+* Database can get Locked for long periods of time.  Don't know why...

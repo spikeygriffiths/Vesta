@@ -1,10 +1,11 @@
 <?php
+include "database.php";
 error_reporting(E_ALL);
+
 ini_set('display_errors', '1');
 $devKey=$_POST['devKey'];   // Get new device to add from form
 $groupName = $_GET['groupName'];  // Get Group's user name from URL
-$dir = "sqlite:/home/pi/hubapp/hubstuff.db";
-$db = new PDO($dir) or die("Cannot open database");
+$db = DatabaseInit();
 $query = "SELECT devKeyList FROM Groups WHERE userName=\"".$groupName."\"";
 echo $query, "<br>";
 $sth = $db->prepare($query);

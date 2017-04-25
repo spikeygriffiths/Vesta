@@ -1,10 +1,11 @@
 <?php
 error_reporting(E_ALL);
+include "database.php";
+
 ini_set('display_errors', '1');
 $oldGroupName=$_GET['oldName'];
 $newGroupName = $_POST["NewName"];  // Get new user name from form
-$dir = "sqlite:/home/pi/hubapp/hubstuff.db";
-$db = new PDO($dir) or die("Cannot open database");
+$db = DatabaseInit();
 if ($oldGroupName == "NewGroup") {
     echo "New name is:", $newGroupName, "to be created<br>";
     $query = "INSERT INTO Groups (userName, devKeyList) VALUES (\"".$newGroupName."\",\"\")";  # Insert new name and empty string for devices

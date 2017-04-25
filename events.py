@@ -10,6 +10,7 @@ import variables
 import iottime
 import database
 import weather
+import presence
 
 if __name__ == "__main__":
     hubapp.main()
@@ -34,6 +35,7 @@ class ids:
     TIMEOFDAY = 16 # Arg is string "morning", "lunchtime", etc.
     ALARM = 17 # Arg is string, one of "Arming", "Armed", Elevated", "Activated", "Disarmed" 
     RADIO_INFO = 18 # No arg, just displays info about the radio (channel, power, PAN id)
+    NEWDEVICE = 19 # Arg is devKey, and only issued after the database has added the new device
 
 def Issue(eventId, eventArg=0):
     # Tell all interested parties about the new event
@@ -45,4 +47,5 @@ def Issue(eventId, eventArg=0):
     rules.EventHandler(eventId, eventArg)
     commands.EventHandler(eventId, eventArg)
     weather.EventHandler(eventId, eventArg)
+    presence.EventHandler(eventId, eventArg)
 

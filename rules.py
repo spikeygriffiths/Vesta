@@ -14,6 +14,7 @@ import variables
 import iottime
 import database
 import config
+import telegesis
 
 rulesFilename = "rules.txt"
 
@@ -33,38 +34,44 @@ rulesFilename = "rules.txt"
 def EventHandler(eventId, eventArg):
     if eventId == events.ids.TRIGGER:
         devKey = devices.GetKey(eventArg[1]) # Lookup device from network address in eventArg[1]
-        now = datetime.now()
-        nowStr = now.strftime("%H:%M")
-        zoneType = database.GetDeviceItem(devKey, "iasZoneType") # Device type
-        if zoneType != None:
-            oldState = database.GetLatestEvent(devKey)
-            if zoneType == zcl.Zone_Type.Contact:
-                if int(eventArg[3], 16) & 1: # Bottom bit indicates alarm1
-                    newState = "opened"
+        if devKey != None:
+            now = datetime.now()
+            nowStr = now.strftime("%H:%M")
+            zoneType = database.GetDeviceItem(devKey, "iasZoneType") # Device type
+            if zoneType != None:
+                oldState = database.GetLatestEvent(devKey)
+                if zoneType == zcl.Zone_Type.Contact:
+                    if int(eventArg[3], 16) & 1: # Bottom bit indicates alarm1
+                        newState = "opened"
+                    else:
+                        newState = "closed"
+                    if oldState != newState:    # NB Might get same state if sensor re-sends, or due to battery report 
+                        database.NewEvent(devKey, newState) # For web page.  Only update event log when state changes
+                        DeviceRun(devKey, "=="+newState) # See if rule exists (when state changes)
+                        #log.debug("Door "+ eventArg[1]+ " "+newState)
+                elif zoneType == zcl.Zone_Type.PIR:
+                    if int(eventArg[3], 16) & 1: # Bottom bit indicates alarm1
+                        newState = "active"
+                        devices.SetTempVal(devKey, "PirInactive@", datetime.now()+timedelta(seconds=300))
+                    else:
+                        newState = "inactive" # Might happen if we get an IAS battery report
+                    if oldState != newState:
+                        database.NewEvent(devKey, newState) # For web page.  Only update event log when state changes
+                    DeviceRun(devKey, "=="+newState) # See if rule exists
                 else:
-                    newState = "closed"
-                if oldState != newState:    # NB Might get same state if sensor re-sends, or due to battery report 
-                    database.NewEvent(devKey, newState) # For web page.  Only update event log when state changes
-                    DeviceRun(devKey, "=="+newState) # See if rule exists (when state changes)
-                    #log.debug("Door "+ eventArg[1]+ " "+newState)
-            elif zoneType == zcl.Zone_Type.PIR:
-                if int(eventArg[3], 16) & 1: # Bottom bit indicates alarm1
-                    newState = "active"
-                    devices.SetTempVal(devKey, "PirInactive@", datetime.now()+timedelta(seconds=300))
-                else:
-                    newState = "inactive" # Might happen if we get an IAS battery report
-                if oldState != newState:
-                    database.NewEvent(devKey, newState) # For web page.  Only update event log when state changes
-                DeviceRun(devKey, "=="+newState) # See if rule exists
+                    log.debug("DevId: "+ eventArg[1]+" zonestatus "+ eventArg[3])
             else:
-                log.debug("DevId: "+ eventArg[1]+" zonestatus "+ eventArg[3])
-        else:
-            log.fault("Unknown IAS device type for devId "+eventArg[1])
+                log.fault("Unknown IAS device type for devId "+eventArg[1])
+        else: # devKey == None
+            telegesis.Leave(eventArg[1])    # Tell device to leave the network, since we don't know anything about it
     elif eventId == events.ids.BUTTON:
         devKey = devices.GetKey(eventArg[1]) # Lookup device from network address in eventArg[1]
-        #log.debug("Button "+ eventArg[1]+ " "+eventArg[0]) # Arg[0] holds "ON", "OFF" or "TOGGLE" (Case might be wrong)
-        database.NewEvent(devKey, "pressed") # For web page
-        DeviceRun(devKey, "=="+eventArg[0]) # See if rule exists
+        if devKey != None:
+            #log.debug("Button "+ eventArg[1]+ " "+eventArg[0]) # Arg[0] holds "ON", "OFF" or "TOGGLE" (Case might be wrong)
+            database.NewEvent(devKey, "pressed") # For web page
+            DeviceRun(devKey, "=="+eventArg[0]) # See if rule exists
+        else: # devKey == None
+            telegesis.Leave(eventArg[1])    # Tell device to leave the network, since we don't know anything about it
     # End of EventHandler
 
 def DeviceRun(devKey, restOfRule): # Run rule for specified device

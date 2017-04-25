@@ -19,7 +19,7 @@ import config
 import devcmds
 import queue
 
-globalDevIdx = None
+globalDevKey = None
 pendingBinding = None # Needed because the BIND response doesn't include the cluster
 pendingRptAttrId = None # Needed because CFGRPTRSP only includes the cluster and not the attr
 
@@ -31,7 +31,7 @@ expRspTimeoutS = array('f',[]) # Array of timeouts if we're expecting a response
 msp_ota = None  # Until filled in from config
 
 def EventHandler(eventId, eventArg):
-    global ephemera, globalDevIdx, pendingBinding, pendingRptAttrId, msp_ota
+    global ephemera, globalDevKey, pendingBinding, pendingRptAttrId, msp_ota
     if eventId == events.ids.PREINIT:
         keyList = database.GetAllDevKeys()  # Get a list of all the device identifiers from the database
         for devKey in keyList:  # Hub and devices
@@ -46,7 +46,7 @@ def EventHandler(eventId, eventArg):
     if eventId == events.ids.DEVICE_ANNOUNCE:
         nwkId = eventArg[2]
         devKey = GetKey(nwkId)
-        if devKey == None:  # Which will only be the case if this device is actually new, but it may have just reset and announced
+        if devKey == None:  # Which will only be the case if this device is actually new, and not just reset and announced
             devKey = Add()
             log.debug("New key for new device is "+ str(devKey))
             database.SetDeviceItem(devKey, "nwkId", nwkId)
@@ -55,6 +55,7 @@ def EventHandler(eventId, eventArg):
             database.SetDeviceItem(devKey,"eui64",eventArg[1])
             if eventArg[0] == "SED":
                 SetTempVal(devKey,"PollingUntil", datetime.now()+timedelta(seconds=300))
+            events.Issue(events.ids.NEWDEVICE, devKey)  # Tell everyone that a new device has been seen, so it can be initialised
         else:
             NoteMsgDetails(devKey, eventArg)
     if eventId == events.ids.CHECKIN:   # See if we have anything to ask the device...
@@ -75,7 +76,7 @@ def EventHandler(eventId, eventArg):
             else:
                 queue.EnqueueCmd(devKey, ["AT+RAWZCL:"+nwkId+","+endPoint+",0020,11"+seq+"00000100", "DFTREP"]) # Tell device to stop Poll
         else: # Unknown device, so assume it's been deleted from our database
-            telegesis.TxCmd("AT+DASSR:"+eventArg[1])    # Tell device to leave the network, since we don't know anything about it
+            telegesis.Leave(eventArg[1])    # Tell device to leave the network, since we don't know anything about it
     if eventId == events.ids.RXMSG:
         if eventArg[0] == "AddrResp" and eventArg[1] == "00":
             devKey = GetKey(eventArg[2])
@@ -88,18 +89,18 @@ def EventHandler(eventId, eventArg):
                     database.SetDeviceItem(devKey, "endPoints", eventArg[3]) # Note first endpoint
         elif eventArg[0] == "SimpleDesc":
             if "00" == eventArg[2]:
-                globalDevIdx = GetKey(eventArg[1]) # Is multi-line response, so expect rest of response and use this global index until it's all finished
+                globalDevKey = GetKey(eventArg[1]) # Is multi-line response, so expect rest of response and use this global index until it's all finished
             elif "82" == eventArg[2]:   # 82 == Invalid endpoint
                 devKey = GetKey(eventArg[1])
                 events.Issue(events.ids.RXERROR, int(eventArg[2],16)) # Tell system that we're aborting this command
         elif eventArg[0] == "InCluster":
-            if globalDevIdx != None:
-                database.SetDeviceItem(globalDevIdx, "inClusters", str(eventArg[1:])) # Store whole list from arg[1] to arg[n]
+            if globalDevKey != None:
+                database.SetDeviceItem(globalDevKey, "inClusters", str(eventArg[1:])) # Store whole list from arg[1] to arg[n]
         elif eventArg[0] == "OutCluster":
-            if globalDevIdx != None:
-                NoteMsgDetails(globalDevIdx, eventArg)
-                database.SetDeviceItem(globalDevIdx, "outClusters", str(eventArg[1:])) # Store whole list from arg[1] to arg[n]
-            globalDevIdx = None # We've finished with this global for now
+            if globalDevKey != None:
+                NoteMsgDetails(globalDevKey, eventArg)
+                database.SetDeviceItem(globalDevKey, "outClusters", str(eventArg[1:])) # Store whole list from arg[1] to arg[n]
+            globalDevKey = None # We've finished with this global for now
         elif eventArg[0] == "RESPATTR":
             devKey = GetKey(eventArg[1])
             if devKey != None:
@@ -133,7 +134,7 @@ def EventHandler(eventId, eventArg):
                 SetAttrVal(devKey, clusterId, attrId, attrVal)
                 NoteReporting(devKey, clusterId, attrId)
             else: # Unknown device, so assume it's been deleted from our database
-                telegesis.TxCmd("AT+DASSR:"+eventArg[1])    # Tell device to leave the network, since we don't know anything about it
+                telegesis.Leave(eventArg[1])    # Tell device to leave the network, since we don't know anything about it
         elif eventArg[0] == "Bind":    # Binding Response from device
             devKey = GetKey(eventArg[1])
             if devKey != None:
@@ -159,7 +160,7 @@ def EventHandler(eventId, eventArg):
         devKey = GetKey(eventArg[1]) # Lookup device from network address in eventArg[1]
         NoteMsgDetails(devKey, eventArg)
     if eventId == events.ids.RXERROR:
-        globalDevIdx = None # We've finished with this global if we get an error
+        globalDevKey = None # We've finished with this global if we get an error
     if eventId == events.ids.SECONDS:
         for devKey in devDict:  # Go through devDict, pulling out each entry
             if devDict[devKey] >= 0:    # Make sure device hasn't been deleted
@@ -190,8 +191,6 @@ def EventHandler(eventId, eventArg):
                     newState = "inactive"
                     database.NewEvent(devKey, newState)
                     Rule(devKey, newState)
-    if eventId == events.ids.MINUTES:
-        presence.Check()   # For all devices
     # End event handler
 
 def NoteReporting(devKey, clusterId, attrId):
@@ -422,7 +421,7 @@ def Remove(devKey):
     if IsListening(devKey):
         nwkId = database.GetDeviceItem(devKey, "nwkId")
         if nwkId:
-            telegesis.TxCmd("AT+DASSR:"+nwkId)  # Tell device to leave the network immediately (assuming it's listening)
+            telegesis.Leave(eventArg[1])    # Tell device to leave the network immediately (assuming it's listening)
     database.RemoveDevice(devKey)
     devDict[devKey] = -1    # Remove link between the key and its index (but don't remove the entry in the dict)
     # Note that the entry isn't removed, so that we deliberately leave the old queues and other ephemera so that we don't have to re-number all other items.
