@@ -32,8 +32,8 @@ echo "<p>Show events for:<select id='devKey' name='devKey'>";
 echo "<option value=-1>All devices</option>";
 $numDevs = GetDevCount($db);
 for ($idx=0; $idx<$numDevs; $idx++) {
-    $devKey = GetDevKey($idx, $db);
-    $userName = GetDevItem("userName", $devKey, $db);
+    $deviceKey = GetDevKey($idx, $db);
+    $userName = GetDevItem("userName", $deviceKey, $db);
     echo "<option value='",$idx,"'>",$userName,"</option>";
 }
 echo "</select><p>";
