@@ -35,7 +35,7 @@ def EventHandler(eventId, eventArg):
     if eventId == events.ids.PREINIT:
         keyList = database.GetAllDevKeys()  # Get a list of all the device identifiers from the database
         for devKey in keyList:  # Hub and devices
-            log.debug("Initialising devKey "+str(devKey)+" in keylist "+str(keyList))
+            #log.debug("Initialising devKey "+str(devKey)+" in keylist "+str(keyList))
             Init(devKey) # Initialise dictionary and associated ephemera
             if database.GetDeviceItem(devKey, "nwkId") != "0000":  # Ignore hub
                 presence.Set(devKey, presence.states.unknown)
@@ -405,7 +405,7 @@ def Init(devKey):
     global expRsp, expRspTimeoutS
     index = len(ephemera)   # Rely upon the length of this as the master for making a new index into everything else!
     devDict[devKey] = index # Add new item
-    log.debug("Added new item to devDict, which now is "+str(devDict))
+    #log.debug("Added new item to devDict, which now is "+str(devDict))
     ephemera.append([]) # Add parallel ephemeral device list
     queue.Init(devKey)
     expRsp.append("")

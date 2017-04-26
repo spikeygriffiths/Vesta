@@ -196,3 +196,7 @@ class Commands(cmd.Cmd):
         if devKey != None:
             devices.Remove(devKey)
 
+    def do_rolllog(self, line):
+        """rolllog
+        Rolls the logs - automatically done at midnight"""
+        log.RollLogs()

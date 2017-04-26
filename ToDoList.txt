@@ -46,3 +46,4 @@ COMMIT;
 
 ******** Bugs ********
 * Database can get Locked for long periods of time.  Don't know why... Hopefully fixed after making sure flushDB was a global reference in all functions
+* hub log doesn't roll properly - new log fails to start

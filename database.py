@@ -34,7 +34,7 @@ def InitStatus(devKey):
 
 def SetStatus(devKey, item, value):
     global curs, flushDB
-    log.debug("Setting status for "+item+" with "+str(value)+" for "+str(devKey))
+    #log.debug("Setting status for "+item+" with "+str(value)+" for "+str(devKey))
     curs.execute("UPDATE Status SET "+item+"_time=datetime('now', 'localtime') WHERE devKey="+str(devKey))
     if type(value) is str:
         curs.execute("UPDATE Status SET "+item+"=\""+value+"\" WHERE devKey="+str(devKey))
