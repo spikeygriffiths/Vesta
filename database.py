@@ -30,7 +30,7 @@ def InitStatus(devKey):
         curs.execute("INSERT INTO Status DEFAULT VALUES")  # Insert blank row for status
         rowId = curs.lastrowid
         curs.execute("UPDATE Status SET devKey="+str(devKey)+" WHERE rowId="+str(rowId))
-    flushDB = True # Batch up the commits
+        flushDB = True # Batch up the commits
 
 def SetStatus(devKey, item, value):
     global curs, flushDB
@@ -135,20 +135,24 @@ def GetDeviceItem(devKey, item):
     return None
 
 def SetDeviceItem(devKey, item, value):
-    global curs
+    global curs, flushDB
     if type(value) is str:
         curs.execute("UPDATE Devices SET "+item+"=\""+value+"\" WHERE devKey="+str(devKey))
     else: # Assume number (Integer or Float)
         curs.execute("UPDATE Devices SET "+item+"="+str(value)+" WHERE devKey="+str(devKey))
     flushDB = True # Batch up the commits
 
-def NewDevice():
+def NewDevice(nwkId, eui64, devType):
     global curs, db
     curs.execute("INSERT INTO Devices DEFAULT VALUES")  # Insert blank row
     rowId = curs.lastrowid
     log.debug("Newly inserted row is ID "+str(rowId))
     devKey = rowId # Just need a unique key
     curs.execute("UPDATE Devices SET devKey="+str(devKey)+" WHERE rowId="+str(rowId))   # Define device key first, since that's used everywhere!
+    SetDeviceItem(devKey, "nwkId", nwkId)
+    SetDeviceItem(devKey, "Username", "(New) "+nwkId)   # Default username of network ID, since that's unique
+    SetDeviceItem(devKey,"devType",devType)    # SED, FFD or ZED
+    SetDeviceItem(devKey,"eui64",eui64)
     InitStatus(devKey)
     db.commit() # Flush db to disk immediately
     return devKey    # Return new devKey for newly added device

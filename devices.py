@@ -46,12 +46,8 @@ def EventHandler(eventId, eventArg):
         nwkId = eventArg[2]
         devKey = GetKey(nwkId)
         if devKey == None:  # Which will only be the case if this device is actually new, and not just reset and announced
-            devKey = Add()
+            devKey = Add(nwkId, eventArg[1], eventArg[0])
             log.debug("New key for new device is "+ str(devKey))
-            database.SetDeviceItem(devKey, "nwkId", nwkId)
-            database.SetDeviceItem(devKey, "Username", "(New) "+nwkId)   # Default username of network ID, since that's unique
-            database.SetDeviceItem(devKey,"devType",eventArg[0])    # SED, FFD or ZED
-            database.SetDeviceItem(devKey,"eui64",eventArg[1])
             if eventArg[0] == "SED":
                 SetTempVal(devKey,"PollingUntil", datetime.now()+timedelta(seconds=300))
             events.Issue(events.ids.NEWDEVICE, devKey)  # Tell everyone that a new device has been seen, so it can be initialised
@@ -400,8 +396,8 @@ def GetIndexFromKey(key):
     #log.debug("Looking up index for Key "+str(key))
     return devDict[key]
 
-def Add():
-    devKey = database.NewDevice()
+def Add(nwkId, eui64, devType):
+    devKey = database.NewDevice(nwkId, eui64, devType)
     Init(devKey)
     return devKey
 
