@@ -49,7 +49,10 @@ function ShowEvent($devKey, $db)
 
 function ShowDeviceInfo($db, $devKey, $username)
 {
-    echo "<A href=\"/DelDevice.php/?devId=",$username,"\">Remove Device</A><br><br>";    // Make sure this won't be accidentally pressed
+    $nwkId = GetDevItem("nwkId", $devkey, $db);
+    if ("0000" != $nwkId) {
+        echo "<A href=\"/DelDevice.php/?devId=",$username,"\">Remove Device</A><br><br>";    // Make sure this won't be accidentally pressed
+    }
     //echo "<center><form action=\"/UpdateDeviceName.php/?devKey=",$devKey,"\" method=\"post\">";
     echo "<table>";
     //echo "<tr><td>Name</td><td><input type=\"text\" name=\"UserName\" value=\"", $username, "\"></td>";
@@ -68,7 +71,7 @@ function ShowDeviceInfo($db, $devKey, $username)
     ShowDevItem("devType", "Device Type", $devKey, $db);
     ShowDevItem("endPoints", "Endpoints", $devKey, $db);
     ShowDevItem("firmwareVersion", "Firmware Version", $devKey, $db);
-    if ($devKey != 0) {
+    if ("0000" != $nwkId) {
         ShowDevItem("inClusters", "In Clusters", $devKey, $db);
         ShowDevItem("outClusters", "Out Clusters", $devKey, $db);
         ShowDevItem("binding", "Binding", $devKey, $db);
@@ -85,17 +88,19 @@ function ShowDeviceInfo($db, $devKey, $username)
     echo "</table>";
     //echo "<input type=\"submit\" value=\"Update name\"></form>";
     echo "<A href=\"/ChangeDevName.php/?devKey=",$devKey,"\">Change Name</A><br><br>";
-    echo "<A href=\"/Command.php/?cmd=identify ",$username," 30\">Identify for 30s</A><br><br>";
-    $inClusters = GetDevItem("inClusters", $devKey, $db);
-    if (strpos($inClusters, "0006") !== false) { // Is switchable, eg smartplug, bulb, etc.
-        echo "<A href=\"/Command.php/?cmd=toggle ",$username,"\">Toggle</A><br><br>";
-    }
-    if (strpos($inClusters, "0008") !== false) { // Is dimmable, eg lamp, bulb
-        echo "Brightness: <a href=\"/ImageMap.php/?devId=",$username,"&cmd=dim&map=\"><img src=\"/UpRamp.png\" width=100 height=20 alt=\"Level\" ismap=\"ismap\"></a><br><br>";  // Php page will GET x,y,
-    }
-    if (strpos($inClusters, "0300") !== false) { // ColorCtrl cluster, eg lamp, RGB bulbs
-        echo "Hue: <a href=\"/ImageMap.php/?devId=",$username,"&cmd=hue&map=\"><img src=\"/Hue.png\" width=360 height=20 alt=\"Hue\" ismap=\"ismap\"></a><br><br>";  // Php page will GET x,y, according to stackoverflow.com/questions/358387
-        echo "Saturation: <a href=\"/ImageMap.php/?devId=",$username,"&cmd=sat&map=\"><img src=\"/Sat.png\" width=100 height=20 alt=\"Saturation\" ismap=\"ismap\"></a><br><br>";
+    if ("0000" != $nwkId) {
+        echo "<A href=\"/Command.php/?cmd=identify ",$username," 30\">Identify for 30s</A><br><br>";
+        $inClusters = GetDevItem("inClusters", $devKey, $db);
+        if (strpos($inClusters, "0006") !== false) { // Is switchable, eg smartplug, bulb, etc.
+            echo "<A href=\"/Command.php/?cmd=toggle ",$username,"\">Toggle</A><br><br>";
+        }
+        if (strpos($inClusters, "0008") !== false) { // Is dimmable, eg lamp, bulb
+            echo "Brightness: <a href=\"/ImageMap.php/?devId=",$username,"&cmd=dim&map=\"><img src=\"/UpRamp.png\" width=100 height=20 alt=\"Level\" ismap=\"ismap\"></a><br><br>";  // Php page will GET x,y,
+        }
+        if (strpos($inClusters, "0300") !== false) { // ColorCtrl cluster, eg lamp, RGB bulbs
+            echo "Hue: <a href=\"/ImageMap.php/?devId=",$username,"&cmd=hue&map=\"><img src=\"/Hue.png\" width=360 height=20 alt=\"Hue\" ismap=\"ismap\"></a><br><br>";  // Php page will GET x,y, according to stackoverflow.com/questions/358387
+            echo "Saturation: <a href=\"/ImageMap.php/?devId=",$username,"&cmd=sat&map=\"><img src=\"/Sat.png\" width=100 height=20 alt=\"Saturation\" ismap=\"ismap\"></a><br><br>";
+        }
     }
 }
 ?>

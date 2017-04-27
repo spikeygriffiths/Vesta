@@ -45,5 +45,9 @@ COMMIT;
 # if InternalPirs==unoccupied and 0:00<time<sunset and HallLight_OnOff==off and rand(30)==0 do SwitchOn HallLight for 300
 
 ******** Bugs ********
-* Database can get Locked for long periods of time.  Don't know why... Hopefully fixed after making sure flushDB was a global reference in all functions
-* hub log doesn't roll properly - new log fails to start
+* hub log doesn't roll properly - new log fails to start.  Can't remove file while writing to it
+* Remove device page fails to qualify the "removeDevice" command with a device identifier
+* Need to remove devKey from groups' devKeyLists in database.RemoveDevice()
+* Very slow to get information from newly added device
+* Hub is always marked as "Absent", although it clearly isn't
+
