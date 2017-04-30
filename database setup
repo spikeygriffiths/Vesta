@@ -1,0 +1,53 @@
+sqlite3 hubstuff.db
+
+BEGIN;
+DROP TABLE IF EXISTS Devices;
+CREATE TABLE Devices (
+  devKey INTEGER,
+  userName TEXT,
+  modelName TEXT,
+  manufName TEXT,
+  nwkId TEXT,
+  eui64 TEXT,
+  devType TEXT,
+  endPoints TEXT,
+  inClusters TEXT,
+  outClusters TEXT,
+  binding TEXT,
+  reporting TEXT,
+  iasZoneType TEXT,
+  firmwareVersion TEXT
+);
+
+DROP TABLE IF EXISTS Status;
+CREATE TABLE Status (
+  devKey INTEGER,
+  battery INTEGER, battery_time DATETIME,
+  temperature INTEGER, temperature_time DATETIME,
+  signal INTEGER, signal_time DATETIME,
+  presence TEXT, presence_time DATETIME,
+  powerReadingW INTEGER, powerReadingW_time DATETIME,
+  energyForHourWh INTEGER, energyForHourWh_time DATETIME,
+  FOREIGN KEY(devKey) REFERENCES Devices(devKey)
+);
+
+DROP TABLE IF EXISTS Events;
+CREATE TABLE Events (
+  timestamp DATETIME,
+  event TEXT,
+  devKey INTEGER,
+  FOREIGN KEY(devKey) REFERENCES Devices(devKey)
+);
+
+DROP TABLE IF EXISTS Groups;
+CREATE TABLE Groups (
+  userName TEXT,
+  devKeyList TEXT
+);
+COMMIT;
+.quit
+# Next line needed to allow Python to write back to the database
+chmod 666 hubstuff.db
+# Next line needed to allow SQL from Apache to write back to the database
+chmod 777 ..
+

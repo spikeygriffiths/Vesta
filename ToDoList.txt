@@ -1,0 +1,41 @@
+#!ToDoList.txt
+
+***** Features to Add *****
+* Consider putting rules inside db
+* Try to reduce delay between trigger and action.  Queuing has added some delay
+* Change power storage to use Status table rather than Devices
+* Energy entry for Status in database (updated hourly)
+* Daily synopsis to use HTML email to show UpTime & snapshot of devices page, plus last day's activity log.  Customise and improve synopsis, so that we can have different synopses daily, weekly or monthly...
+* Auto-start network ("AT+EN") if ATN shows none available at start up
+* Multiple device ZigBee endpoints?
+ 
+***** Features to Test *****
+* Groups aren't updating via web (at home, but work fine at work.  Hmm.)
+
+# *** Burglar alarm? ***  Probably best done in Python
+# if keyfob==arm do Set AlarmState=StartArming
+# if AlarmState==StartArming do Set AlarmTimeout=30, Set AlarmState=Arming
+# if AlarmState==Arming do repeat play ArmingAlarm.mp3
+# if AlarmState==DoneArming do stop play, Set AlarmState=Armed
+# if ExternalDoors==opened and Alarm==DoneArming do Set AlarmState=Disarm, email Door open - Disarming
+# if InternalPirs==active and Alarm==Armed do Set AlarmState=Elevate
+# if InternalPirs==active and Alarm==Elevated do Set AlarmState=Activate
+# if ExternalDoors==opened and Alarm==Armed do Set AlarmState=Elevate
+# if ExternalDoors==opened and Alarm==Elevated do Set AlarmState=Activate
+# if Alarm==Elevate do Set AlarmTimeout=60, Set AlarmState=Elevated
+# if Alarm==Activated do play IntruderAlert.mp3
+# if Alarm==Activated do email Intruder Alert!
+# if keyfob==disarm do Set AlarmState=Disarm
+
+# *** Activity Pretence ***   Probably best done in Python
+# if Alarm==Armed and sunset<time<23:59 do SwitchOn SpikeyLampPlug
+# if time==00:30 and Alarm==Armed do SwitchOff SpikeyLampPlug
+# if InternalPirs==unoccupied and 0:00<time<sunset and HallLight_OnOff==off and rand(30)==0 do SwitchOn HallLight for 300
+
+******** Bugs ********
+* hub log doesn't roll properly - new log fails to start.  Can't remove file while writing to it
+* Remove device page fails to qualify the "removeDevice" command with a device identifier
+* Need to remove devKey from groups' devKeyLists in database.RemoveDevice()
+* Very slow to get information from newly added device
+* Hub is always marked as "Absent", although it clearly isn't
+
