@@ -23,8 +23,8 @@ if ($iotHubRunning) {
  } else {
     echo "<br>";
     echo "<center><h2>IoT Hub stopped</h2></center>"; 
-    $reason = shell_exec("tail --lines=20 /home/pi/hubapp/hub.log");
-    echo "<b>Last lines of hub.log;</b><br>",nl2br($reason);
+    $reason = shell_exec("tail --lines=20 /home/pi/hubapp/today.log");
+    echo "<b>Last lines of today's hub log;</b><br>",nl2br($reason);
 }
 echo "</body></html>";
 ?>
