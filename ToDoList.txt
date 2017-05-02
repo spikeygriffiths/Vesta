@@ -10,7 +10,6 @@
 * Multiple device ZigBee endpoints?
  
 ***** Features to Test *****
-* Groups aren't updating via web (at home, but work fine at work.  Hmm.)
 
 # *** Burglar alarm? ***  Probably best done in Python
 # if keyfob==arm do Set AlarmState=StartArming

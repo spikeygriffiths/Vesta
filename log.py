@@ -24,4 +24,4 @@ def log(msg):
 
 def RollLogs(): # Called once/day
     os.replace("today.log","yesterday.log")
-     
+
