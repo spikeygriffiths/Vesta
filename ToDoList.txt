@@ -8,21 +8,6 @@
 * Multiple device ZigBee endpoints?
  
 ***** Features to Test *****
-* (Add 
-alter table Devices add column firmwareVersion TEXT;
-alter table Status add column powerReadingW INTEGER;
-alter table Status add column powerReadingW_time DATETIME;
-alter table Status add column energyForHourWh INTEGER;
-alter table Status add column energyForHourWh_time DATETIME;
-
-BEGIN;
-PRAGMA writable_schema=1;
-UPDATE sqlite_master SET SQL=REPLACE(SQL, 'devIdx', 'devKey');
-PRAGMA writable_schema=0;
-COMMIT;
-
- via SQL)
-* Groups aren't updating via web (at home, but work fine at work.  Hmm.)
 
 # *** Burglar alarm? ***  Probably best done in Python
 # if keyfob==arm do Set AlarmState=StartArming
@@ -49,5 +34,4 @@ COMMIT;
 * Remove device page fails to qualify the "removeDevice" command with a device identifier
 * Need to remove devKey from groups' devKeyLists in database.RemoveDevice()
 * Very slow to get information from newly added device
-* Hub is always marked as "Absent", although it clearly isn't
 
