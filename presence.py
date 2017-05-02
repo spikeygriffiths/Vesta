@@ -15,6 +15,13 @@ class states():
     present = "Present"
 
 def EventHandler(eventId, eventArg):
+    if eventId == events.ids.INIT:
+        keyList = database.GetAllDevKeys()  # Get a list of all the device identifiers from the database
+        for devKey in keyList:  # Hub and devices
+            if database.GetDeviceItem(devKey, "nwkId") != "0000":  # Ignore hub
+                Set(devKey, states.unknown)
+            else:
+                Set(devKey, states.present)
     if eventId == events.ids.NEWDEVICE:
         devKey = eventArg
         Set(devKey, states.present)   # Mark any new device as immediately present

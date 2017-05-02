@@ -35,10 +35,8 @@ def EventHandler(eventId, eventArg):
     if eventId == events.ids.PREINIT:
         keyList = database.GetAllDevKeys()  # Get a list of all the device identifiers from the database
         for devKey in keyList:  # Hub and devices
-            #log.debug("Initialising devKey "+str(devKey)+" in keylist "+str(keyList))
             Init(devKey) # Initialise dictionary and associated ephemera
             if database.GetDeviceItem(devKey, "nwkId") != "0000":  # Ignore hub
-                presence.Set(devKey, presence.states.unknown)
                 SetTempVal(devKey, "GetNextBatteryAfter", datetime.now())    # Ask for battery shortly after startup
     if eventId == events.ids.INIT:
         msp_ota = config.Get("MSP_OTA")
