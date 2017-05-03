@@ -2,23 +2,26 @@
 
 from datetime import datetime
 from subprocess import call
+import os
 # App-specific Python modules
 
 def Init(msg):
     try:
         debug(msg)
     except:
-        call("sudo rm hub.log", shell=True) # Remove unusable log if necessary (we may be recovering from a power cut in the middle of writing the log)
+        os.remove("today.log") # Remove unusable log if necessary (we may be recovering from a power cut in the middle of writing the log?)
         
 def debug(msg):
-    timedMsg = "<" + str(datetime.now()) + ">"+ msg
-    print(timedMsg)  # To stdout.  Relies on stdout being re-directed to hub.log (so that it includes crash information)
-
+    log("debug:" + msg)
+    
 def fault(msg):
-    debug("FAULT! " + msg)
+    log("FAULT:" + msg)
+
+def log(msg):
+    timedMsg = "<" + str(datetime.now()) + ">"+ msg
+    open("today.log", "a").write(timedMsg+"\n")
+    print(timedMsg)
 
 def RollLogs(): # Called once/day
-    call("sudo chmod 666 yesterday.log", shell=True)    # Make sure we can erase the old log
-    call("rm yesterday.log", shell=True) # Remove yesterday's old log
-    call("mv hub.log yesterday.log", shell=True) # Move today's log to yesterday's, getting ready to start new log from now
+    os.replace("today.log","yesterday.log")
 

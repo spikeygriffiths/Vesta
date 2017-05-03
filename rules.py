@@ -181,8 +181,7 @@ def Action(actList):
     if action == "Log":
         log.debug("Rule says Log event for "+' '.join(actList[1:]))
     elif action == "Play":
-        filename = "Sfx/"+actList[1]
-        call(["omxplayer", "-o", "local", filename])
+        call(["omxplayer", "-o", actList[1], actList[2]])
     elif action == "Event":
         if actList[1] == "TimeOfDay":
             events.IssueEvent(events.ids.TIMEOFDAY, actList[2])

@@ -20,7 +20,7 @@ def EventHandler(eventId, eventArg):
         for devKey in keyList:  # Hub and devices
             if database.GetDeviceItem(devKey, "nwkId") != "0000":  # Ignore hub
                 Set(devKey, states.unknown)
-            else:
+            else:   # Is hub, so must be Present
                 Set(devKey, states.present)
     if eventId == events.ids.NEWDEVICE:
         devKey = eventArg

@@ -104,6 +104,8 @@ def EventHandler(eventId, eventArg):
                 if "00" == eventArg[5]:
                     attrVal = eventArg[6]
                     SetAttrVal(devKey, clusterId, attrId, attrVal)
+                else:
+                    SetAttrVal(devKey, clusterId, attrId, "Failed (error "+eventArg[5]+")") # So that we don't keep asking
         elif eventArg[0] == "RESPMATTR":
             devKey = GetKey(eventArg[1])
             if devKey != None:
@@ -176,7 +178,7 @@ def EventHandler(eventId, eventArg):
             offAt = GetTempVal(devKey, "SwitchOff@")
             if offAt:
                 if datetime.now() >= offAt:
-                    SwitchOff(devKey)
+                    devcmds.SwitchOff(devKey)
             pirOffAt = GetTempVal(devKey, "PirInactive@")
             if pirOffAt:
                 if datetime.now() >= pirOffAt:
@@ -196,7 +198,6 @@ def NoteReporting(devKey, clusterId, attrId):
             reporting = str(reportList)
     else:
         reporting = "['"+newRpt+"']"
-    print ("Reporting = "+reporting)
     database.SetDeviceItem(devKey, "reporting", reporting) # Ready for next time
 
 def GetKey(nwkId):
@@ -414,7 +415,7 @@ def Remove(devKey):
     if IsListening(devKey):
         nwkId = database.GetDeviceItem(devKey, "nwkId")
         if nwkId:
-            telegesis.Leave(eventArg[1])    # Tell device to leave the network immediately (assuming it's listening)
+            telegesis.Leave(nwkId)    # Tell device to leave the network immediately (assuming it's listening)
     database.RemoveDevice(devKey)
     devDict[devKey] = -1    # Remove link between the key and its index (but don't remove the entry in the dict)
     # Note that the entry isn't removed, so that we deliberately leave the old queues and other ephemera so that we don't have to re-number all other items.

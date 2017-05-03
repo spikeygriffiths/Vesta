@@ -1,6 +1,8 @@
 #!ToDoList.txt
 
 ***** Features to Add *****
+* Consider putting rules inside db
+* Try to reduce delay between trigger and action.  Queuing has added some delay
 * Change power storage to use Status table rather than Devices
 * Energy entry for Status in database (updated hourly)
 * Daily synopsis to use HTML email to show UpTime & snapshot of devices page, plus last day's activity log.  Customise and improve synopsis, so that we can have different synopses daily, weekly or monthly...
@@ -30,8 +32,6 @@
 # if InternalPirs==unoccupied and 0:00<time<sunset and HallLight_OnOff==off and rand(30)==0 do SwitchOn HallLight for 300
 
 ******** Bugs ********
-* hub log doesn't roll properly - new log fails to start.  Can't remove file while writing to it
-* Remove device page fails to qualify the "removeDevice" command with a device identifier
 * Need to remove devKey from groups' devKeyLists in database.RemoveDevice()
 * Very slow to get information from newly added device
 
