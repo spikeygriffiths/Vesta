@@ -22,10 +22,11 @@ ourExtPan = "Unknown"
 
 def HandleSerial(ser):
     global txBuf, rxBuf
-    telegesisInLine = str(ser.readline(),'utf-8').rstrip('\r\n')    # Rely on timeout=0 to return imemdiately,either with a line or with None
-    if telegesisInLine != None:
+    while ser.inWaiting():
+        telegesisInLine = str(ser.readline(),'utf-8').rstrip('\r\n')    # Rely on timeout=0 to return immediately, either with a line or with None
+        #if telegesisInLine != None:
         rxBuf.append(telegesisInLine)  # Buffer this for subsequent processing in main thread
-    if len(txBuf):
+    while len(txBuf):
         atCmd = txBuf.popleft()
         wrAtCmd = atCmd + "\r\n"
         ser.write(wrAtCmd.encode())
@@ -44,7 +45,7 @@ def EventHandler(eventId, eventArg):
         queue.EnqueueCmd(0, ["AT+N", "OK"]) # Get network information, to see whether to start new network or use existing one
     elif eventId == events.ids.SECONDS:
         HandleSerial(ser)
-        if len(rxBuf):
+        while len(rxBuf):
             Parse(rxBuf.popleft())
     elif eventId == events.ids.RADIO_INFO:
         print(ourChannel+","+ourPowLvl+","+ourPan+","+ourExtPan) # Formatted to make it easy to extract in php
