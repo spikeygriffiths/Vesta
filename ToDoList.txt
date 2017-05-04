@@ -2,14 +2,20 @@
 
 ***** Features to Add *****
 * Consider putting rules inside db
-* Change power storage to use Status table rather than Devices
 * Energy entry for Status in database (updated hourly)
 * Daily synopsis to use HTML email to show UpTime & snapshot of devices page, plus last day's activity log.  Customise and improve synopsis, so that we can have different synopses daily, weekly or monthly...
 * Auto-start network ("AT+EN") if ATN shows none available at start up
 * Multiple device ZigBee endpoints?
  
-***** Features to Test *****
+***** Items to Test *****
 * Very slow to get information from newly added device - hopefully fixed
+* From sqlite;
+BEGIN;
+PRAGMA writable_schema=1;
+SELECT * FROM sqlite_master;
+UPDATE sqlite_master SET SQL=REPLACE(SQL, 'powerReading', 'Unused') WHERE name='Devices';
+PRAGMA writable_schema=0;
+COMMIT;
 
 # *** Burglar alarm? ***  Probably best done in Python
 # if keyfob==arm do Set AlarmState=StartArming

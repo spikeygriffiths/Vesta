@@ -59,7 +59,7 @@ function ShowDeviceInfo($db, $devKey, $username)
     ShowDevStatus("signal", "Radio Signal %", $devKey, $db);
     ShowDevStatus("battery", "Battery %", $devKey, $db);
     ShowDevStatus("temperature", "Temperature 'C", $devKey, $db);
-    ShowDevItem("powerReading", "Power (W)", $devKey, $db);
+    ShowDevStatus("powerReadingW", "Power (W)", $devKey, $db);
     ShowDevStatus("presence", "Presence", $devKey, $db);
     echo "<tr><td>Event</td>";
     ShowEvent($devKey, $db);
