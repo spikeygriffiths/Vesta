@@ -67,6 +67,7 @@ def EventHandler(eventId, eventArg):
                 SetTempVal(devKey,"PollingUntil", datetime.now()+timedelta(seconds=10))
                 queue.EnqueueCmd(devKey, cmdRsp)  # This will go out after the Fast Poll Set
             else:
+                SetTempVal(devKey,"PollingUntil", datetime.now()+timedelta(seconds=2))  # Say that it's polling for a short while, so that we can tell it to stop(!)
                 queue.EnqueueCmd(devKey, ["AT+RAWZCL:"+nwkId+","+endPoint+",0020,11"+seq+"00000100", "DFTREP"]) # Tell device to stop Poll
         else: # Unknown device, so assume it's been deleted from our database
             telegesis.Leave(eventArg[1])    # Tell device to leave the network, since we don't know anything about it
@@ -162,9 +163,10 @@ def EventHandler(eventId, eventArg):
                 if IsListening(devKey):  # True if FFD, ZED or Polling
                     devIndex = GetIndexFromKey(devKey)
                     if expRsp[devIndex] == None:  # We don't have a message in flight
-                        cmdRsp = Check(devKey)
-                        if cmdRsp:
-                            queue.EnqueueCmd(devKey, cmdRsp)   # Queue up anything we ought to know
+                        if queue.IsEmpty(devKey):
+                            cmdRsp = Check(devKey)
+                            if cmdRsp:
+                                queue.EnqueueCmd(devKey, cmdRsp)   # Queue up anything we ought to know
                         cmdRsp = queue.DequeueCmd(devKey) # Pull first item from queue
                         if cmdRsp != None:
                             log.debug("Sending "+str(cmdRsp))
@@ -215,15 +217,12 @@ def SetAttrVal(devKey, clstrId, attrId, value):
         SetTempVal(devKey, "GetNextBatteryAfter", datetime.now()+timedelta(seconds=86400))    # Ask for battery every day
         if value != "FF":
             varVal = int(int(value, 16) / 2) # Arrives in 0.5% increments, but drop fractional component
+            #log.debug("Battery is "+str(varVal)+"%.  Get next reading at "+str(GetTempVal(devKey, "GetNextBatteryAfter")))
             database.SetStatus(devKey, "battery", varVal) # For web page
-        else:
-            variables.Del(varName)
     if clstrId == zcl.Cluster.Temperature and attrId == zcl.Attribute.Celsius:
         if value != "FF9C": # Don't know where this value comes from - should be "FFFF"
             varVal = int(value, 16) / 100 # Arrives in 0.01'C increments 
             database.SetStatus(devKey, "temperature", varVal) # For web page
-        else:
-            variables.Del(varName)
     if clstrId == zcl.Cluster.OnOff and attrId == zcl.Attribute.OnOffState:
         oldState = database.GetLatestEvent(devKey)
         if int(value, 16) == 0:
@@ -341,6 +340,7 @@ def Check(devKey):
             checkBatt = GetTempVal(devKey, "GetNextBatteryAfter")
             if checkBatt != None:
                 if datetime.now() > checkBatt:
+                    #log.debug("Now = "+str(datetime.now())+" and checkBatt = "+str(checkBatt))
                     return telegesis.ReadAttr(nwkId, ep, zcl.Cluster.PowerConfig, zcl.Attribute.Batt_Percentage) # Get Battery percentage
         if zcl.Cluster.OTA in outClstr:
             if None == database.GetDeviceItem(devKey, "firmwareVersion"):
