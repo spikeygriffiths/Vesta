@@ -23,8 +23,17 @@ if ($iotHubRunning) {
  } else {
     echo "<br>";
     echo "<center><h2>IoT Hub stopped</h2></center>"; 
-    $reason = shell_exec("tail --lines=20 /home/pi/hubapp/today.log");
-    echo "<b>Last lines of today's hub log;</b><br>",nl2br($reason);
+    //$reason = shell_exec("tail --lines=20 /home/pi/hubapp/today.log");
+    //echo "<b>Last lines of today's hub log;</b><br>",nl2br($reason);
+    $fragmentSize = 1000;
+    $logName = "/home/pi/hubapp/today.log";
+    $logHandle = fopen($logName, "r");
+    $logSize = filesize($logName);
+    fseek($logHandle, $logSize - $fragmentSize);    // Seek to near the end
+    $logText = fread($logHandle, $fragmentSize);    // Read the last few bytes
+    echo "..."; // Ellipsis before final log fragment
+    echo nl2br($logText);   // NewLine To <br>
+    echo "<br><br><button type=\"button\" onclick=\"window.location.href='restart.php'\">Restart</button><br><br>";
 }
 echo "</body></html>";
 ?>
