@@ -2,6 +2,7 @@
 // ShowAllDevices.php
 error_reporting(E_ALL); 
 include "database.php";
+include "functions.php";
 
 echo "<html>";
 echo "<head><style>table {font-family:arial, sans-serif;border-collapse: collapse;width: 100 % }";
@@ -15,11 +16,11 @@ ShowDevices();
 echo "<br><a href=\"/index.php\">Home</a></center>";
 echo "</body></html>";
 
-function ShowDevStatus($item, $devKey, $db)
+function ShowDevStatus($item, $devKey, $db, $suffix)
 {
     $val = GetDevStatus($item, $devKey,$db);
     if ($val != null) {
-        echo "<td>$val</td>";
+        echo "<td>$val$suffix</td>";
     } else {
         echo "<td>N/A</td>";
     }
@@ -40,15 +41,22 @@ function ShowDevices()
     $numDevs = GetDevCount($db);
     if ($numDevs > 0) {
         echo "<table>";
-        echo "<tr><th>Name</th><th>Battery %</th><th>Signal %</th><th>Presence</th><th>Notes</th></tr>";
+        echo "<tr><th>Name</th><th>Battery</th><th>Signal</th><th>Presence</th><th>Time</th><th>Notes</th></tr>";
         for ($index = 0; $index < $numDevs; $index++) {
             $devKey = GetDevKey($index, $db);
             echo "<tr>";
             $username = GetDevItem("userName", $devKey, $db);
             echo "<td><a href=\"ShowOneDevice.php/?devKey=",$devKey,"\">",$username,"</a></td>";
-	        ShowDevStatus("battery", $devKey, $db);
-	        ShowDevStatus("signal", $devKey, $db);
-      	    ShowDevStatus("presence", $devKey, $db);
+	        ShowDevStatus("battery", $devKey, $db, "%");
+	        ShowDevStatus("signal", $devKey, $db, "%");
+      	    ShowDevStatus("presence", $devKey, $db, "");
+            $time = GetDevStatus("presence_time", $devKey, $db);
+            if ($time != null) {
+                $ago = ElapsedTime($time);
+                echo "<td>$ago</td>";
+            } else {
+                echo "<td>N/A</td>";
+            }
             ShowEvent($devKey, $db);
             echo "</tr>";
         }
