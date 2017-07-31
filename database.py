@@ -50,7 +50,10 @@ def GetStatus(devKey, item):
         value = rows[0]
         curs.execute("SELECT "+item+"_time FROM Status WHERE devKey="+str(devKey))
         rows = curs.fetchone()
-        time = datetime.strptime(rows[0], "%Y-%m-%d %H:%M:%S")
+        if rows != None:
+            time = datetime.strptime(rows[0], "%Y-%m-%d %H:%M:%S")
+        else:
+            time = "Unknown"
         #log.debug("value="+value+", time="+str(time))
         return value, time # Return value, time
     return None

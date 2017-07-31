@@ -220,7 +220,7 @@ def SetAttrVal(devKey, clstrId, attrId, value):
             #log.debug("Battery is "+str(varVal)+"%.  Get next reading at "+str(GetTempVal(devKey, "GetNextBatteryAfter")))
             database.SetStatus(devKey, "battery", varVal) # For web page
     if clstrId == zcl.Cluster.Temperature and attrId == zcl.Attribute.Celsius:
-        if value != "FF9C": # Don't know where this value comes from - should be "FFFF"
+        if value != "FF9C": # Don't know where this value (of -100) comes from - should be "7FFF" (signed value)
             varVal = int(value, 16) / 100 # Arrives in 0.01'C increments 
             database.SetStatus(devKey, "temperature", varVal) # For web page
     if clstrId == zcl.Cluster.OnOff and attrId == zcl.Attribute.OnOffState:

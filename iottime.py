@@ -14,6 +14,7 @@ import rules
 import variables
 import database
 import config
+import status
 
 appStartTime = datetime.now()
 oldMins = -1
@@ -47,6 +48,7 @@ def EventHandler(eventId, eventArg):
             CheckTimedRule("evening", now)  # No longer proper daylight (depending on cloud)
             CheckTimedRule("sunset", now) # Sun on horizon
             CheckTimedRule("dusk", now) # Sky now getting dark after sunset
+        status.BuildPage()  # Create status page, probably once/hour?
     if eventId == events.ids.HOURS:
         now = datetime.now()
         if now.hour == 0: # Midnight, time to calculate sunrise and sunset for new day
