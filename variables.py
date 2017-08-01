@@ -20,7 +20,7 @@ def Del(name):
 def Get(name):
     global varList
     for item in varList:
-        if item[0] == name:
+        if item[0].lower() == name.lower(): # Case-independent name matching
             return item[1] # Just return value associated with name
     return None # Indicate item not found
 

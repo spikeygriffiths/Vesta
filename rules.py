@@ -188,16 +188,14 @@ def Action(actList):
         elif actList[1] == "Alarm":
             events.IssueEvent(events.ids.ALARM, actList[2])
         # Could have other events here...
-    elif action == "synopsis": # First arg is email recipient
+    elif action == "status":  # Was synopsis
         emailAddress = config.Get("emailAddress")
         if emailAddress != None:
-            emailBody = []
-            #for items in devices.synopsis:
-            #    emailBody.append(' '.join(items))  # Tuples are joined by spaces
-            #cmdList = ["echo", "\""+'\n'.join(emailBody)+"\"", "|", "mail", "-s", "\"Update from IoT-Hub\"", ]
-            #cmdStr = " ".join(cmdList)
-            #call(cmdStr, shell=True)
-            #devices.synopsis = []   # Ready to start a new synopsis mail now
+            with open("status.html", "r") as status:    # Send status.html page as body of email
+                emailBody = status.readlines().replace('\n', '')
+            cmdList = ["echo", "\""+'\n'.join(emailBody)+"\"", "|", "mail", "-s", "\"Status from IoT-Hub\"", ]
+            cmdStr = " ".join(cmdList)
+            call(cmdStr, shell=True)
     elif action == "email": # All args are body of the text.  Fixed subject and email address
         emailAddress = config.Get("emailAddress")
         if emailAddress != None:
