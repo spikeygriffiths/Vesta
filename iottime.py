@@ -48,15 +48,15 @@ def EventHandler(eventId, eventArg):
             CheckTimedRule("evening", now)  # No longer proper daylight (depending on cloud)
             CheckTimedRule("sunset", now) # Sun on horizon
             CheckTimedRule("dusk", now) # Sky now getting dark after sunset
-        status.BuildPage()  # Create status page, probably once/hour?
     if eventId == events.ids.HOURS:
         now = datetime.now()
         if now.hour == 0: # Midnight, time to calculate sunrise and sunset for new day
             events.Issue(events.ids.NEWDAY)
     if eventId == events.ids.NEWDAY:
-            SetSunTimes()
-            log.RollLogs() # Roll the logs, to avoid running out of disc space
-            SetDayInfo()
+        SetSunTimes()
+        log.RollLogs() # Roll the logs, to avoid running out of disc space
+        SetDayInfo()
+        status.BuildPage()  # Create status page, once/day, based upon reported problems during the previous day
     if eventId == events.ids.WEATHER:
         if variables.Get("sunrise") != None:    # Can only use weather if we know sunrise & sunset
             now = datetime.now()

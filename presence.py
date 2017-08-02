@@ -8,11 +8,15 @@ import devices
 import devcmds
 import database
 import log
+import status
 
 class states():
     unknown = "Unknown"
     absent = "Absent"
     present = "Present"
+
+presenceFreq = {}
+absenceFreq = {}
 
 def EventHandler(eventId, eventArg):
     if eventId == events.ids.INIT:
@@ -34,6 +38,16 @@ def Check():  # Expected to be called infrequently - ie once/minute
         if database.GetDeviceItem(devKey, "nwkId") != "0000":  # Ignore hub
             presence, lastSeen = Get(devKey)
             if presence != None:    # It may have only just joined and still be unintialised (?)
+                if presence == states.present:  # Check database each minute to build up a picture of how often each device is present or absent
+                    if presenceFreq.get(devKey) != None:
+                        presenceFreq[devKey] = presenceFreq[devKey] + 1
+                    else:
+                        presenceFreq[devKey] = 1
+                elif presence == states.absent:
+                    if absenceFreq.get(devKey) != None:
+                        absenceFreq[devKey] = absenceFreq[devKey] + 1
+                    else:
+                        absenceFreq[devKey] = 1
                 if presence != states.absent:
                     if datetime.now() > lastSeen+timedelta(seconds=900) or (presence == states.unknown and "SED"!= database.GetDeviceItem(devKey, "devType")): # More than 15 minutes since we last heard from device, or it's unknown and listening
                         devcmds.Prod(devKey)    # Ask device a question, just to provoke a response                        
@@ -45,4 +59,20 @@ def Set(devKey, newState):
 
 def Get(devKey):
     return database.GetStatus(devKey, "presence")
+
+def GetFreq(devKey):
+    if presenceFreq.get(devKey) != None:
+        presence = presenceFreq.get(devKey)
+        if absenceFreq.get(devKey) != None:
+            absence = absenceFreq.get(devKey)
+        else:
+            absence = 0 # Never absent
+        presencePercentage = ((presence + absence) / presence) * 100
+    else:
+        presencePercentage = 0  # Never present
+    return presencePercentage
+
+def ClearFreqs():
+    presenceFreq.clear()
+    absenceFreq.clear()
 

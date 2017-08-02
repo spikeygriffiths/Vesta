@@ -119,7 +119,7 @@ def FindItemInList(item, listToCheck):
 def ParseCondition(ruleConditionList, trigger):
     #log.debug("Parsing: "+" ".join(ruleConditionList))
     subAnswers = ""
-    if ruleConditionList[0] == trigger: # If first condition (must be trigger) matches, then check rest
+    if ruleConditionList[0].lower() == trigger.lower(): # If first condition (must be trigger) matches (ignoring case), then check rest
         #log.debug("condition: "+ruleConditionList[0]+ " = trigger: "+trigger)
         subAnswers = subAnswers + "True"
         if len(ruleConditionList) > 0: # Only parse rest of condition if first item is true
@@ -218,6 +218,7 @@ def Action(actList):
 def CommandDev(action, devKey, actList):
     if devKey == None:
         log.fault("Device "+actList[1]+" from rules.txt not found in devices")
+        status.problem("rules", "Unknown device "+actList[1]+" in rules")
     else:
         if action == "SwitchOn":
             devcmds.SwitchOn(devKey)

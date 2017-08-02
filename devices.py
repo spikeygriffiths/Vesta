@@ -18,6 +18,7 @@ import presence
 import config
 import devcmds
 import queue
+import status
 
 globalDevKey = None
 pendingBinding = None # Needed because the BIND response doesn't include the cluster
@@ -219,6 +220,9 @@ def SetAttrVal(devKey, clstrId, attrId, value):
             varVal = int(int(value, 16) / 2) # Arrives in 0.5% increments, but drop fractional component
             #log.debug("Battery is "+str(varVal)+"%.  Get next reading at "+str(GetTempVal(devKey, "GetNextBatteryAfter")))
             database.SetStatus(devKey, "battery", varVal) # For web page
+            if varVal < 10: # Batteries below 10% are considered "low"
+                devName = database.GetDeviceItem(devKey, "userName")
+                status.problem(devName + "_batt", devName + " low battery ("+str(varVal)+"%)")
     if clstrId == zcl.Cluster.Temperature and attrId == zcl.Attribute.Celsius:
         if value != "FF9C": # Don't know where this value (of -100) comes from - should be "7FFF" (signed value)
             varVal = int(value, 16) / 100 # Arrives in 0.01'C increments 
