@@ -13,8 +13,8 @@ if ($db) {
     echo "About to send ",$query, " to DB<br>";
     $count = $db->exec($query);
     if ($count == 1) {
-        UpdateRules($oldUserName, $newUserName);    // Now go through the rules and make sure the old name is updated to the new
-        echo "<meta http-equiv=\"refresh\" content=\"0;url=/ShowOneDevice.php/?devKey=",$devKey,"\"/>";
+        UpdateRules($oldUserName, $newUserName, $db);    // Now go through the rules and make sure the old name is updated to the new
+        echo "<meta http-equiv=\"refresh\" content=\"0;url=/ShowOneDevice.php/?devKey=",$devKey,"\"/>"; # Automatically go back to where we came from
         echo "New name saved";
     } else {
         echo "Update failed, with count of:", $count, "<br>";
@@ -22,26 +22,5 @@ if ($db) {
 } else {
     echo "Failed to get a handle onto the database<br>";
 }
-echo "<a href=/ShowOneDevice.php/?devKey=",$devKey,">Show Device</a>";
-
-function UpdateRules($oldUserName, $newUserName)
-{
-    //echo "Replacing ",$oldUserName," with ",$newUserName;
-    $inHandle = fopen("/home/pi/hubapp/rules.txt", "r");
-    $outHandle = fopen("/home/pi/hubapp/new_rules.txt", "w");
-    if ($inHandle && $outHandle) {
-        while (!feof($inHandle)) {
-            $line = fgets($inHandle);
-            //echo "Read ",$line,"<br>";
-            $newLine = str_replace($oldUserName, $newUserName, $line); // Replace old with new name
-            //echo "Writing ",$newLine,"<br>";
-            fputs($outHandle, $newLine);
-        }
-    }
-    fclose($outHandle); 
-    fclose($inHandle); 
-    shell_exec("mv /home/pi/hubapp/rules.txt /home/pi/hubapp/old_rules.txt");
-    shell_exec("mv /home/pi/hubapp/new_rules.txt /home/pi/hubapp/rules.txt");
-    //shell_exec("chmod 666 /home/pi/hubapp/rules.txt");
-}
+echo "<a href=/ShowOneDevice.php/?devKey=",$devKey,">Show Device</a>"; # Let user go back to where we came from
 ?>

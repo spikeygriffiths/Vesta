@@ -54,4 +54,25 @@ function  GetDevStatus($item, $devKey, $db)
     return null;
 }
 
+function UpdateRules($oldUserName, $newUserName, $db)
+{
+    $updates = [];    # Get ready to make a list of all the updates
+    $numRules = 0;
+    $query = "SELECT rowid, * FROM Rules WHERE rule LIKE '%".$oldUserName."%' "; # Get all rules that mention our old device name
+    echo "Checking rules using ", $query, "<br>";
+    $sth = $db->prepare($query);
+    $sth->execute();
+    while ($row =  $sth->fetch()) {
+        $ruleTxt = $row['rule'];
+        $ruleId = $row['rowid'];
+        echo "Here's a rule that mentions ",$oldUserName, " - ", $ruleTxt, "<br>";
+        $newRule = str_replace($oldUserName, $newUserName, $ruleTxt); // Replace old with new name
+        echo "Updated rule that mentions ",$oldUserName, " - ", $newRule, "<br>";
+        $updates[$numRules++] = "UPDATE Rules SET rule=\"".$newRule."\" WHERE rowid=".$ruleId; # Build query to update existing rule
+    }
+    for ($index = 0; $index < $numRules; $index++) {
+        $count = $db->exec($updates[$index]); # Run all the updates
+    }
+}
+
 ?>

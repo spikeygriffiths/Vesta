@@ -16,9 +16,7 @@ import database
 import config
 import telegesis
 
-rulesFilename = "rules.txt"
-
-# Example rules.txt
+# Example rules
 # if HallwayPir==active do SwitchOn HallwayLight for 120
 # if HallwayBtn==TOGGLE do Toggle HallwayLight
 # if HallwayPir==active and 16:00<time<23:59 do SwitchOn HallwayLight for 120
@@ -82,33 +80,27 @@ def DeviceRun(devKey, restOfRule): # Run rule for specified device
         Run(name+restOfRule)
 
 def Run(trigger): # Run through the rules looking to see if we have a match for the trigger
-    rulesFile = Path(rulesFilename)
-    if rulesFile.is_file():
-        call("sudo chmod 666 "+rulesFilename, shell=True)    # Make sure we can use it
-        with open(rulesFilename) as rules:
-            log.debug("Running rule: "+ trigger)
-            if "==" in trigger:
-                sep = trigger.index("==")
-                triggerType = trigger[:sep]
-                triggerVal = trigger[sep+2:]
-                variables.Set(triggerType, triggerVal)
-            for line in rules:
-                rule = ' '.join(line.split()) # Compact multiple spaces into single ones and make each line into a rule
-                ruleList = rule.split(" ") # Make each rule into a list
-                if ruleList[0] == "if":
-                    doIndex = FindItemInList("do", ruleList) # Safely look for "do"
-                    if doIndex != None:
-                        if ParseCondition(ruleList[1:doIndex], trigger) == True: # Parse condition from element 1 to "do" 
-                            Action(ruleList[doIndex+1:]) # Do action
-                    # else skip rest of line
-                elif ruleList[0] == "do":
-                    Action(ruleList[1:])
-                # else assume the line is a comment and skip it
-            # end of rules
-            variables.Del(triggerType) # Make sure we don't re-run the same trigger
-    else:
-        call("touch "+rulesFilename, shell=True)
-        log.fault("Made new " + rulesFilename+" !")
+    rules = database.GetRules(trigger)  # Get a list of all rules that mention trigger
+    log.debug("Running rule: "+ trigger)
+    if "==" in trigger:
+        sep = trigger.index("==")
+        triggerType = trigger[:sep]
+        triggerVal = trigger[sep+2:]
+        variables.Set(triggerType, triggerVal)
+    for line in rules:
+        rule = ' '.join(line.split()) # Compact multiple spaces into single ones and make each line into a rule
+        ruleList = rule.split(" ") # Make each rule into a list
+        if ruleList[0] == "if":
+            doIndex = FindItemInList("do", ruleList) # Safely look for "do"
+            if doIndex != None:
+                if ParseCondition(ruleList[1:doIndex], trigger) == True: # Parse condition from element 1 to "do" 
+                    Action(ruleList[doIndex+1:]) # Do action
+            # else skip rest of line
+        elif ruleList[0] == "do":
+            Action(ruleList[1:])
+        # else assume the line is a comment and skip it
+    # end of rules
+    variables.Del(triggerType) # Make sure we don't re-run the same trigger
 
 def FindItemInList(item, listToCheck):
     try:
@@ -171,7 +163,9 @@ def GetConditionResult(test, condition):
         if isNumber(tstVal):
             varVal = str(varVal)
             tstVal = str(tstVal)
-        return eval(varVal + test + tstVal)
+        condStr = varVal + test + tstVal
+        log.debug("Evaluating '" + condStr + "'")
+        return eval(condStr)
     else:
         return False # If we couldn't find the item requested, assume the condition fails(?)
 
@@ -217,7 +211,7 @@ def Action(actList):
 
 def CommandDev(action, devKey, actList):
     if devKey == None:
-        log.fault("Device "+actList[1]+" from rules.txt not found in devices")
+        log.fault("Device "+actList[1]+" from rules not found in devices")
         status.problem("rules", "Unknown device "+actList[1]+" in rules")
     else:
         if action == "SwitchOn":

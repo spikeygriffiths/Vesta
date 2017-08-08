@@ -88,6 +88,7 @@ function ShowDeviceInfo($db, $devKey, $username)
     echo "</table>";
     //echo "<input type=\"submit\" value=\"Update name\"></form>";
     echo "<A href=\"/ChangeDevName.php/?devKey=",$devKey,"\">Change Name</A><br><br>";
+    echo "<button type=\"button\" onclick=\"window.location.href='/rules.php/?item=",$username,"'\">Rules</button><br><br>";
     if ("0000" != $nwkId) {
         echo "<A href=\"/Command.php/?cmd=identify ",$username," 30\">Identify for 30s</A><br><br>";
         $inClusters = GetDevItem("inClusters", $devKey, $db);

@@ -105,7 +105,9 @@ def GetGroupDevs(userName): # Get list of devices that belong to specified group
     return None
 
 # === Devices ===
-def GetDevicesCount():
+def GetDevicesCount():include "database.php";
+error_reporting(E_ALL); 
+
     global curs
     curs.execute("SELECT COUNT(*) FROM Devices") # Get number of devices
     rows = curs.fetchone()
@@ -167,4 +169,13 @@ def RemoveDevice(devKey):
     curs.execute("DELETE FROM Events WHERE devKey="+str(devKey))
     curs.execute("DELETE FROM Devices WHERE devKey="+str(devKey))
     db.commit() # Flush db to disk immediately
+
+# === Rules ===
+def GetRules(item):
+    global curs
+    ruleList = []
+    curs.execute("SELECT * FROM Rules WHERE rule LIKE '%"+item+"%'")
+    for row in curs:
+        ruleList.append(row[0]) # Build a list of all rules that mention item
+    return ruleList
 

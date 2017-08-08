@@ -59,6 +59,8 @@ def EventHandler(eventId, eventArg):
         status.BuildPage()  # Create status page, once/day, based upon reported problems during the previous day
     if eventId == events.ids.WEATHER:
         if variables.Get("sunrise") != None:    # Can only use weather if we know sunrise & sunset
+            # Replace all of the stuff below with a simple "sunlight" variable based on cloudcover, rain & snow as well as time of day
+            # Then use "if sunlight<25" for PIRs to turn on lights, etc.
             now = datetime.now()
             nowTime = datetime.strptime(now.strftime("%H:%M"), "%H:%M")
             extraTime = int(variables.Get("cloudCover"))    # Just take percentage cloudiness as minutes
