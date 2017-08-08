@@ -15,6 +15,7 @@ import iottime
 import database
 import config
 import telegesis
+import status
 
 # Example rules
 # if HallwayPir==active do SwitchOn HallwayLight for 120

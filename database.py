@@ -98,16 +98,14 @@ def GetGroupsWithDev(devKey):   # Return list of all group names that include sp
 
 def GetGroupDevs(userName): # Get list of devices that belong to specified group
     global curs
-    curs.execute("SELECT devKeyList FROM Groups WHERE userName=\""+userName+"\"")
+    curs.execute("SELECT devKeyList FROM Groups WHERE userName=\""+userName+"\" COLLATE NOCASE") # Case-insensitive matching
     rows = curs.fetchone()
     if rows != None:
         return "["+rows[0]+"]"  # List of comma separated devKeys.  Surrounding square brackets to convert to Python list
     return None
 
 # === Devices ===
-def GetDevicesCount():include "database.php";
-error_reporting(E_ALL); 
-
+def GetDevicesCount():
     global curs
     curs.execute("SELECT COUNT(*) FROM Devices") # Get number of devices
     rows = curs.fetchone()
@@ -117,7 +115,7 @@ error_reporting(E_ALL);
 
 def GetDevKey(item, value):
     global curs
-    curs.execute("SELECT devKey FROM Devices WHERE "+item+"=\""+value+"\"");
+    curs.execute("SELECT devKey FROM Devices WHERE "+item+"=\""+value+"\" COLLATE NOCASE") # Case-insensitive matching
     rows = curs.fetchone()
     if rows != None:
         return rows[0]
@@ -174,7 +172,7 @@ def RemoveDevice(devKey):
 def GetRules(item):
     global curs
     ruleList = []
-    curs.execute("SELECT * FROM Rules WHERE rule LIKE '%"+item+"%'")
+    curs.execute("SELECT * FROM Rules WHERE rule LIKE '%"+item+"%'") # NB LIKE is already csae-insensitive, so no need for COLLATE NOCASE
     for row in curs:
         ruleList.append(row[0]) # Build a list of all rules that mention item
     return ruleList

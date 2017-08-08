@@ -4,7 +4,8 @@ include "database.php";
 
 ini_set('display_errors', '1');
 $devKey=$_GET['devKey'];
-$newUserName = $_POST["UserName"];  // Get new user name from form
+$userName = $_POST["UserName"];  // Get new user name from form
+$newUserName = str_replace(" ", "_", $userName);    # Ensure there are no spaces in usernames by replacing them with underscores
 $db = DatabaseInit();
 if ($db) {
     $oldUserName = GetDevItem("userName", $devKey,$db);
