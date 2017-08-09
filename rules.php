@@ -32,11 +32,11 @@ function ShowRules($db, $item)
         $index++;
     }
     for ($ruleIdx = 0; $ruleIdx < $index/*sizeof(ruleTxts)?*/; $ruleIdx++) {
-        echo "<form action=\"/save_rules.php/?ruleId=",$ruleIds[$ruleIdx],"\" method=\"post\">";
+        echo "<form action=\"/save_rules.php/?ruleId=", $ruleIds[$ruleIdx], "&item=", $item, "\" method=\"post\">";
         echo "<input type=\"text\" size=\"100\" name=\"ruleTxt\" value=\"", $ruleTxts[$ruleIdx], "\">";
         echo "<input type=\"submit\" value=\"Update\"></form>";
     }
-    echo "<form action=\"/save_rules.php/?ruleId=-1\" method=\"post\">"; # Use -1 to indicate new rule
+    echo "<form action=\"/save_rules.php/?ruleId=-1&item=", $item, "\" method=\"post\">"; # Use -1 to indicate new rule
     echo "<input type=\"text\" size=\"100\" name=\"ruleTxt\" value=\"\"\">";
     echo "<input type=\"submit\" value=\"Update\"></form>";
 }

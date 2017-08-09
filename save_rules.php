@@ -6,6 +6,8 @@ include "database.php";
 echo "<html><body>";
 $ruleTxt = $_POST["ruleTxt"];  // Get new rule text from form
 $ruleId = $_GET['ruleId'];
+$item = $_GET['item'];
+
 $db = DatabaseInit();
 if ($db) {
     if ($ruleId != -1) {
@@ -20,7 +22,7 @@ if ($db) {
     echo "About to send ",$query, " to DB<br>";
     $count = $db->exec($query);
 }
-echo "<meta http-equiv=\"refresh\" content=\"0;url=/index.php\"/>"; # Automatically go to index page.  Ought to go back, really...
+echo "<meta http-equiv=\"refresh\" content=\"0;url=/rules.php/?item=", $item, "\"/>"; # Automatically go to rules page
 echo "<p><center><a href=\"/index.php\">Home</a></center>";
 echo "</body></html>";
 ?>
