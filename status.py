@@ -38,4 +38,4 @@ def BuildPage():
 
 def problem(key, value):
     issues[key] = value   # Add new, or update old, dictionary entry
-
+    log.fault(key + ":" + value)

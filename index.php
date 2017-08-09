@@ -15,7 +15,8 @@ if ($iotHubRunning) {
     echo "<button type=\"button\" onclick=\"window.location.href='ShowAllDevices.php'\">Devices</button><br><br>";
     echo "<button type=\"button\" onclick=\"window.location.href='Groups.php'\">Groups</button><br><br>";
     echo "<button type=\"button\" onclick=\"window.location.href='rules.php/?item=All'\">Rules</button><br><br>";
-    echo "<button type=\"button\" onclick=\"window.location.href='activity.php'\">Events</button><br><br>";
+    echo "<button type=\"button\" onclick=\"window.location.href='activity.php'\">Activity Log</button><br><br>";
+    echo "<button type=\"button\" onclick=\"window.location.href='variables.php'\">Variables</button><br><br>";
     if (file_exists($statusPage)) {
         echo "<button type=\"button\" onclick=\"window.location.href='$statusPage'\">Status</button><br><br>";
     }

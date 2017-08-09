@@ -165,8 +165,8 @@ def GetConditionResult(test, condition):
             varVal = str(varVal)
             tstVal = str(tstVal)
         else:
-            varVal = "'"+varVal + "'".lower()
-            tstVal = "'"+tstVal + "'".lower()   # Surround strings with quotes to make string comparisons work (Tuesday==Tuesday fails, although 'Tuesday'=='Tuesday' works)
+            varVal = "'"+varVal.lower() + "'"
+            tstVal = "'"+tstVal.lower() + "'"   # Surround strings with quotes to make string comparisons work (Tuesday==Tuesday fails, although 'Tuesday'=='Tuesday' works)
         condStr = varVal + test + tstVal
         log.debug("Evaluating '" + condStr + "'")
         return eval(condStr)

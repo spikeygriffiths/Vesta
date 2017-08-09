@@ -14,7 +14,7 @@ def Set(name, value):
 def Del(name):
     global varList
     for item in varList:
-        if item[0] == name:
+        if item[0].lower() == name.lower(): # Case-independent name matching
             varList.remove(item) # Remove tuple
     
 def Get(name):

@@ -11,9 +11,11 @@ import config
 import status
 
 owm = None
+apiKey = None
+location =  None
 
 def EventHandler(eventId, eventArg):
-    global owm
+    global owm, apiKey, location
     if eventId == events.ids.HOURS: # Get weather once/hour
         if owm == None:
             apiKey = config.Get("owmApiKey")
