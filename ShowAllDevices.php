@@ -10,10 +10,11 @@ echo "td, th {border: 2px solid #dddddd;text-align: left;padding: 2px }";
 echo "tr:nth-child(even) { background-color: #dddddd; }</style></head>";
 echo "<body>";
 echo "<center><h1>Devices</h1> ";
-echo "<button type=\"button\" onclick=\"window.location.href='AddNewDevices.php'\">Add new devices</button><br><br>";
+echo "<button type=\"button\" onclick=\"window.location.href='/AddNewDevices.php'\">Add new devices</button><br><br>";
 //print_r (PDO::getAvailableDrivers()); echo("<br>"); // Shows whether you have SQLite for PDO installed
 ShowDevices();
-echo "<br><a href=\"/index.php\">Home</a></center>";
+echo "<br>";
+echo "<button type=\"button\" onclick=\"window.location.href='/index.php'\">Home</button><br><br>";
 echo "</body></html>";
 
 function ShowDevStatus($item, $devKey, $db, $suffix)

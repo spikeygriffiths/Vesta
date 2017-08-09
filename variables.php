@@ -23,7 +23,7 @@ echo "<tr><th>Name</th><th>Value</th></tr>";
 for ($index = 0; $index < count($varsArray); $index += 2) {
     echo "<tr><td>",$varsArray[$index], "</td><td>", $varsArray[$index+1], "</td></tr>";
 }
-echo "</table>";
-echo "<center><br><a href=\"/index.php\">Home</a> </center>";
+echo "</table><br>";
+echo "<button type=\"button\" onclick=\"window.location.href='/index.php'\">Home</button><br><br>";
 echo "</body></html>";
 ?>

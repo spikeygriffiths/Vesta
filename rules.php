@@ -12,7 +12,10 @@ if ($item == "All") {
 }
 $db = DatabaseInit();
 ShowRules($db, $item);
-echo "<p><center><a href=\"/index.php\">Home</a></center>";
+if ($item != "All") {
+    echo "<button type=\"button\" onclick=\"window.location.href='/ShowAllDevices.php'\">Devices</button><br><br>";
+}
+echo "<button type=\"button\" onclick=\"window.location.href='/index.php'\">Home</button><br><br>";
 echo "</body></html>";
 
 function ShowRules($db, $item)

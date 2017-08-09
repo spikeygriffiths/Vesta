@@ -10,7 +10,8 @@ echo "<body>";
 echo "<center><h1>Groups</h1>";
 $db = DatabaseInit();
 ShowGroups($db);
-echo "<p><center><a href=\"/index.php\">Home</a></center>";
+echo "<br>";
+echo "<button type=\"button\" onclick=\"window.location.href='/index.php'\">Home</button><br><br>";
 echo "</body></html>";
 
 function ShowGroups($db)

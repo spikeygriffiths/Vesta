@@ -12,8 +12,8 @@ $db = DatabaseInit();
 echo "<center><h1>",$groupName,"</h1>";
 echo "<button type=\"button\" onclick=\"window.location.href='/DelGroup.php/?groupName=",$groupName,"'\">Remove all of ",$groupName,"</button><br><br>";
 ShowGroupInfo($db, $groupName);
-echo "<a href=\"/Groups.php\">Groups</a><br>";
-echo "<br><a href=\"/index.php\">Home</a> </center>";
+echo "<button type=\"button\" onclick=\"window.location.href='/Groups.php'\">Groups</button><br><br>";
+echo "<button type=\"button\" onclick=\"window.location.href='/index.php'\">Home</button><br><br>";
 echo "</body></html>";
 
 function ShowGroupInfo($db, $groupName)

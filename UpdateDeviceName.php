@@ -23,5 +23,6 @@ if ($db) {
 } else {
     echo "Failed to get a handle onto the database<br>";
 }
-echo "<a href=/ShowOneDevice.php/?devKey=",$devKey,">Show Device</a>"; # Let user go back to where we came from
+echo "<button type=\"button\" onclick=\"window.location.href='/ShowOneDevice.php/?devKey=",$devKey,"'>Show Device</button><br><br>"; # Let user go back to where we came from
+echo "<button type=\"button\" onclick=\"window.location.href='/index.php'\">Home</button><br><br>";
 ?>
