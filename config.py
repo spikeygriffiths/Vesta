@@ -3,6 +3,7 @@
 from pathlib import Path
 # App-specific modules
 import log
+import status
 
 configFilename = "config.txt"
 
@@ -18,5 +19,6 @@ def Get(item, default=None):
                         value = value.strip()   # Discard leading or trailing spaces
                         #log.debug("Matched:"+lineList[0]+ "with value:"+value)
                         return value
+    status.problem("config", "Missing variable from config.txt : "+item)
     return default  # If we get all through the config file without finding a match, use default value
  

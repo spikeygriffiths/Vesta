@@ -44,6 +44,14 @@ CREATE TABLE Groups (
   userName TEXT,
   devKeyList TEXT
 );
+
+DROP TABLE IF EXISTS Rules;
+CREATE TABLE Rules (
+  rule TEXT
+);
+# Could use;
+# .import rules.txt Rules;
+
 COMMIT;
 .quit
 # Next line needed to allow Python to write back to the database

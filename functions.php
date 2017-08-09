@@ -23,5 +23,18 @@ function HubCmd($cmd) // Takes a command for the hub and returns any string
         return $ans;
     } else echo "Socket  connection failed!<br>";
 }
+
+function ElapsedTime($timeStamp)    // Creates a string describing age of $timeStamp
+{
+    $now = date('Y-m-d H:i:s');
+    $elapsedSecs = abs(strtotime($now) - strtotime($timeStamp));
+    $elapsedMins = floor($elapsedSecs / 60);
+    $elapsedHours = floor($elapsedMins / 60);
+    $elapsedDays = floor($elapsedHours / 24);
+    if ($elapsedSecs < 120) return $elapsedSecs . " secs";
+    if ($elapsedMins < 120) return $elapsedMins . " mins";
+    if ($elapsedHours < 48) return $elapsedHours . " hours";
+    return $elapsedDays . " days";
+}
 ?>
 

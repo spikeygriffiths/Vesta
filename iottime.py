@@ -14,6 +14,7 @@ import rules
 import variables
 import database
 import config
+import status
 
 appStartTime = datetime.now()
 oldMins = -1
@@ -52,11 +53,14 @@ def EventHandler(eventId, eventArg):
         if now.hour == 0: # Midnight, time to calculate sunrise and sunset for new day
             events.Issue(events.ids.NEWDAY)
     if eventId == events.ids.NEWDAY:
-            SetSunTimes()
-            log.RollLogs() # Roll the logs, to avoid running out of disc space
-            SetDayInfo()
+        SetSunTimes()
+        log.RollLogs() # Roll the logs, to avoid running out of disc space
+        SetDayInfo()
+        status.BuildPage()  # Create status page, once/day, based upon reported problems during the previous day
     if eventId == events.ids.WEATHER:
         if variables.Get("sunrise") != None:    # Can only use weather if we know sunrise & sunset
+            # Replace all of the stuff below with a simple "sunlight" variable based on cloudcover, rain & snow as well as time of day
+            # Then use "if sunlight<25" for PIRs to turn on lights, etc.
             now = datetime.now()
             nowTime = datetime.strptime(now.strftime("%H:%M"), "%H:%M")
             extraTime = int(variables.Get("cloudCover"))    # Just take percentage cloudiness as minutesx

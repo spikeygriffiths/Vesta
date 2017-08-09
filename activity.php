@@ -40,7 +40,8 @@ echo "</select><p>";
 echo "<input type='submit' name='submit'/>";
 echo "</form>";
 ShowActivity($db, $dbTime, $titleTime, $devKey);
-echo "<br><a href=\"/index.php\">Home</a></center>";
+echo "<br>";
+echo "<button type=\"button\" onclick=\"window.location.href='/index.php'\">Home</button><br><br>";
 echo "</body></html>";
 
 function ShowActivity($db, $dbTime, $titleTime, $devKey)

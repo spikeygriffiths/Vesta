@@ -8,11 +8,14 @@ import log
 import events
 import variables
 import config
+import status
 
 owm = None
+apiKey = None
+location =  None
 
 def EventHandler(eventId, eventArg):
-    global owm
+    global owm, apiKey, location
     if eventId == events.ids.HOURS: # Get weather once/hour
         if owm == None:
             apiKey = config.Get("owmApiKey")
@@ -22,7 +25,7 @@ def EventHandler(eventId, eventArg):
             try:
                 obs = owm.weather_at_place(location)  # My location
             except:
-                log.fault("Couldn't get weather")
+                status.problem("Weather", "Feed failed!")
                 return
             w = obs.get_weather()
             cloudCover = w.get_clouds() # Percentage cloud cover
@@ -43,5 +46,5 @@ def EventHandler(eventId, eventArg):
             else:
                 snow = 0    # No snow
             variables.Set("snow", str(snow))
-            events.Issue(events.ids.WEATHER, windSpeed)    # Tell system
+            events.Issue(events.ids.WEATHER)    # Tell system that we have a new weather report
 

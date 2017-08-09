@@ -1,29 +1,28 @@
 <?php
 error_reporting(E_ALL);
 ini_set('display_errors', '1');
-$numRules=$_POST["numRules"];
-$handle = fopen("/home/pi/hubapp/rules.txt", "w");
-if ($handle) {
-    $previousRule = "";
-    for ($index = 0; $index < $numRules; $index++) {
-        $name = "rule".$index;
-        $ruleLine = $_POST[$name];
-        $ignore = False;
-        if ($ruleLine == "") {
-            if ($previousRule == "") { // Lose any double blank lines
-                $ignore = True;
-            }
+include "database.php";
+
+echo "<html><body>";
+$ruleTxt = $_POST["ruleTxt"];  // Get new rule text from form
+$ruleId = $_GET['ruleId'];
+$item = $_GET['item'];
+
+$db = DatabaseInit();
+if ($db) {
+    if ($ruleId != -1) {
+        if ($ruleTxt != "") {
+            $query = "UPDATE Rules SET rule=\"".$ruleTxt."\" WHERE rowid=".$ruleId; # Update existing rule
+        } else {
+            $query = "DELETE FROM Rules WHERE rowid=".$ruleId;  # Remove empty rule
         }
-       $previousRule = $ruleLine;
-        if ($ignore == False) {
-            $ruleLine = $ruleLine."\n";
-            fputs($handle, $ruleLine);
-        }
+    } else {
+        $query = "INSERT INTO Rules VALUES(\"".$ruleTxt."\")";  # Add new rule
     }
-    fclose($handle); 
-    echo "<meta http-equiv=\"refresh\" content=\"1;url=rules.php\" />";
-    echo "New rules saved";
-} else {
-    echo "<br>Try chmod 666 home/pi/hubapp/rules.txt...<br>";
+    echo "About to send ",$query, " to DB<br>";
+    $count = $db->exec($query);
 }
+echo "<meta http-equiv=\"refresh\" content=\"0;url=/rules.php/?item=", $item, "\"/>"; # Automatically go to rules page
+echo "<p><center><a href=\"/index.php\">Home</a></center>";
+echo "</body></html>";
 ?>

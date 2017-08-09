@@ -18,8 +18,8 @@ $db = DatabaseInit();
 $username = GetDevItem("userName", $devKey,$db);
 echo "<center><h1>",$username,"</h1>";
 ShowDeviceInfo($db, $devKey, $username);
-echo "<a href=\"/ShowAllDevices.php\">All Devices</a><br><br>";
-echo "<a href=\"/index.php\">Home</a>";
+echo "<br><br><button type=\"button\" onclick=\"window.location.href='/ShowAllDevices.php'\">All Devices</button><br><br>";
+echo "<button type=\"button\" onclick=\"window.location.href='/index.php'\">Home</button><br><br>";
 echo "</body></html>";
 
 function ShowDevStatus($item, $name, $devKey, $db)
@@ -51,7 +51,7 @@ function ShowDeviceInfo($db, $devKey, $username)
 {
     $nwkId = GetDevItem("nwkId", $devkey, $db);
     if ("0000" != $nwkId) {
-        echo "<A href=\"/DelDevice.php/?devId=",$username,"\">Remove Device</A><br><br>";    // Make sure this won't be accidentally pressed
+        echo "<button type=\"button\" onclick=\"window.location.href='/DelDevice.php/?devId=",$username,"'\">Remove Device</button><br><br>";
     }
     //echo "<center><form action=\"/UpdateDeviceName.php/?devKey=",$devKey,"\" method=\"post\">";
     echo "<table>";
@@ -87,12 +87,13 @@ function ShowDeviceInfo($db, $devKey, $username)
     }
     echo "</table>";
     //echo "<input type=\"submit\" value=\"Update name\"></form>";
-    echo "<A href=\"/ChangeDevName.php/?devKey=",$devKey,"\">Change Name</A><br><br>";
+    echo "<br><button type=\"button\" onclick=\"window.location.href='/ChangeDevName.php/?devKey=",$devKey,"'\">Change Name</button>&nbsp&nbsp&nbsp";
+    echo "<button type=\"button\" onclick=\"window.location.href='/rules.php/?item=",$username,"'\">Rules</button>&nbsp&nbsp&nbsp";
     if ("0000" != $nwkId) {
-        echo "<A href=\"/Command.php/?cmd=identify ",$username," 30\">Identify for 30s</A><br><br>";
+        echo "<button type=\"button\" onclick=\"window.location.href='/Command.php/?cmd=identify ",$username," 30'\">Identify for 30s</button>&nbsp&nbsp&nbsp";
         $inClusters = GetDevItem("inClusters", $devKey, $db);
         if (strpos($inClusters, "0006") !== false) { // Is switchable, eg smartplug, bulb, etc.
-            echo "<A href=\"/Command.php/?cmd=toggle ",$username,"\">Toggle</A><br><br>";
+            echo "<button type=\"button\" onclick=\"window.location.href='/Command.php/?cmd=toggle ",$username,"'\">Toggle</button>&nbsp&nbsp&nbsp";
         }
         if (strpos($inClusters, "0008") !== false) { // Is dimmable, eg lamp, bulb
             echo "Brightness: <a href=\"/ImageMap.php/?devId=",$username,"&cmd=dim&map=\"><img src=\"/UpRamp.png\" width=100 height=20 alt=\"Level\" ismap=\"ismap\"></a><br><br>";  // Php page will GET x,y,

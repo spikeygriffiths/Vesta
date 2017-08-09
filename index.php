@@ -8,17 +8,21 @@ echo "<center><h1>IoT Hub</h1>";
 echo "Now: ", date('Y-m-d H:i:s'), "<br>";
 $ps = shell_exec("ps ax");
 $iotHubRunning = (strpos($ps, "hubapp.py") !== false);
+$statusPage = "status.html";
 if ($iotHubRunning) {
     echo "UpTime: ",HubCmd("uptime", True),"<br>";
     echo "<br>";
     echo "<button type=\"button\" onclick=\"window.location.href='ShowAllDevices.php'\">Devices</button><br><br>";
     echo "<button type=\"button\" onclick=\"window.location.href='Groups.php'\">Groups</button><br><br>";
-    echo "<button type=\"button\" onclick=\"window.location.href='rules.php'\">Rules</button><br><br>";
-    echo "<button type=\"button\" onclick=\"window.location.href='activity.php'\">Events</button><br><br>";
-    echo "<button type=\"button\" onclick=\"window.location.href='log.php'\">Show Debugging Log</button><br><br>";
-    echo "<button type=\"button\" onclick=\"window.location.href='info.php'\">Send Info Command</button><br><br>";
-    echo "<br><br>";
-    echo "<a href='https://docs.google.com/document/d/1BPCPYH9JV_Ekot3clXyhLmIPgkDzyd2aZhu5PGcCNKw/edit?usp=sharing' target='_blank'>Documentation</a><br><br>";
+    echo "<button type=\"button\" onclick=\"window.location.href='rules.php/?item=All'\">Rules</button><br><br>";
+    echo "<button type=\"button\" onclick=\"window.location.href='activity.php'\">Activity Log</button><br><br>";
+    echo "<button type=\"button\" onclick=\"window.location.href='variables.php'\">Variables</button><br><br>";
+    if (file_exists($statusPage)) {
+        echo "<button type=\"button\" onclick=\"window.location.href='$statusPage'\">Status</button><br><br>";
+    }
+    #echo "<button type=\"button\" onclick=\"window.location.href='log.php'\">Show Debugging Log</button><br><br>";
+    #echo "<button type=\"button\" onclick=\"window.location.href='info.php'\">Send Info Command</button><br><br>";
+    echo "<button type=\"button\" onclick=\"window.location.href='https://docs.google.com/document/d/1BPCPYH9JV_Ekot3clXyhLmIPgkDzyd2aZhu5PGcCNKw/edit?usp=sharing'\">Documentation</button><br><br>";
     echo "</center>";
  } else {
     echo "<br>";

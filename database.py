@@ -50,7 +50,10 @@ def GetStatus(devKey, item):
         value = rows[0]
         curs.execute("SELECT "+item+"_time FROM Status WHERE devKey="+str(devKey))
         rows = curs.fetchone()
-        time = datetime.strptime(rows[0], "%Y-%m-%d %H:%M:%S")
+        if rows != None and rows[0] != None:
+            time = datetime.strptime(rows[0], "%Y-%m-%d %H:%M:%S")
+        else:
+            time = "Unknown"
         #log.debug("value="+value+", time="+str(time))
         return value, time # Return value, time
     return None
@@ -95,7 +98,7 @@ def GetGroupsWithDev(devKey):   # Return list of all group names that include sp
 
 def GetGroupDevs(userName): # Get list of devices that belong to specified group
     global curs
-    curs.execute("SELECT devKeyList FROM Groups WHERE userName=\""+userName+"\"")
+    curs.execute("SELECT devKeyList FROM Groups WHERE userName=\""+userName+"\" COLLATE NOCASE") # Case-insensitive matching
     rows = curs.fetchone()
     if rows != None:
         return "["+rows[0]+"]"  # List of comma separated devKeys.  Surrounding square brackets to convert to Python list
@@ -112,7 +115,7 @@ def GetDevicesCount():
 
 def GetDevKey(item, value):
     global curs
-    curs.execute("SELECT devKey FROM Devices WHERE "+item+"=\""+value+"\"");
+    curs.execute("SELECT devKey FROM Devices WHERE "+item+"=\""+value+"\" COLLATE NOCASE") # Case-insensitive matching
     rows = curs.fetchone()
     if rows != None:
         return rows[0]
@@ -164,4 +167,13 @@ def RemoveDevice(devKey):
     curs.execute("DELETE FROM Events WHERE devKey="+str(devKey))
     curs.execute("DELETE FROM Devices WHERE devKey="+str(devKey))
     db.commit() # Flush db to disk immediately
+
+# === Rules ===
+def GetRules(item):
+    global curs
+    ruleList = []
+    curs.execute("SELECT * FROM Rules WHERE rule LIKE '%"+item+"%'") # NB LIKE is already csae-insensitive, so no need for COLLATE NOCASE
+    for row in curs:
+        ruleList.append(row[0]) # Build a list of all rules that mention item
+    return ruleList
 

@@ -13,7 +13,7 @@ function ConnectToHub($addr, $port)
 
 function HubCmd($cmd, $expRsp) // Takes a command for the hub and returns any string
 {
-    $hubSck = ConnectToHub("127.0.0.1", 12345);
+    $hubSck = ConnectToHub("127.0.0.1", 12345); # Local machine, HubApp port
     if ($hubSck != false) {
         socket_write($hubSck, $cmd, strlen($cmd));
         if ($expRsp) {

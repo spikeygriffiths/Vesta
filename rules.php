@@ -1,29 +1,46 @@
 <?php
+include "database.php";
+error_reporting(E_ALL); 
+$item = $_GET['item'];
 
+echo "<html><body>";
 echo "<center>";
-echo "<H1>Rules</H1>";
-echo "</center>";
-echo "<form action=\"save_rules.php\" method=\"post\">";
-ShowRules("/home/pi/hubapp/rules.txt");
-echo "<input type=\"submit\" value=\"Update Rules\">";
-echo "</form>";
-echo "<center>";
-echo "<a href=\"index.php\">Home</a>";
-echo "</center>";
+if ($item == "All") {
+    echo "<H1>All Rules</H1>";
+} else {
+    echo "<H1>Rules for ",$item,"</H1>";
+}
+$db = DatabaseInit();
+ShowRules($db, $item);
+if ($item != "All") {
+    echo "<button type=\"button\" onclick=\"window.location.href='/ShowAllDevices.php'\">Devices</button><br><br>";
+}
+echo "<button type=\"button\" onclick=\"window.location.href='/index.php'\">Home</button><br><br>";
+echo "</body></html>";
 
-function ShowRules($filename)
+function ShowRules($db, $item)
 {
+    $ruleTxts = [];
+    $ruleIds = [];
     $index = 0;
-    $handle = fopen($filename, "r");
-    if ($handle) {
-        while (!feof($handle)) {
-            $line = fgets($handle);
-            echo "<input type=\"text\" size=\"100\" name=\"rule", $index, "\" value=\"", $line, "\"><br>";
-            $index++;
-        }
-        fclose($handle); 
+    if ($item == "All") {
+        $sth = $db->prepare("SELECT rowid, * FROM Rules");
+    } else {
+        $sth = $db->prepare("SELECT rowid, * FROM Rules WHERE rule LIKE '%".$item."%' ");
     }
-    echo "<input type=\"text\" size=\"100\" name=\"rule", $index, "\"><br>"; // Always have a blank rule at the end to add 
-    echo "<input type=\"hidden\" name=\"numRules\", value=\"",$index+1,"\">";
+    $sth->execute();
+    while ($row =  $sth->fetch()) {
+        $ruleTxts[$index] = $row['rule'];
+        $ruleIds[$index] = $row['rowid'];
+        $index++;
+    }
+    for ($ruleIdx = 0; $ruleIdx < $index/*sizeof(ruleTxts)?*/; $ruleIdx++) {
+        echo "<form action=\"/save_rules.php/?ruleId=", $ruleIds[$ruleIdx], "&item=", $item, "\" method=\"post\">";
+        echo "<input type=\"text\" size=\"100\" name=\"ruleTxt\" value=\"", $ruleTxts[$ruleIdx], "\">";
+        echo "<input type=\"submit\" value=\"Update\"></form>";
+    }
+    echo "<form action=\"/save_rules.php/?ruleId=-1&item=", $item, "\" method=\"post\">"; # Use -1 to indicate new rule
+    echo "<input type=\"text\" size=\"100\" name=\"ruleTxt\" value=\"\"\">";
+    echo "<input type=\"submit\" value=\"Update\"></form>";
 }
 ?>
