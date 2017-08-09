@@ -91,7 +91,9 @@ class Commands(cmd.Cmd):
         """vars [item]
         Show all variables, or just variables that contain item"""
         if item == "":
-            pprint (variables.varList)
+            vars = variables.varList
+            vars.sort()
+            pprint (vars)
         else:
             itemisedList = []
             for v in variables.varList:

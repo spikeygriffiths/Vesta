@@ -127,8 +127,8 @@ def ParseCondition(ruleConditionList, trigger):
                     startTime = iottime.Get(condition[:sep])
                     endTime = iottime.Get(condition[sep+6:])
                     if endTime < startTime: # Handle midnight-crossing here...
-                        midnight = datetime.strptime(0:00, "%H:%M")
-                        if nowTime > datetime.strptime(12:00, "%H:%M"): # After midday but before midnight
+                        midnight = datetime.strptime("0:00", "%H:%M")
+                        if nowTime > datetime.strptime("12:00", "%H:%M"): # After midday but before midnight
                            subAnswers = subAnswers + str(IsTimeBetween(startTime, nowTime, midnight))
                         else: # Assume after midnight
                            subAnswers = subAnswers + str(IsTimeBetween(midnight, nowTime, endTime))
@@ -152,7 +152,7 @@ def ParseCondition(ruleConditionList, trigger):
     else:
         return False
 
-def IsTimeBetween(startTime, nowTime, endTime) 
+def IsTimeBetween(startTime, nowTime, endTime):
     if startTime <= nowTime <= endTime:
        return True
     else:
