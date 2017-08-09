@@ -126,10 +126,14 @@ def ParseCondition(ruleConditionList, trigger):
                     nowTime = datetime.strptime(datetime.now().strftime("%H:%M"), "%H:%M")
                     startTime = iottime.Get(condition[:sep])
                     endTime = iottime.Get(condition[sep+6:])
-                    if startTime <= nowTime <= endTime:
-                       subAnswers = subAnswers + "True"
-                    else:
-                       subAnswers = subAnswers + "False"
+                    if endTime < startTime: # Handle midnight-crossing here...
+                        midnight = datetime.strptime(0:00, "%H:%M")
+                        if nowTime > datetime.strptime(12:00, "%H:%M"): # After midday but before midnight
+                           subAnswers = subAnswers + str(IsTimeBetween(startTime, nowTime, midnight))
+                        else: # Assume after midnight
+                           subAnswers = subAnswers + str(IsTimeBetween(midnight, nowTime, endTime))
+                    else:   # Doesn't involve midnight
+                       subAnswers = subAnswers + str(IsTimeBetween(startTime, nowTime, endTime))
                 elif "<=" in condition:
                     subAnswers = subAnswers + str(GetConditionResult("<=", condition))
                 elif ">=" in condition:
@@ -147,6 +151,12 @@ def ParseCondition(ruleConditionList, trigger):
         return True
     else:
         return False
+
+def IsTimeBetween(startTime, nowTime, endTime) 
+    if startTime <= nowTime <= endTime:
+       return True
+    else:
+       return False
 
 def isNumber(s):
     try:
@@ -175,15 +185,15 @@ def GetConditionResult(test, condition):
 
 def Action(actList):
     log.debug("Action with: "+str(actList))
-    action = actList[0]
-    if action == "Log":
+    action = actList[0].lower()
+    if action == "Log".lower():
         log.debug("Rule says Log event for "+' '.join(actList[1:]))
-    elif action == "Play":
+    elif action == "Play".lower():
         call(["omxplayer", "-o", actList[1], actList[2]])
-    elif action == "Event":
-        if actList[1] == "TimeOfDay":
+    elif action == "Event".lower():
+        if actList[1].lower() == "TimeOfDay".lower():
             events.IssueEvent(events.ids.TIMEOFDAY, actList[2])
-        elif actList[1] == "Alarm":
+        elif actList[1].lower() == "Alarm".lower():
             events.IssueEvent(events.ids.ALARM, actList[2])
         # Could have other events here...
     elif action == "status":  # Was synopsis
@@ -218,21 +228,21 @@ def CommandDev(action, devKey, actList):
         log.fault("Device "+actList[1]+" from rules not found in devices")
         status.problem("rules", "Unknown device "+actList[1]+" in rules")
     else:
-        if action == "SwitchOn":
+        if action == "SwitchOn".lower():
             devcmds.SwitchOn(devKey)
             if len(actList) > 3:
                 if actList[2] == "for":
                     SetOnDuration(devKey, int(actList[3],10))
-        elif action == "SwitchOff":
+        elif action == "SwitchOff".lower():
             devcmds.SwitchOff(devKey)
-        elif action == "Toggle":
+        elif action == "Toggle".lower():
             devcmds.Toggle(devKey)
-        elif action == "Dim" and actList[2] == "to":
+        elif action == "Dim".lower() and actList[2] == "to":
             devcmds.Dim(devKey,float(actList[3]))
             if len(actList) > 5:
                 if actList[4] == "for":
                     SetOnDuration(devKey, int(actList[5],10))
-        elif action == "HueSat":    # Syntax is "do HueSat <Hue in degrees>,<fractional saturation>
+        elif action == "HueSat".lower():    # Syntax is "do HueSat <Hue in degrees>,<fractional saturation>
             devcmds.Colour(devKey, int(actList[3],10), float(actList[4]))
         else:
             log.debug("Unknown action: "+action +" for device: "+actList[1])

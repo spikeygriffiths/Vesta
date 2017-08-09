@@ -25,8 +25,7 @@ def EventHandler(eventId, eventArg):
             try:
                 obs = owm.weather_at_place(location)  # My location
             except:
-                status.problem("weather", "Weather feed failed!")
-                log.fault("Couldn't get weather")
+                status.problem("Weather", "Feed failed!")
                 return
             w = obs.get_weather()
             cloudCover = w.get_clouds() # Percentage cloud cover
