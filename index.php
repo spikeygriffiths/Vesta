@@ -3,7 +3,7 @@ error_reporting(E_ALL);
 include "HubCmd.php";
 
 echo "<html><head>";
-echo "<link rel=\"shortcut icon\" type=\"image/x-icon\" href=\"vestaLogo.png\" />";
+echo "<link rel=\"icon\" type=\"image/ico\" href=\"/favicon.ico\"/>";
 echo "</head><body>";
 echo "<center><img src='vestaTitle.png' width=128 height=128><br>";
 echo "Now: ", date('Y-m-d H:i:s'), "<br>";

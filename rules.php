@@ -3,7 +3,8 @@ include "database.php";
 error_reporting(E_ALL); 
 $item = $_GET['item'];
 
-echo "<html><body>";
+echo "<html><head>";
+echo "</head><body>";
 echo "<center>";
 if ($item == "All") {
     echo "<H1>All Rules</H1>";

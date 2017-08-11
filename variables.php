@@ -3,8 +3,9 @@ error_reporting(E_ALL);
 include "HubCmd.php";
 
 $varsArray = [];
-echo "<html>";
-echo "<head><style>table {font-family:arial, sans-serif;border-collapse: collapse;width: 100 % }";
+echo "<html><head>";
+echo "<link rel=\"icon\" type=\"image/ico\" href=\"/favicon.ico\"/>";
+echo "<style>table {font-family:arial, sans-serif;border-collapse: collapse;width: 100 % }";
 echo "td, th {border: 2px solid #dddddd;text-align: left;padding: 2px }";
 echo "tr:nth-child(even) { background-color: #dddddd; }</style></head>";
 echo "<body>";

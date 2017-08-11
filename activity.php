@@ -2,8 +2,9 @@
 include "database.php";
 error_reporting(E_ALL); 
 
-echo "<html>";
-echo "<head><style>table {font-family:arial, sans-serif;border-collapse: collapse;width: 100 % }";
+echo "<html><head>";
+echo "<link rel=\"icon\" type=\"image/ico\" href=\"/favicon.ico\"/>";   # Not sure this is needed - works fine in Chrome without it
+echo "<style>table {font-family:arial, sans-serif;border-collapse: collapse;width: 100 % }";
 echo "td, th {border: 2px solid #dddddd;text-align: left;padding: 2px }";
 echo "</style></head>";
 echo "<body>";
