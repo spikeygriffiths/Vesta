@@ -75,4 +75,22 @@ function UpdateRules($oldUserName, $newUserName, $db)
     }
 }
 
+function GetAppState($item, $db)
+{
+    $result = $db->query("SELECT Value FROM AppState WHERE Name=\"".$item."\"");
+    if ($result != null) {
+        $result->setFetchMode(PDO::FETCH_ASSOC);
+        $fetch = $result->fetch();
+        if ($fetch != null) {
+            return $fetch["Value"];
+        }
+    }
+    return null;
+}
+
+function SetAppState($item, $val, $db)
+{
+    $db->exec("REPLACE INTO AppState VALUES(\"".$item."\", \"".$val."\")"); # Run the update
+}
+
 ?>

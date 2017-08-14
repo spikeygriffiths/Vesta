@@ -52,6 +52,9 @@ CREATE TABLE Rules (
 # Could use;
 # .import rules.txt Rules;
 
+DROP TABLE IF EXISTS AppState;
+CREATE TABLE AppState (Name TEXT PRIMARY KEY, Value TEXT);
+
 COMMIT;
 .quit
 # Next line needed to allow Python to write back to the database

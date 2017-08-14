@@ -58,7 +58,11 @@ def EventHandler(eventId, eventArg):
                 sckLst.append(cliSck)
                 #log.debug("New connection from web page!")
             else:
-                cmd = cliSck.recv(100)
+                try:
+                    cmd = cliSck.recv(100)
+                except OSError as err:  # OSError: [Errno 9] Bad file descriptor"
+                    database.NewEvent(0, "Web command failed with " + err.args[1]) # 0 is always hub
+                    cmd = ""    # No command if there was a failure                
                 if cmd:
                     cmd = cmd.decode()
                     log.debug("Got cmd \""+ cmd+"\" from web page")
