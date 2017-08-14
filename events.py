@@ -2,7 +2,7 @@
 
 # App-specific Python modules
 import telegesis
-import hubapp
+import vesta
 import devices
 import rules
 import commands
@@ -11,9 +11,6 @@ import iottime
 import database
 import weather
 import presence
-
-if __name__ == "__main__":
-    hubapp.main()
 
 class ids:
     INIT = 0 # No arg
@@ -40,7 +37,7 @@ class ids:
 
 def Issue(eventId, eventArg=0):
     # Tell all interested parties about the new event
-    hubapp.EventHandler(eventId, eventArg)
+    vesta.EventHandler(eventId, eventArg)
     telegesis.EventHandler(eventId, eventArg)
     database.EventHandler(eventId, eventArg)
     devices.EventHandler(eventId, eventArg)

@@ -1,6 +1,6 @@
 <?php
 // functions.php
-// Useful functions for talking to hubapp
+// Useful functions for talking to Vesta
 
 function ConnectToHub($addr, $port)
 {

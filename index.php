@@ -8,9 +8,9 @@ echo "</head><body>";
 echo "<center><img src='vestaTitle.png' width=128 height=128><br>";
 echo "Now: ", date('Y-m-d H:i:s'), "<br>";
 $ps = shell_exec("ps ax");
-$iotHubRunning = (strpos($ps, "hubapp.py") !== false);
+$vestaRunning = (strpos($ps, "vesta.py") !== false);
 $statusPage = "status.html";
-if ($iotHubRunning) {
+if ($vestaRunning) {
     echo "UpTime: ",HubCmd("uptime", True),"<br>";
     echo "<br>";
     echo "<button type=\"button\" onclick=\"window.location.href='ShowAllDevices.php'\">Devices</button><br><br>";
@@ -27,7 +27,7 @@ if ($iotHubRunning) {
     echo "</center>";
  } else {
     echo "<br>";
-    echo "<center><h2>IoT Hub stopped</h2></center>"; 
+    echo "<center><h2>Vesta stopped</h2></center>"; 
     //$reason = shell_exec("tail --lines=20 /home/pi/hubapp/today.log");
     //echo "<b>Last lines of today's hub log;</b><br>",nl2br($reason);
     $fragmentSize = 1000;

@@ -1,6 +1,6 @@
 #!commands.py
 
-# Command Line Interpreter module for hubapp
+# Command Line Interpreter module for Vesta
 
 # Standard Python modules
 import cmd
@@ -22,7 +22,7 @@ import events
 import telegesis
 import variables
 import rules
-import hubapp
+import vesta
 import log
 import iottime
 import database
@@ -43,9 +43,7 @@ def EventHandler(eventId, eventArg):
             sck.bind(('', port))    # Listen on all available interfaces
         except OSError as err: # "OSError: [Errno 98] Address already in use"
             database.NewEvent(0, "Socket bind failed with " + err.args[1]) # 0 is always hub
-            database.NewEvent(0, "Rebooting...") # 0 is always hub
-            events.Issue(events.ids.SHUTDOWN)   # Tell system we're about to shutdown
-            os.system("sudo reboot")    # Unrecoverable, so reboot entire machine...
+            vesta.Reboot()
         sck.listen(0)
         sckLst = [sck]
     if eventId == events.ids.SECONDS:
