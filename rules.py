@@ -111,47 +111,42 @@ def FindItemInList(item, listToCheck):
 
 def ParseCondition(ruleConditionList, trigger):
     #log.debug("Parsing: "+" ".join(ruleConditionList))
-    subAnswers = ""
-    if ruleConditionList[0].lower() == trigger.lower(): # If first condition (must be trigger) matches (ignoring case), then check rest
-        #log.debug("condition: "+ruleConditionList[0]+ " = trigger: "+trigger)
-        subAnswers = subAnswers + "True"
-        if len(ruleConditionList) > 0: # Only parse rest of condition if first item is true
-            for condition in ruleConditionList[1:]:
-                if condition == "and":
-                    subAnswers = subAnswers+" and " # Note surrounding spaces, for python eval()
-                elif condition == "or":
-                    subAnswers = subAnswers+" or "
-                elif "<time<" in condition:
-                    sep = condition.index("<time<") # Handle time here
-                    nowTime = datetime.strptime(datetime.now().strftime("%H:%M"), "%H:%M")
-                    startTime = iottime.Get(condition[:sep])
-                    endTime = iottime.Get(condition[sep+6:])
-                    if endTime < startTime: # Handle midnight-crossing here...
-                        almostMidnight = datetime.strptime("23:59", "%H:%M")
-                        midnight = datetime.strptime("0:00", "%H:%M")
-                        if nowTime > datetime.strptime("12:00", "%H:%M"): # After midday but before midnight
-                           subAnswers = subAnswers + str(IsTimeBetween(startTime, nowTime, almostMidnight))
-                        else: # Assume after midnight
-                           subAnswers = subAnswers + str(IsTimeBetween(midnight, nowTime, endTime))
-                    else:   # Doesn't involve midnight
-                       subAnswers = subAnswers + str(IsTimeBetween(startTime, nowTime, endTime))
-                elif "<=" in condition:
-                    subAnswers = subAnswers + str(GetConditionResult("<=", condition))
-                elif ">=" in condition:
-                    subAnswers = subAnswers + str(GetConditionResult(">=", condition))
-                elif "<" in condition:
-                    subAnswers = subAnswers + str(GetConditionResult("<", condition))
-                elif ">" in condition:
-                    subAnswers = subAnswers + str(GetConditionResult(">", condition))
-                elif "==" in condition:
-                    subAnswers = subAnswers + str(GetConditionResult("==", condition))
-            # End of loop
-    else: # Initial condition failed
-        subAnswers = subAnswers + "False"
-    if eval(subAnswers) == True:
-        return True
+    subAnswers = "True"
+    for condition in ruleConditionList[1:]:
+        if condition == "and":
+            subAnswers = subAnswers+" and " # Note surrounding spaces, for python eval()
+        elif condition == "or":
+            subAnswers = subAnswers+" or "
+        elif "<time<" in condition:
+            sep = condition.index("<time<") # Handle time here
+            nowTime = datetime.strptime(datetime.now().strftime("%H:%M"), "%H:%M")
+            startTime = iottime.Get(condition[:sep])
+            endTime = iottime.Get(condition[sep+6:])
+            if endTime < startTime: # Handle midnight-crossing here...
+                almostMidnight = datetime.strptime("23:59", "%H:%M")
+                midnight = datetime.strptime("0:00", "%H:%M")
+                if nowTime > datetime.strptime("12:00", "%H:%M"): # After midday but before midnight
+                   subAnswers = subAnswers + str(IsTimeBetween(startTime, nowTime, almostMidnight))
+                else: # Assume after midnight
+                   subAnswers = subAnswers + str(IsTimeBetween(midnight, nowTime, endTime))
+            else:   # Doesn't involve midnight
+               subAnswers = subAnswers + str(IsTimeBetween(startTime, nowTime, endTime))
+        elif "<=" in condition:
+            subAnswers = subAnswers + str(GetConditionResult("<=", condition))
+        elif ">=" in condition:
+            subAnswers = subAnswers + str(GetConditionResult(">=", condition))
+        elif "<" in condition:
+            subAnswers = subAnswers + str(GetConditionResult("<", condition))
+        elif ">" in condition:
+            subAnswers = subAnswers + str(GetConditionResult(">", condition))
+        elif "==" in condition:
+            subAnswers = subAnswers + str(GetConditionResult("==", condition))
+    # End of loop
+    if subAnswers != "":
+        log.debug("About to evaluate:'"+subAnswers+"'")
+        return eval(subAnswers)
     else:
-        return False
+        return False    # Empty string is always False
 
 def IsTimeBetween(startTime, nowTime, endTime):
     if startTime <= nowTime <= endTime:

@@ -21,7 +21,6 @@ def Del(name):
 def Get(name):
     global varList
     if name.lower() == "rand":
-        log.debug("random
         return random.random() * 100    # Could return random.randrange(0,101) to give an integer percentage
     for item in varList:
         if item[0].lower() == name.lower(): # Case-independent name matching
