@@ -5,6 +5,7 @@
 # Standard Python modules
 import cmd
 import readline
+import os
 import sys
 import select
 import socket
@@ -25,6 +26,7 @@ import hubapp
 import log
 import iottime
 import database
+import status
 
 sck = ""
 cliSck = ""
@@ -37,7 +39,13 @@ def EventHandler(eventId, eventArg):
         sck.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sck.setblocking(0) # accept() is no longer blocking
         port = 12345
-        sck.bind(('', port))    # Listen on all available interfaces
+        try:
+            sck.bind(('', port))    # Listen on all available interfaces
+        except OSError as err: # "OSError: [Errno 98] Address already in use"
+            database.NewEvent(0, "Socket bind failed with " + err.args[1]) # 0 is always hub
+            database.NewEvent(0, "Rebooting...") # 0 is always hub
+            events.Issue(events.ids.SHUTDOWN)   # Tell system we're about to shutdown
+            os.system("sudo reboot")    # Unrecoverable, so reboot entire machine...
         sck.listen(0)
         sckLst = [sck]
     if eventId == events.ids.SECONDS:
@@ -92,7 +100,7 @@ class Commands(cmd.Cmd):
         Show all variables, or just variables that contain item"""
         if item == "":
             vars = variables.varList
-            vars.sort()
+            vars.sort() # Alphabetic by name, to make it easier to search by eye
             pprint (vars)
         else:
             itemisedList = []

@@ -19,6 +19,8 @@ def EventHandler(eventId, eventArg):
         if flushDB:
             db.commit() # Flush events to disk
             flushDB = False
+    if eventId == events.ids.SHUTDOWN:
+        db.commit() # Flush events to disk prior to shutdown
 # end of EventHandler
 
 # === Status ===

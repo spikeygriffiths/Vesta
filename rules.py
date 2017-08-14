@@ -144,7 +144,13 @@ def ParseCondition(ruleConditionList, trigger):
     # End of loop
     if subAnswers != "":
         log.debug("About to evaluate:'"+subAnswers+"'")
-        return eval(subAnswers)
+        try:
+            finalAnswer = eval(subAnswers)
+        except: # Catch all errors that the rule might raise
+            err = sys.exc_info()[0]
+            status.problem("Bad rule : '" + join(ruleConditionList) + "'", err) # Make a note in the status page so the user can fix the rule
+            finalAnswer = False # Say rule failed
+        return finalAnswer
     else:
         return False    # Empty string is always False
 
