@@ -20,7 +20,10 @@ def EventHandler(eventId, eventArg):
             oldAway = "False"    # Assume at home if we don't know any better
         if oldAway != away:
             log.debug("Away state has changed from "+oldAway+" to "+away)
-            # Could issue events.ids.AWAY here, if anyone would be interested..?
+            if away == "False":
+                database.NewEvent(0, "Arrived Home")
+            else:
+                database.NewEvent(0, "Gone Away")
             Set("away", away)  # Keep our variable in sync with the value from the database, so now user can update the db via the web and we'll know...
 
 def Set(name, value):
