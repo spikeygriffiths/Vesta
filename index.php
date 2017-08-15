@@ -22,9 +22,9 @@ if ($appRunning) {
     $db = DatabaseInit();
     $away = GetAppState("away", $db);
     if ($away == "True") {
-        echo "Away";
+        echo "Now Away - Click when Home";
     } else {
-        echo "Home";
+        echo "At Home - Change to Away";
     }
     echo "</button><br><br>";
     echo "<button type=\"button\" onclick=\"window.location.href='variables.php'\">Variables</button><br><br>";
