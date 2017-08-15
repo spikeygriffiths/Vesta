@@ -10,6 +10,7 @@ echo "<center><img src='vestaTitle.png' width=128 height=128><br>";
 echo "Now: ", date('Y-m-d H:i:s'), "<br>";
 $ps = shell_exec("ps ax");
 $appRunning = (strpos($ps, "vesta.py") !== false);
+echo "Current PHP version: ".phpversion()."<br>";
 $statusPage = "status.html";
 if ($appRunning) {
     echo "UpTime: ",HubCmd("uptime", True),"<br>";

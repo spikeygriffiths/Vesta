@@ -12,7 +12,7 @@ def EventHandler(eventId, eventArg):
     global varList
     if eventId == events.ids.SECONDS:
         away = database.GetAppState("away")
-        if away == None:    # This shouldn't happen (since we set it up in INIT above), but theoretically the item could be removed from the db
+        if away == None:
             away = "False"    # Assume at home if we don't know any better
             database.SetAppState("away", away)  # Ensure database has our same default
         oldAway = Get("away")
@@ -20,8 +20,8 @@ def EventHandler(eventId, eventArg):
             oldAway = "False"    # Assume at home if we don't know any better
         if oldAway != away:
             log.debug("Away state has changed from "+oldAway+" to "+away)
+            # Could issue events.ids.AWAY here, if anyone would be interested..?
             Set("away", away)  # Keep our variable in sync with the value from the database, so now user can update the db via the web and we'll know...
-
 
 def Set(name, value):
     global varList
