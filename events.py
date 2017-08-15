@@ -40,6 +40,7 @@ def Issue(eventId, eventArg=0):
     vesta.EventHandler(eventId, eventArg)
     telegesis.EventHandler(eventId, eventArg)
     database.EventHandler(eventId, eventArg)
+    variables.EventHandler(eventId, eventArg)
     devices.EventHandler(eventId, eventArg)
     iottime.EventHandler(eventId, eventArg)
     rules.EventHandler(eventId, eventArg)

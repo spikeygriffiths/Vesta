@@ -174,8 +174,27 @@ def RemoveDevice(devKey):
 def GetRules(item):
     global curs
     ruleList = []
-    curs.execute("SELECT * FROM Rules WHERE rule LIKE '%"+item+"%'") # NB LIKE is already csae-insensitive, so no need for COLLATE NOCASE
+    curs.execute("SELECT * FROM Rules WHERE rule LIKE '%"+item+"%'") # NB LIKE is already case-insensitive, so no need for COLLATE NOCASE
     for row in curs:
         ruleList.append(row[0]) # Build a list of all rules that mention item
     return ruleList
+
+# === AppState ===
+def GetAppState(item):
+    global curs
+    curs.execute("SELECT Value FROM AppState WHERE Name=\""+item+"\" COLLATE NOCASE")
+    rows = curs.fetchone()
+    if rows != None:
+        return rows[0]
+    return None
+
+def SetAppState(item, val):
+    global curs, flushDB
+    curs.execute("INSERT OR REPLACE INTO AppState VALUES(\""+item+"\", \""+val+"\")") # Run the update
+    flushDB = True # Batch up the commits
+
+def DelAppState(item):
+    global curs, flushDB
+    curs.execute("DELETE FROM AppState WHERE Name=\""+item+"\" COLLATE NOCASE")
+    flushDB = True # Batch up the commits
 
