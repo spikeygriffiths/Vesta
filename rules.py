@@ -203,7 +203,7 @@ def Action(actList):
         if emailAddress != None:
             with open("status.html", "r") as status:    # Send status.html page as body of email
                 emailBody = status.readlines().replace('\n', '')
-            cmdList = ["echo", "\""+'\n'.join(emailBody)+"\"", "|", "mail", "-s", "\"Status from IoT-Hub\"", ]
+            cmdList = ["echo", "\""+'\n'.join(emailBody)+"\"", "|", "mail", "-s", "\"Vesta Status\"", ]
             cmdStr = " ".join(cmdList)
             call(cmdStr, shell=True)
     elif action == "email": # All args are body of the text.  Fixed subject and email address
@@ -212,7 +212,7 @@ def Action(actList):
             emailBody = []
             for item in actList[1:]:
                 emailBody.append(item)
-            cmdList = ["echo", "\""+' '.join(emailBody)+"\"", "|", "mail", "-s", "\"Alert from IoT-Hub\"", emailAddress]
+            cmdList = ["echo", "\""+' '.join(emailBody)+"\"", "|", "mail", "-s", "\"Alert from Vesta!\"", emailAddress]
             cmdStr = " ".join(cmdList)
             call(cmdStr, shell=True)
     else: # Must be a command for a device, or group of devices

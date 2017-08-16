@@ -15,9 +15,10 @@ def EventHandler(eventId, eventArg):
         if away == None:
             away = "False"    # Assume at home if we don't know any better
             database.SetAppState("away", away)  # Ensure database has our same default
+            Set("away", away)  # Keep our variable in sync with the value from the database, so now user can update the db via the web and we'll know...
         oldAway = Get("away")
         if oldAway == None:
-            oldAway = "False"    # Assume at home if we don't know any better
+            oldAway = "Unknown" # Force update
         if oldAway != away:
             log.debug("Away state has changed from "+oldAway+" to "+away)
             if away == "False":
