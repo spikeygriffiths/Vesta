@@ -41,7 +41,7 @@ def EventHandler(eventId, eventArg):
             events.Issue(events.ids.HOURS)
             oldHours = now.hour # Ready for next time
         variables.Set("time", str(now.strftime("%H:%M")))
-        rules.Run("newMinute==True") # Run timed rules once per minute
+        rules.Run("trigger==time") # Run timed rules once per minute
         if variables.Get("sunrise") != None:
             CheckTimedRule("dawn", now) # Sky getting light before sunrise
             CheckTimedRule("sunrise", now) # Sun on horizon

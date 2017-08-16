@@ -1,8 +1,7 @@
 sqlite3 hubstuff.db
 
 BEGIN;
-DROP TABLE IF EXISTS Devices;
-CREATE TABLE Devices (
+CREATE TABLE IF NOT EXISTS Devices (
   devKey INTEGER,
   userName TEXT,
   modelName TEXT,
@@ -16,11 +15,9 @@ CREATE TABLE Devices (
   binding TEXT,
   reporting TEXT,
   iasZoneType TEXT,
-  firmwareVersion TEXT
-);
+  firmwareVersion TEXT);
 
-DROP TABLE IF EXISTS Status;
-CREATE TABLE Status (
+CREATE TABLE IF NOT EXISTS Status (
   devKey INTEGER,
   battery INTEGER, battery_time DATETIME,
   temperature INTEGER, temperature_time DATETIME,
@@ -28,32 +25,30 @@ CREATE TABLE Status (
   presence TEXT, presence_time DATETIME,
   powerReadingW INTEGER, powerReadingW_time DATETIME,
   energyForHourWh INTEGER, energyForHourWh_time DATETIME,
-  FOREIGN KEY(devKey) REFERENCES Devices(devKey)
-);
+  FOREIGN KEY(devKey) REFERENCES Devices(devKey));
 
-DROP TABLE IF EXISTS Events;
-CREATE TABLE Events (
+CREATE TABLE IF NOT EXISTS Events (
   timestamp DATETIME,
   event TEXT,
   devKey INTEGER,
-  FOREIGN KEY(devKey) REFERENCES Devices(devKey)
-);
+  FOREIGN KEY(devKey) REFERENCES Devices(devKey));
 
-DROP TABLE IF EXISTS Groups;
-CREATE TABLE Groups (
+CREATE TABLE IF NOT EXISTS Groups (
   userName TEXT,
-  devKeyList TEXT
-);
+  devKeyList TEXT);
 
-DROP TABLE IF EXISTS Rules;
-CREATE TABLE Rules (
-  rule TEXT
-);
-# Could use;
+CREATE TABLE IF NOT EXISTS Rules (rule TEXT);
 # .import rules.txt Rules;
 
-DROP TABLE IF EXISTS AppState;
-CREATE TABLE AppState (Name TEXT PRIMARY KEY, Value TEXT);
+CREATE TABLE IF NOT EXISTS AppState (Name TEXT PRIMARY KEY, Value TEXT);
+
+CREATE TABLE IF NOT EXISTS Users (
+    id INTEGER PRIMARY KEY,
+    name varchar(64),
+    passwordHash varchar(255),
+    email varchar(64));
+    CREATE UNIQUE INDEX name_UNIQUE ON users (name ASC);
+    CREATE UNIQUE INDEX email_UNIQUE ON users (email ASC);
 
 COMMIT;
 .quit
