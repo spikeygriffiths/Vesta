@@ -7,7 +7,6 @@ from array import *
 # App-specific modules
 import events
 import log
-import hubapp
 import telegesis
 import rules
 import variables

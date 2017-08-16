@@ -2,7 +2,7 @@
 
 # App-specific Python modules
 import telegesis
-import hubapp
+import vesta
 import devices
 import rules
 import commands
@@ -11,9 +11,6 @@ import iottime
 import database
 import weather
 import presence
-
-if __name__ == "__main__":
-    hubapp.main()
 
 class ids:
     INIT = 0 # No arg
@@ -36,12 +33,14 @@ class ids:
     ALARM = 17 # Arg is string, one of "Arming", "Armed", Elevated", "Activated", "Disarmed" 
     RADIO_INFO = 18 # No arg, just displays info about the radio (channel, power, PAN id)
     NEWDEVICE = 19 # Arg is devKey, and only issued after the database has added the new device
+    SHUTDOWN = 20 # No arg.  Issued prior to rebooting, esp. to allow DB to commit
 
 def Issue(eventId, eventArg=0):
     # Tell all interested parties about the new event
-    hubapp.EventHandler(eventId, eventArg)
+    vesta.EventHandler(eventId, eventArg)
     telegesis.EventHandler(eventId, eventArg)
     database.EventHandler(eventId, eventArg)
+    variables.EventHandler(eventId, eventArg)
     devices.EventHandler(eventId, eventArg)
     iottime.EventHandler(eventId, eventArg)
     rules.EventHandler(eventId, eventArg)

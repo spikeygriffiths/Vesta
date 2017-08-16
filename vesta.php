@@ -1,22 +1,33 @@
 <?php 
 error_reporting(E_ALL); 
 include "HubCmd.php";
+include "database.php";
 
 echo "<html><head>";
-echo "<link rel=\"icon\" type=\"image/ico\" href=\"/favicon.ico\"/>";
+echo "<link rel=\"icon\" type=\"image/ico\" href=\"/favicon.ico\"/>";   # Not sure if this is necessary, but does no harm...
 echo "</head><body>";
 echo "<center><img src='vestaTitle.png' width=128 height=128><br>";
 echo "Now: ", date('Y-m-d H:i:s'), "<br>";
 $ps = shell_exec("ps ax");
-$iotHubRunning = (strpos($ps, "hubapp.py") !== false);
+$appRunning = (strpos($ps, "vesta.py") !== false);
+echo "Current PHP version: ".phpversion()."<br>";
 $statusPage = "status.html";
-if ($iotHubRunning) {
+if ($appRunning) {
     echo "UpTime: ",HubCmd("uptime", True),"<br>";
     echo "<br>";
     echo "<button type=\"button\" onclick=\"window.location.href='ShowAllDevices.php'\">Devices</button><br><br>";
     echo "<button type=\"button\" onclick=\"window.location.href='Groups.php'\">Groups</button><br><br>";
     echo "<button type=\"button\" onclick=\"window.location.href='rules.php/?item=All'\">Rules</button><br><br>";
     echo "<button type=\"button\" onclick=\"window.location.href='activity.php'\">Activity Log</button><br><br>";
+    echo "<button type=\"button\" onclick=\"window.location.href='ToggleAway.php'\">";
+    $db = DatabaseInit();
+    $away = GetAppState("away", $db);
+    if ($away == "True") {
+        echo "Now Away - Click when Home";
+    } else {
+        echo "At Home - Change to Away";
+    }
+    echo "</button><br><br>";
     echo "<button type=\"button\" onclick=\"window.location.href='variables.php'\">Variables</button><br><br>";
     if (file_exists($statusPage)) {
         echo "<button type=\"button\" onclick=\"window.location.href='$statusPage'\">Status</button><br><br>";
@@ -27,8 +38,8 @@ if ($iotHubRunning) {
     echo "</center>";
  } else {
     echo "<br>";
-    echo "<center><h2>IoT Hub stopped</h2></center>"; 
-    //$reason = shell_exec("tail -lines=20 /home/pi/hubapp/today.log");
+    echo "<center><h2>Vesta app stopped</h2></center>"; 
+    //$reason = shell_exec("tail --lines=20 /home/pi/hubapp/today.log");
     //echo "<b>Last lines of today's hub log;</b><br>",nl2br($reason);
     $fragmentSize = 1500;
     $logName = "/home/pi/hubapp/hubout.log";

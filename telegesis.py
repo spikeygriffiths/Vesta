@@ -4,6 +4,7 @@
 import serial
 from collections import deque
 # App-specific Python modules
+import vesta
 import devices
 import queue
 import log
@@ -23,8 +24,11 @@ ourExtPan = "Unknown"
 def HandleSerial(ser):
     global txBuf, rxBuf
     while ser.inWaiting():
-        telegesisInLine = str(ser.readline(),'utf-8').rstrip('\r\n')    # Rely on timeout=0 to return immediately, either with a line or with None
-        #if telegesisInLine != None:
+        try:
+            telegesisInLine = str(ser.readline(),'utf-8').rstrip('\r\n')    # Rely on timeout=0 to return immediately, either with a line or with None
+        except:
+            database.NewEvent(0, "Serial port problem")
+            vesta.Restart()
         rxBuf.append(telegesisInLine)  # Buffer this for subsequent processing in main thread
     while len(txBuf):
         atCmd = txBuf.popleft()

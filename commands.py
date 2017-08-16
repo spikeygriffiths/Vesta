@@ -1,10 +1,11 @@
 #!commands.py
 
-# Command Line Interpreter module for hubapp
+# Command Line Interpreter module for Vesta
 
 # Standard Python modules
 import cmd
 import readline
+import os
 import sys
 import select
 import socket
@@ -21,10 +22,11 @@ import events
 import telegesis
 import variables
 import rules
-import hubapp
+import vesta
 import log
 import iottime
 import database
+import status
 
 sck = ""
 cliSck = ""
@@ -37,7 +39,11 @@ def EventHandler(eventId, eventArg):
         sck.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sck.setblocking(0) # accept() is no longer blocking
         port = 12345
-        sck.bind(('', port))    # Listen on all available interfaces
+        try:
+            sck.bind(('', port))    # Listen on all available interfaces
+        except OSError as err: # "OSError: [Errno 98] Address already in use"
+            database.NewEvent(0, "Socket bind failed with " + err.args[1]) # 0 is always hub
+            vesta.Reboot()
         sck.listen(0)
         sckLst = [sck]
     if eventId == events.ids.SECONDS:
@@ -52,7 +58,11 @@ def EventHandler(eventId, eventArg):
                 sckLst.append(cliSck)
                 #log.debug("New connection from web page!")
             else:
-                cmd = cliSck.recv(100)
+                try:
+                    cmd = cliSck.recv(100)
+                except OSError as err:  # OSError: [Errno 9] Bad file descriptor"
+                    database.NewEvent(0, "Web command failed with " + err.args[1]) # 0 is always hub
+                    cmd = ""    # No command if there was a failure                
                 if cmd:
                     cmd = cmd.decode()
                     log.debug("Got cmd \""+ cmd+"\" from web page")
@@ -92,7 +102,7 @@ class Commands(cmd.Cmd):
         Show all variables, or just variables that contain item"""
         if item == "":
             vars = variables.varList
-            vars.sort()
+            vars.sort() # Alphabetic by name, to make it easier to search by eye
             pprint (vars)
         else:
             itemisedList = []
