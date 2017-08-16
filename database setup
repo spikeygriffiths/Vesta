@@ -50,7 +50,7 @@ CREATE TABLE Rules (
   rule TEXT
 );
 # Could use;
-# .import rules.txt Rules;
+#.import rules.txt Rules;
 
 COMMIT;
 .quit
