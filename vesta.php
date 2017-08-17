@@ -8,17 +8,17 @@ include "database.php";
 echo "<html><head>";
 echo "</head><body>";
 echo "<center><img src='vestaTitle.png' title=\"Vesta was the Roman goddess of hearth and home\" width=128 height=128><br>";
-echo "Now: ", date('Y-m-d H:i:s'), "<br>";
+//echo "Now: ", date('Y-m-d H:i:s'), "<br>";
 $ps = shell_exec("ps ax");
 $appRunning = (strpos($ps, "vesta.py") !== false);
-echo "Current PHP version: ".phpversion()."<br>";
+//echo "Current PHP version: ".phpversion()."<br>";
 $statusPage = "status.html";
 if ($appRunning) {
     echo "UpTime: ",HubCmd("uptime", True),"<br>";
     echo "<br>";
-    echo "<button type=\"button\" onclick=\"window.location.href='/ShowAllDevices.php'\">Devices</button><br><br>";
+    echo "<button type=\"button\" onclick=\"window.location.href='/ShowAllDevices.php'\">Devices</button>&nbsp&nbsp&nbsp";
     echo "<button type=\"button\" onclick=\"window.location.href='/Groups.php'\">Groups</button><br><br>";
-    echo "<button type=\"button\" onclick=\"window.location.href='/rules.php/?item=All'\">Rules</button><br><br>";
+    echo "<button type=\"button\" onclick=\"window.location.href='/rules.php/?item=All'\">Rules</button>&nbsp&nbsp&nbsp";
     echo "<button type=\"button\" onclick=\"window.location.href='/activity.php/?devKey=-1'\">Activity Log</button><br><br>";
     echo "<button type=\"button\" onclick=\"window.location.href='/ToggleAway.php'\">";
     $db = DatabaseInit();
@@ -29,9 +29,9 @@ if ($appRunning) {
         echo "At Home - Change to Away";
     }
     echo "</button><br><br>";
-    echo "<button type=\"button\" onclick=\"window.location.href='/variables.php'\">Variables</button><br><br>";
+    echo "<button type=\"button\" onclick=\"window.location.href='/variables.php'\">Variables</button>&nbsp&nbsp&nbsp";
     if (file_exists($statusPage)) {
-        echo "<button type=\"button\" onclick=\"window.location.href='$statusPage'\">Status</button><br><br>";
+        echo "<button type=\"button\" onclick=\"window.location.href='$statusPage'\">Status</button>&nbsp&nbsp&nbsp";
     }
     #echo "<button type=\"button\" onclick=\"window.location.href='/log.php'\">Show Debugging Log</button><br><br>";
     #echo "<button type=\"button\" onclick=\"window.location.href='/info.php'\">Send Info Command</button><br><br>";

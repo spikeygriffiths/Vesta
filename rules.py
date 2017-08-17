@@ -94,7 +94,7 @@ def Run(trigger): # Run through the rules looking to see if we have a match for 
         if ruleList[0] == "if":
             doIndex = FindItemInList("do", ruleList) # Safely look for "do"
             if doIndex != None:
-                if ParseCondition(ruleList[1:doIndex], trigger) == True: # Parse condition from element 1 to "do" 
+                if ParseCondition(ruleList[1:doIndex], trigger) == True: # Parse condition from element 1 (ie immediately after "if") to "do" 
                     Action(ruleList[doIndex+1:]) # Do action
             # else skip rest of line
         elif ruleList[0] == "do":
@@ -143,7 +143,7 @@ def ParseCondition(ruleConditionList, trigger):
             subAnswers = subAnswers + str(GetConditionResult("==", condition))
     # End of loop
     if subAnswers != "":
-        log.debug("About to evaluate:'"+subAnswers+"'")
+        #log.debug("About to evaluate:'"+subAnswers+"'")
         try:
             finalAnswer = eval(subAnswers)
         except: # Catch all errors that the rule might raise
