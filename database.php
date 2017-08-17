@@ -78,8 +78,11 @@ function UpdateRules($oldUserName, $newUserName, $db)
 
 function CreateUser($name, $email, $passwordHash, $db)
 {
-    $result = $db->query('SELECT * FROM Users WHERE name = '.$name.' OR email = '.$email);  // Check that name or email doesn't already exist
-    if ($result == null) {
+    $query = 'SELECT * FROM Users WHERE name = "'.$name.'" OR email = "'.$email.'"';  // Check that name or email doesn't already exist
+    $sth = $db->prepare($query);
+    $sth->execute();
+    $row = $sth->fetch();
+    if ($row == null) {
         $insert = 'INSERT INTO Users (name, passwordHash, email) VALUES("'.$name.'", "'.$passwordHash.'", "'.$email.'")';
         $db->exec($insert);   # Add the new user
         return "";  // Success if empty string
@@ -89,25 +92,18 @@ function CreateUser($name, $email, $passwordHash, $db)
 function CheckPasswordCorrectnessAndLogin($name, $password, $db)
 {
     $query = 'SELECT name, email, passwordHash FROM Users WHERE name = "'.$name.'" OR email = "'.$name.'" LIMIT 1'; // Allow the user to log in with username or email address
-    #echo "Read from db using: ".$query."<br>";
     $sth = $db->prepare($query);
     $sth->execute();
     $row = $sth->fetch();
     if ($row) {
-        echo "Hash from db of ".$row['passwordHash']."<br>";
         $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-        echo "Calculated Hash is ".$passwordHash."<br>";
         if (password_verify($password, $row['passwordHash'])) {   // Using PHP 5.5's password_verify() function to check password
-            echo "Verified!<br>";
             $_SESSION['user_name'] = $row['name'];
             echo "Session Name = ".$_SESSION['user_name']."<br>";
             $_SESSION['user_email'] = $row['email'];
             $_SESSION['user_is_logged_in'] = true;
             return "";  // Success if empty string
-        } else {
-            echo "Failed to verify.  :-( <br>";
-        }
-        return "Wrong password.";
+        } return "Wrong password.";
     } return "This user does not exist.";
 }
 

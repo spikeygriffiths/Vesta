@@ -3,14 +3,7 @@ session_start();    // start the session, always needed, and must be before any 
 error_reporting(E_ALL); 
 include "database.php";
 
-/*echo "<html><head>";
-echo "<link rel=\"icon\" type=\"image/ico\" href=\"/favicon.ico\"/>";   # Not sure if this is necessary, but does no harm...
-echo "</head><body>";
-echo "<center><img src='vestaTitle.png' width=128 height=128><br>";
-echo "</body></html>";*/
-
 // Following code is taken from:
-// @author Panique
 // @link https://github.com/panique/php-login-one-file/
 // @license http://opensource.org/licenses/MIT MIT License
 class OneFileLoginApplication
@@ -19,7 +12,6 @@ class OneFileLoginApplication
 
     public function __construct()
     {
-        echo "Starting<br>";
         $this->RunApplication();
     }
 
@@ -42,9 +34,7 @@ class OneFileLoginApplication
 
     private function PerformUserLoginAction($db)
     {
-        if (isset($_GET["action"]) && $_GET["action"] == "logout") {
-            $this->DoLogout();
-        } elseif (!empty($_SESSION['user_name']) && ($_SESSION['user_is_logged_in'])) {
+        if (!empty($_SESSION['user_name']) && ($_SESSION['user_is_logged_in'])) {
             $this->DoLoginWithSessionData();
         } elseif (isset($_POST["login"])) {
             $this->DoLoginWithPostData($db);
@@ -56,15 +46,10 @@ class OneFileLoginApplication
         if ($this->CheckLoginFormDataNotEmpty()) {
             $name = $_POST['user_name'];
             $password = $_POST['user_password'];
-            CheckPasswordCorrectnessAndLogin($name, $password, $db);
-            print_r($_SESSION);
+            $faultStr = CheckPasswordCorrectnessAndLogin($name, $password, $db);
+            $this->feedback = $faultStr;
+            return ($faultStr == "");  // Did we note any fault?
         }
-    }
-
-    private function DoLogout()
-    {
-        $_SESSION['user_is_logged_in'] = false;
-        $this->feedback = "You were just logged out.";
     }
 
     private function DoRegistration($db)
@@ -122,9 +107,8 @@ class OneFileLoginApplication
         $password = $_POST['user_password_new'];
         // crypt the user's password with the PHP 5.5's password_hash() function, results in a 60 char hash string.
         // the constant PASSWORD_DEFAULT comes from PHP 5.5 or the password_compatibility_library
-        $passwordHash = password_hash($user_password, PASSWORD_DEFAULT);
-        echo "About to create user ".$name.", email ".$email.", with hash of ".$passwordHash."<br>";
-        $faultStr =  CreateUser($name, $email, $passwordHash, $db);    // See database.php.  Returns string.  If empty, then is successful
+        $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+        $faultStr =  CreateUser($name, $email, $passwordHash, $db);    // See database.php.  Returns string which is empty when successful
         $this->feedback = $faultStr;
         return ($faultStr == "");  // Did we note any fault?
     }
@@ -165,5 +149,11 @@ class OneFileLoginApplication
         echo '<a href="' . $_SERVER['SCRIPT_NAME'] . '">Homepage</a>';
     }
 }
+echo "<html><head>";
+echo "<link rel=\"icon\" type=\"image/ico\" href=\"/favicon.ico\"/>";   # Not sure if this is necessary, but does no harm...
+echo "</head><body>";
+echo "<center><img src='vestaTitle.png' width=128 height=128><br>";
 $app = new OneFileLoginApplication();
+echo "</body></html>";
+
 ?>

@@ -1,7 +1,9 @@
 <?php 
+session_start();
 error_reporting(E_ALL); 
 include "HubCmd.php";
 include "database.php";
+if ($_SESSION['user_is_logged_in'] != true) echo "<meta http-equiv=\"refresh\" content=\"0;url=/index.php\"/>"; # Automatically go to index if we're not logged in
 
 echo "<html><head>";
 echo "<link rel=\"icon\" type=\"image/ico\" href=\"/favicon.ico\"/>";   # Not sure if this is necessary, but does no harm...
@@ -35,6 +37,7 @@ if ($appRunning) {
     #echo "<button type=\"button\" onclick=\"window.location.href='log.php'\">Show Debugging Log</button><br><br>";
     #echo "<button type=\"button\" onclick=\"window.location.href='info.php'\">Send Info Command</button><br><br>";
     echo "<button type=\"button\" onclick=\"window.location.href='https://docs.google.com/document/d/1BPCPYH9JV_Ekot3clXyhLmIPgkDzyd2aZhu5PGcCNKw/edit?usp=sharing'\">Documentation</button><br><br>";
+    echo "<button type=\"button\" onclick=\"window.location.href='logout.php'\">Log Out</button><br><br>";
     echo "</center>";
  } else {
     echo "<br>";
