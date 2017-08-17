@@ -85,8 +85,19 @@ function CreateUser($name, $email, $passwordHash, $db)
     if ($row == null) {
         $insert = 'INSERT INTO Users (name, passwordHash, email) VALUES("'.$name.'", "'.$passwordHash.'", "'.$email.'")';
         $db->exec($insert);   # Add the new user
-        return "";  // Success if empty string
+        return "New user ".$name." now added";  // Success
     } return "Sorry, that username / email is already taken. Please choose another one.";
+}
+
+function DeleteUser($name, $db)
+{
+    $db->exec('DELETE FROM Users WHERE name = "'.$name.'"'); # Run the update
+}
+
+function GetNumUsers($db)
+{
+    $result = $db->query("SELECT COUNT(*) FROM Users");
+    return $result->fetchColumn();
 }
 
 function CheckPasswordCorrectnessAndLogin($name, $password, $db)

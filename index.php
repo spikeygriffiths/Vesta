@@ -13,25 +13,25 @@ class OneFileLoginApplication
 
     public function __construct()
     {
-        $this->RunApplication();
-    }
-
-    public function RunApplication()
-    {
-        // check if user wants to see register page (etc.)
         $db = DatabaseInit();
-        $this->PerformUserLoginAction($db);            // check for possible user interactions (login with session/post data or logout)
-        if ($_SESSION['user_is_logged_in'] == true) {
-            echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta.php\"/>"; # Automatically go to home page once we're logged in
+        $numUsers = GetNumUsers($db);
+        if (0 == $numUsers) {
+            $_SESSION['user_is_logged_in'] = true;  # Log in without a name (we have no names yet...)
+            echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta.php\"/>"; # Automatically go to home page if there are no registered users
         } else {
-            $this->ShowPageLoginForm();
+            $this->PerformUserLoginAction($db);            // check for possible user interactions (login with session/post data or logout)
+            if ($_SESSION['user_is_logged_in'] == true) {
+                echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta.php\"/>"; # Automatically go to home page once we're logged in
+            } else {
+                $this->ShowPageLoginForm();
+            }
         }
     }
 
     private function PerformUserLoginAction($db)
     {
         if (!empty($_SESSION['user_name']) && ($_SESSION['user_is_logged_in'])) {
-            $this->DoLoginWithSessionData();
+            //$this->DoLoginWithSessionData();
         } elseif (isset($_POST["login"])) {
             $this->DoLoginWithPostData($db);
         }

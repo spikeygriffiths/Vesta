@@ -4,18 +4,15 @@ error_reporting(E_ALL);
 include "database.php";
 if ($_SESSION['user_is_logged_in'] != true) echo "<meta http-equiv=\"refresh\" content=\"0;url=/index.php\"/>"; # Automatically go to index if we're not logged in
 
-class OneFileLoginApplication
+// Following code is freely adapted from:
+// @link https://github.com/panique/php-login-one-file/
+// @license http://opensource.org/licenses/MIT MIT License
+class Register
 {
     public $feedback = "";
 
     public function __construct()
     {
-        $this->RunApplication();
-    }
-
-    public function RunApplication()
-    {
-        // check if user wants to see register page (etc.)
         $db = DatabaseInit();
         $this->DoRegistration($db);
         $this->ShowPageRegistration();
@@ -24,7 +21,8 @@ class OneFileLoginApplication
     private function DoRegistration($db)
     {
         if ($this->CheckRegistrationData()) {
-            $this->CreateNewUser($db);
+            if ($this->CreateNewUser($db))
+                echo "New user ";
         }
         return false;   // default return
     }
@@ -32,7 +30,6 @@ class OneFileLoginApplication
     private function CheckRegistrationData()
     {
         $faultStr = "";
-        if (!isset($_POST["register"])) return false;        // if no registration form submitted: exit the method
         if (empty($_POST['user_name'])) {
             $faultStr = "Empty Username";
         } elseif (empty($_POST['user_password_new']) || empty($_POST['user_password_repeat'])) {
@@ -58,16 +55,13 @@ class OneFileLoginApplication
 
     private function CreateNewUser($db)
     {
-        $faultStr = "";
         $name = htmlentities($_POST['user_name'], ENT_QUOTES);        // remove html code etc. from username and email
         $email = htmlentities($_POST['user_email'], ENT_QUOTES);
         $password = $_POST['user_password_new'];
         // crypt the user's password with the PHP 5.5's password_hash() function, results in a 60 char hash string.
         // the constant PASSWORD_DEFAULT comes from PHP 5.5 or the password_compatibility_library
         $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-        $faultStr =  CreateUser($name, $email, $passwordHash, $db);    // See database.php.  Returns string which is empty when successful
-        $this->feedback = $faultStr;
-        return ($faultStr == "");  // Did we note any fault?
+        $this->feedback = CreateUser($name, $email, $passwordHash, $db);    // See database.php.  Returns string describing result
     }
 
     private function ShowPageRegistration()
@@ -87,15 +81,13 @@ class OneFileLoginApplication
         echo '<input id="login_input_password_repeat" class="login_input" type="password" name="user_password_repeat" pattern=".{6,}" required autocomplete="off" /><br><br>';
         echo '<input type="submit" name="register" value="Register" />';
         echo '</form>';
-        //echo '<a href="' . $_SERVER['SCRIPT_NAME'] . '">Homepage</a>';
     }
 }
 
 echo "<html><head>";
-echo "<link rel=\"icon\" type=\"image/ico\" href=\"/favicon.ico\"/>";   # Not sure if this is necessary, but does no harm...
 echo "</head><body>";
 echo "<center><img src='vestaTitle.png' width=128 height=128><br>";
-$app = new OneFileLoginApplication();
+$app = new Register();
 echo "<button type=\"button\" onclick=\"window.location.href='/index.php'\">Home</button><br><br>";
 echo "</body></html>";
 
