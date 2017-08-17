@@ -21,8 +21,7 @@ class Register
     private function DoRegistration($db)
     {
         if ($this->CheckRegistrationData()) {
-            if ($this->CreateNewUser($db))
-                echo "New user ";
+            $this->CreateNewUser($db);
         }
         return false;   // default return
     }

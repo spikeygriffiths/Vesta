@@ -4,7 +4,7 @@ error_reporting(E_ALL);
 if ($_SESSION['user_is_logged_in'] == true) echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta.php\"/>"; # Automatically go to main page if we're logged in
 include "database.php";
 
-// Following code is taken from:
+// Following code is freely adapted from:
 // @link https://github.com/panique/php-login-one-file/
 // @license http://opensource.org/licenses/MIT MIT License
 class OneFileLoginApplication

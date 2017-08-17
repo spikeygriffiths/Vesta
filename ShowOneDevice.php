@@ -1,4 +1,6 @@
 <?php
+session_start();
+if ($_SESSION['user_is_logged_in'] != true) echo "<meta http-equiv=\"refresh\" content=\"0;url=/index.php\"/>"; # Automatically go to index if we're not logged in
 error_reporting(E_ALL); 
 include "HubCmd.php";
 include "database.php";
@@ -89,6 +91,7 @@ function ShowDeviceInfo($db, $devKey, $username)
     //echo "<input type=\"submit\" value=\"Update name\"></form>";
     echo "<br><button type=\"button\" onclick=\"window.location.href='/ChangeDevName.php/?devKey=",$devKey,"'\">Change Name</button>&nbsp&nbsp&nbsp";
     echo "<button type=\"button\" onclick=\"window.location.href='/rules.php/?item=",$username,"'\">Rules</button>&nbsp&nbsp&nbsp";
+    echo "<button type=\"button\" onclick=\"window.location.href='/activity.php/?devKey=",$devKey,"'\">Activity Log</button>&nbsp&nbsp&nbsp";
     if ("0000" != $nwkId) {
         echo "<button type=\"button\" onclick=\"window.location.href='/Command.php/?cmd=identify ",$username," 30'\">Identify for 30s</button>&nbsp&nbsp&nbsp";
         $inClusters = GetDevItem("inClusters", $devKey, $db);

@@ -1,9 +1,9 @@
 <?php 
 session_start();
+if ($_SESSION['user_is_logged_in'] != true) echo "<meta http-equiv=\"refresh\" content=\"0;url=/index.php\"/>"; # Automatically go to index if we're not logged in
 error_reporting(E_ALL); 
 include "HubCmd.php";
 include "database.php";
-if ($_SESSION['user_is_logged_in'] != true) echo "<meta http-equiv=\"refresh\" content=\"0;url=/index.php\"/>"; # Automatically go to index if we're not logged in
 
 echo "<html><head>";
 echo "<link rel=\"icon\" type=\"image/ico\" href=\"/favicon.ico\"/>";   # Not sure if this is necessary, but does no harm...
@@ -17,11 +17,11 @@ $statusPage = "status.html";
 if ($appRunning) {
     echo "UpTime: ",HubCmd("uptime", True),"<br>";
     echo "<br>";
-    echo "<button type=\"button\" onclick=\"window.location.href='ShowAllDevices.php'\">Devices</button><br><br>";
-    echo "<button type=\"button\" onclick=\"window.location.href='Groups.php'\">Groups</button><br><br>";
-    echo "<button type=\"button\" onclick=\"window.location.href='rules.php/?item=All'\">Rules</button><br><br>";
-    echo "<button type=\"button\" onclick=\"window.location.href='activity.php'\">Activity Log</button><br><br>";
-    echo "<button type=\"button\" onclick=\"window.location.href='ToggleAway.php'\">";
+    echo "<button type=\"button\" onclick=\"window.location.href='/ShowAllDevices.php'\">Devices</button><br><br>";
+    echo "<button type=\"button\" onclick=\"window.location.href='/Groups.php'\">Groups</button><br><br>";
+    echo "<button type=\"button\" onclick=\"window.location.href='/rules.php/?item=All'\">Rules</button><br><br>";
+    echo "<button type=\"button\" onclick=\"window.location.href='/activity.php/?devKey=-1'\">Activity Log</button><br><br>";
+    echo "<button type=\"button\" onclick=\"window.location.href='/ToggleAway.php'\">";
     $db = DatabaseInit();
     $away = GetAppState("away", $db);
     if ($away == "True") {
@@ -30,15 +30,15 @@ if ($appRunning) {
         echo "At Home - Change to Away";
     }
     echo "</button><br><br>";
-    echo "<button type=\"button\" onclick=\"window.location.href='variables.php'\">Variables</button><br><br>";
+    echo "<button type=\"button\" onclick=\"window.location.href='/variables.php'\">Variables</button><br><br>";
     if (file_exists($statusPage)) {
         echo "<button type=\"button\" onclick=\"window.location.href='$statusPage'\">Status</button><br><br>";
     }
-    #echo "<button type=\"button\" onclick=\"window.location.href='log.php'\">Show Debugging Log</button><br><br>";
-    #echo "<button type=\"button\" onclick=\"window.location.href='info.php'\">Send Info Command</button><br><br>";
+    #echo "<button type=\"button\" onclick=\"window.location.href='/log.php'\">Show Debugging Log</button><br><br>";
+    #echo "<button type=\"button\" onclick=\"window.location.href='/info.php'\">Send Info Command</button><br><br>";
     echo "<button type=\"button\" onclick=\"window.location.href='https://docs.google.com/document/d/1BPCPYH9JV_Ekot3clXyhLmIPgkDzyd2aZhu5PGcCNKw/edit?usp=sharing'\">Documentation</button><br><br>";
-    echo "<button type=\"button\" onclick=\"window.location.href='logout.php'\">Log Out</button><br><br>";
-    echo "<button type=\"button\" onclick=\"window.location.href='register.php'\">Add another user</button><br><br>";
+    echo "<button type=\"button\" onclick=\"window.location.href='/logout.php'\">Log Out</button><br><br>";
+    echo "<button type=\"button\" onclick=\"window.location.href='/register.php'\">Add another user</button><br><br>";
     echo "</center>";
  } else {
     echo "<br>";
