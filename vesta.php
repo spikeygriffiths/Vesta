@@ -41,8 +41,11 @@ if ($appRunning) {
     echo "<center><h2>Vesta app stopped</h2></center>"; 
     //$reason = shell_exec("tail --lines=20 /home/pi/hubapp/today.log");
     //echo "<b>Last lines of today's hub log;</b><br>",nl2br($reason);
-    $fragmentSize = 1000;
-    $logName = "/home/pi/hubapp/today.log";
+    $fragmentSize = 1500;
+    $logName = "/home/pi/hubapp/hubout.log";
+    if (!file_exists($logName)) {
+        $logName = "/home/pi/hubapp/today.log";
+    }
     $logHandle = fopen($logName, "r");
     $logSize = filesize($logName);
     fseek($logHandle, $logSize - $fragmentSize);    // Seek to near the end

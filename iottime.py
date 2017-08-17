@@ -64,7 +64,7 @@ def EventHandler(eventId, eventArg):
             # Then use "if sunlight<25" for PIRs to turn on lights, etc.
             now = datetime.now()
             nowTime = datetime.strptime(now.strftime("%H:%M"), "%H:%M")
-            extraTime = int(variables.Get("cloudCover"))    # Just take percentage cloudiness as minutes
+            extraTime = int(variables.Get("cloudCover"))    # Just take percentage cloudiness as minutesx
             extraTime = extraTime + float(variables.Get("rain"))   # Any rain just makes it even darker (Measured in mm/3hr)
             extraTime = extraTime + float(variables.Get("snow"))   # Any snow just makes it even darker (Measured in mm/3hr)
             sunrise = datetime.strptime(variables.Get("sunrise"), "%H:%M")

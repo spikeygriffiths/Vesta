@@ -17,7 +17,7 @@ def BuildPage():
     html.write(".bad { color: red; }")
     html.write("</style>")
     html.write("</head><body>")
-    html.write("<center><h1>IoT Status at " + datetime.now().strftime("%Y/%m/%d %H:%M:%S") + "</h1>")  # Put body here
+    html.write("<center><h1>Vesta Status at " + datetime.now().strftime("%Y/%m/%d %H:%M:%S") + "</h1>")  # Put body here
     keyList = database.GetAllDevKeys()  # Get a list of all the device identifiers from the database
     for devKey in keyList:  # Element 0 is hub, rest are devices
         if database.GetDeviceItem(devKey, "nwkId") != "0000":  # Ignore hub
