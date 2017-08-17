@@ -34,7 +34,7 @@ def BuildPage():
         html.write("Everything OK!<br>")
     html.write("</body></html>")
     html.close()
-    os.system("sudo cp status.html /var/www/html")  # So index.php can refer to it
+    os.system("sudo cp status.html /var/www/html")  # So vesta.php can refer to it
 
 def problem(key, value):
     issues[key] = value   # Add new, or update old, dictionary entry
