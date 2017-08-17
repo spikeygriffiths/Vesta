@@ -6,9 +6,8 @@ include "HubCmd.php";
 include "database.php";
 
 echo "<html><head>";
-echo "<link rel=\"icon\" type=\"image/ico\" href=\"/favicon.ico\"/>";   # Not sure if this is necessary, but does no harm...
 echo "</head><body>";
-echo "<center><img src='vestaTitle.png' width=128 height=128><br>";
+echo "<center><img src='vestaTitle.png' title=\"Vesta was the Roman goddess of hearth and home\" width=128 height=128><br>";
 echo "Now: ", date('Y-m-d H:i:s'), "<br>";
 $ps = shell_exec("ps ax");
 $appRunning = (strpos($ps, "vesta.py") !== false);
