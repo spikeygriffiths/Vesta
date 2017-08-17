@@ -38,6 +38,7 @@ if ($appRunning) {
     #echo "<button type=\"button\" onclick=\"window.location.href='info.php'\">Send Info Command</button><br><br>";
     echo "<button type=\"button\" onclick=\"window.location.href='https://docs.google.com/document/d/1BPCPYH9JV_Ekot3clXyhLmIPgkDzyd2aZhu5PGcCNKw/edit?usp=sharing'\">Documentation</button><br><br>";
     echo "<button type=\"button\" onclick=\"window.location.href='logout.php'\">Log Out</button><br><br>";
+    echo "<button type=\"button\" onclick=\"window.location.href='register.php'\">Add another user</button><br><br>";
     echo "</center>";
  } else {
     echo "<br>";
