@@ -202,8 +202,8 @@ def Action(actList):
         emailAddress = config.Get("emailAddress")
         if emailAddress != None:
             with open("status.html", "r") as status:    # Send status.html page as body of email
-                emailBody = status.readlines().replace('\n', '')
-            cmdList = ["echo", "\""+'\n'.join(emailBody)+"\"", "|", "mail", "-s", "\"Vesta Status\"", ]
+                emailBody = status.readlines()
+            cmdList = ["echo", "\""+'\n'.join(emailBody)+"\"", "|", "mail", "-s", "\"Vesta Status\"", emailAddress]
             cmdStr = " ".join(cmdList)
             call(cmdStr, shell=True)
     elif action == "email": # All args are body of the text.  Fixed subject and email address
