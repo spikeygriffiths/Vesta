@@ -15,12 +15,14 @@ class OneFileLoginApplication
     {
         $db = DatabaseInit();
         $numUsers = GetNumUsers($db);
-        if (0 == $numUsers) {
+        if (0 == $numUsers) {   # If we have no users yet
             $_SESSION['user_is_logged_in'] = true;  # Log in without a name (we have no names yet...)
             echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta.php\"/>"; # Automatically go to home page if there are no registered users
         } else {
             $this->PerformUserLoginAction($db);            // check for possible user interactions (login with session/post data or logout)
             if ($_SESSION['user_is_logged_in'] == true) {
+                $event = $_SESSION['user_name']." Logged in";
+                NewEvent(0, $event, $db);
                 echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta.php\"/>"; # Automatically go to home page once we're logged in
             } else {
                 $this->ShowPageLoginForm();

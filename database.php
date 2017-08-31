@@ -89,15 +89,16 @@ function CreateUser($name, $email, $passwordHash, $db)
     } return "Sorry, that username / email is already taken. Please choose another one.";
 }
 
-function DeleteUser($name, $db)
-{
-    $db->exec('DELETE FROM Users WHERE name = "'.$name.'"'); # Run the update
-}
-
 function GetNumUsers($db)
 {
     $result = $db->query("SELECT COUNT(*) FROM Users");
     return $result->fetchColumn();
+}
+
+function NewEvent($devKey, $event, $db) # $devKey is the deviceId. Use 0 for hub
+{
+    $insert = 'INSERT INTO Events (timestamp, event, devKey) VALUES("'.date('Y-m-d H:i:s').'", "'.$event.'", '.$devKey.')';  # Insert event with local timestamp
+    $db->exec($insert);   # Add the new event
 }
 
 function CheckPasswordCorrectnessAndLogin($name, $password, $db)
