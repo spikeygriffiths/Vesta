@@ -1,7 +1,6 @@
 <?php 
 session_start();    // start the session, always needed, and must be before any HTML tags
-error_reporting(E_ALL); 
-if ($_SESSION['user_is_logged_in'] == true) echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta.php\"/>"; # Automatically go to main page if we're logged in
+error_reporting(E_ALL);
 include "database.php";
 
 // Following code is freely adapted from:
@@ -33,7 +32,7 @@ class OneFileLoginApplication
     private function PerformUserLoginAction($db)
     {
         if (!empty($_SESSION['user_name']) && ($_SESSION['user_is_logged_in'])) {
-            //$this->DoLoginWithSessionData();
+            echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta.php\"/>"; # Automatically go to home page if we're already logged in
         } elseif (isset($_POST["login"])) {
             $this->DoLoginWithPostData($db);
         }
@@ -78,11 +77,19 @@ class OneFileLoginApplication
     }
 }
 
-echo "<html><head>";
-echo "<link rel=\"icon\" type=\"image/ico\" href=\"/favicon.ico\"/>";   # Not sure if this is necessary, but does no harm...
-echo "</head><body>";
-echo "<center><img src='vestaTitle.png' title=\"Vesta was the Roman goddess of hearth and home\" width=128 height=128><br>";
-$app = new OneFileLoginApplication();
-echo "</body></html>";
+if ($_SESSION['user_is_logged_in'] == true) {
+    echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta.php\"/>"; # Automatically go to main page if we're logged in
+} else {
+    $user = $_SESSION['user_name'];
+    if (strlen($user) == 0) {   # Check if PHP's garbage collector has logged us out
+        $event = "Last user Timed out";
+        $db = DatabaseInit();
+        NewEvent(0, $event, $db);
+    }
+    echo "<html><body>";
+    echo "<center><img src='vestaTitle.png' title=\"Vesta was the Roman goddess of hearth and home\" width=128 height=128><br>";
+    $app = new OneFileLoginApplication();
+    echo "</body></html>";
+}
 
 ?>
