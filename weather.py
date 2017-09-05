@@ -9,6 +9,7 @@ import events
 import variables
 import config
 import status
+import database
 
 owm = None
 apiKey = None
@@ -25,6 +26,7 @@ def EventHandler(eventId, eventArg):
             try:
                 obs = owm.weather_at_place(location)  # My location
             except:
+                database.NewEvent(0, "Weather Feed failed!")
                 status.problem("Weather", "Feed failed!")
                 return
             w = obs.get_weather()
@@ -46,5 +48,6 @@ def EventHandler(eventId, eventArg):
             else:
                 snow = 0    # No snow
             variables.Set("snow", str(snow))
+            database.NewEvent(0, "Weather now "+str(cloudCover)+"% cloudy")
             events.Issue(events.ids.WEATHER)    # Tell system that we have a new weather report
 
