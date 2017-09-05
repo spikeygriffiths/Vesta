@@ -16,13 +16,13 @@ class OneFileLoginApplication
         $numUsers = GetNumUsers($db);
         if (0 == $numUsers) {   # If we have no users yet
             $_SESSION['user_is_logged_in'] = true;  # Log in without a name (we have no names yet...)
-            echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta.php\"/>"; # Automatically go to home page if there are no registered users
+            echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta/vesta.php\"/>"; # Automatically go to home page if there are no registered users
         } else {
             $this->PerformUserLoginAction($db);            // check for possible user interactions (login with session/post data or logout)
             if ($_SESSION['user_is_logged_in'] == true) {
                 $event = $_SESSION['user_name']." Logged in";
                 NewEvent(0, $event, $db);
-                echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta.php\"/>"; # Automatically go to home page once we're logged in
+                echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta/vesta.php\"/>"; # Automatically go to home page once we're logged in
             } else {
                 $this->ShowPageLoginForm();
             }
@@ -32,7 +32,7 @@ class OneFileLoginApplication
     private function PerformUserLoginAction($db)
     {
         if (!empty($_SESSION['user_name']) && ($_SESSION['user_is_logged_in'])) {
-            echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta.php\"/>"; # Automatically go to home page if we're already logged in
+            echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta/vesta.php\"/>"; # Automatically go to home page if we're already logged in
         } elseif (isset($_POST["login"])) {
             $this->DoLoginWithPostData($db);
         }
@@ -78,7 +78,7 @@ class OneFileLoginApplication
 }
 
 if ($_SESSION['user_is_logged_in'] == true) {
-    echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta.php\"/>"; # Automatically go to main page if we're logged in
+    echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta/vesta.php\"/>"; # Automatically go to main page if we're logged in
 } else {
     $user = $_SESSION['user_name'];
     if (strlen($user) == 0) {   # Check if PHP's garbage collector has logged us out

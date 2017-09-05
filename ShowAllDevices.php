@@ -1,7 +1,7 @@
 <?php 
 // ShowAllDevices.php
 session_start();
-if ($_SESSION['user_is_logged_in'] != true) echo "<meta http-equiv=\"refresh\" content=\"0;url=/index.php\"/>"; # Automatically go to index if we're not logged in
+if ($_SESSION['user_is_logged_in'] != true) echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta/index.php\"/>"; # Automatically go to index if we're not logged in
 error_reporting(E_ALL); 
 include "database.php";
 include "functions.php";
@@ -12,11 +12,11 @@ echo "td, th {border: 2px solid #dddddd;text-align: left;padding: 2px }";
 echo "tr:nth-child(even) { background-color: #dddddd; }</style></head>";
 echo "<body>";
 echo "<center><h1>Devices</h1> ";
-echo "<button type=\"button\" onclick=\"window.location.href='/AddNewDevices.php'\">Add new devices</button><br><br>";
+echo "<button type=\"button\" onclick=\"window.location.href='/vesta/AddNewDevices.php'\">Add new devices</button><br><br>";
 //print_r (PDO::getAvailableDrivers()); echo("<br>"); // Shows whether you have SQLite for PDO installed
 ShowDevices();
 echo "<br>";
-echo "<button type=\"button\" onclick=\"window.location.href='/index.php'\">Home</button><br><br>";
+echo "<button type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
 echo "</body></html>";
 
 function ShowDevStatus($item, $devKey, $db, $suffix)
@@ -49,7 +49,7 @@ function ShowDevices()
             $devKey = GetDevKey($index, $db);
             echo "<tr>";
             $username = GetDevItem("userName", $devKey, $db);
-            echo "<td><a href=\"ShowOneDevice.php/?devKey=",$devKey,"\">",$username,"</a></td>";
+            echo "<td><a href=\"/vesta/ShowOneDevice.php/?devKey=",$devKey,"\">",$username,"</a></td>";
 	        ShowDevStatus("battery", $devKey, $db, "%");
 	        ShowDevStatus("signal", $devKey, $db, "%");
       	    ShowDevStatus("presence", $devKey, $db, "");

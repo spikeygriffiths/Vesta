@@ -1,6 +1,6 @@
 <?php 
 session_start();
-if ($_SESSION['user_is_logged_in'] != true) echo "<meta http-equiv=\"refresh\" content=\"0;url=/index.php\"/>"; # Automatically go to index if we're not logged in
+if ($_SESSION['user_is_logged_in'] != true) echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta/index.php\"/>"; # Automatically go to index if we're not logged in
 include "database.php";
 error_reporting(E_ALL); 
 
@@ -19,7 +19,7 @@ $devKey = $_GET['devKey'];
 echo "<center><h1>Activity</h1>";
 $db = DatabaseInit();
 // See if the time needs to be adjusted
-echo "<form action='/SelectActivityTime.php/?devKey=".$devKey."' method='post'>";
+echo "<form action='/vesta/SelectActivityTime.php/?devKey=".$devKey."' method='post'>";
 echo "<p>Show events from:<select id='timePeriod' name='timePeriod'>";
 echo "<option value='today'>Today</option>";
 echo "<option value='yesterday'>Yesterday onwards</option>";
@@ -40,7 +40,7 @@ echo "<input type='submit' name='submit'/>";
 echo "</form>";
 ShowActivity($db, $dbTime, $titleTime, $devKey);
 echo "<br>";
-echo "<button type=\"button\" onclick=\"window.location.href='/index.php'\">Home</button><br><br>";
+echo "<button type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
 echo "</body></html>";
 
 function ShowActivity($db, $dbTime, $titleTime, $devKey)

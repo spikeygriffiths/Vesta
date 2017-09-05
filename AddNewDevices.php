@@ -13,8 +13,8 @@ echo HubCmd("open", false);
 echo "<h3>Top tip - Make sure the new devices are all different types so you can distinguish them later!</h3><br><br>";
 ShowNewDevices();
 echo "<br><br><br><br>";
-echo "<button type=\"button\" onclick=\"window.location.href='/ShowAllDevices.php'\">All Devices</button><br>";
-echo "<button type=\"button\" onclick=\"window.location.href='/index.php'\">Home</button><br><br>";
+echo "<button type=\"button\" onclick=\"window.location.href='/vesta/ShowAllDevices.php'\">All Devices</button><br>";
+echo "<button type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
 echo "</body>";
 echo "</html>";
 

@@ -19,6 +19,8 @@ def EventHandler(eventId, eventArg):
         if flushDB:
             db.commit() # Flush events to disk
             flushDB = False
+    if eventId == events.ids.NEWDAY:
+        FlushOldEvents()    # Flush old events to avoid database getting too big and slow
     if eventId == events.ids.SHUTDOWN:
         db.commit() # Flush events to disk prior to shutdown
 # end of EventHandler
@@ -73,6 +75,11 @@ def GetLatestEvent(devKey):
     if rows != None:
         return rows[0]
     return None
+
+def FlushOldEvents():
+    global curs, flushDB
+    curs.execute("DELETE FROM Events WHERE timestamp <= datetime('now', '-1 months')")  # Remove all events older than 1 month
+    flushDB = True # Batch up the commits
 
 # === Groups ===
 def IsGroupName(checkName): # Return True if arg is a group name

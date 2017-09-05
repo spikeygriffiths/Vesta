@@ -22,10 +22,10 @@ $query = "UPDATE Groups SET devKeyList=\"".$devList."\" WHERE userName=\"".$grou
 echo $query, "<br>";
 $count = $db->exec($query);
 if ($count == 1) {
-    echo "<meta http-equiv=\"refresh\" content=\"1;url=/UpdateGroup.php/?groupName=",$groupName,"\"/>";
+    echo "<meta http-equiv=\"refresh\" content=\"1;url=/vesta/UpdateGroup.php/?groupName=",$groupName,"\"/>";
     echo "New device added to ",$groupName,"<br>";
 } else {
     echo "Update failed, with count of:", $count, "<br>";
 }
-echo "<a href='/UpdateGroup.php/?groupName=",$groupName,"'>Show Group</a>";
+echo "<a href='/vesta/UpdateGroup.php/?groupName=",$groupName,"'>Show Group</a>";
 ?>

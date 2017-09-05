@@ -13,7 +13,7 @@ if ($db) {
     }
     $count = $db->exec($query);
 }
-echo "<meta http-equiv=\"refresh\" content=\"0;url=/ManageUsers.php\"/>"; # Automatically go to ManageUsers page
-echo "<p><center><a href=\"/index.php\">Home</a></center>"; # Shouldn't be needed (or indeed visible!)
+echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta/ManageUsers.php\"/>"; # Automatically go to ManageUsers page
+echo "<p><center><a href=\"/vesta/index.php\">Home</a></center>"; # Shouldn't be needed (or indeed visible!)
 echo "</body></html>";
 ?>

@@ -15,7 +15,7 @@ if ($db) {
     $count = $db->exec($query);
     if ($count == 1) {
         UpdateRules($oldUserName, $newUserName, $db);    // Now go through the rules and make sure the old name is updated to the new
-        echo "<meta http-equiv=\"refresh\" content=\"0;url=/ShowOneDevice.php/?devKey=",$devKey,"\"/>"; # Automatically go back to where we came from
+        echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta/ShowOneDevice.php/?devKey=",$devKey,"\"/>"; # Automatically go back to where we came from
         echo "New name saved";
     } else {
         echo "Update failed, with count of:", $count, "<br>";
@@ -23,6 +23,6 @@ if ($db) {
 } else {
     echo "Failed to get a handle onto the database<br>";
 }
-echo "<button type=\"button\" onclick=\"window.location.href='/ShowOneDevice.php/?devKey=",$devKey,"'>Show Device</button><br><br>"; # Let user go back to where we came from
-echo "<button type=\"button\" onclick=\"window.location.href='/index.php'\">Home</button><br><br>";
+echo "<button type=\"button\" onclick=\"window.location.href='/vesta/ShowOneDevice.php/?devKey=",$devKey,"'>Show Device</button><br><br>"; # Let user go back to where we came from
+echo "<button type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
 ?>

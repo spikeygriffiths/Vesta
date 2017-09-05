@@ -17,5 +17,5 @@ if ($timePeriod=="today") {
     $titleTime = "Last month";
 }
 //$devKey=$_POST["devKey"];
-echo "<meta http-equiv=\"refresh\" content=\"0;url=/activity.php/?dbTime=",$dbTime,"&titleTime=",$titleTime,"&devKey=",$devKey,"\"/>";
+echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta/activity.php/?dbTime=",$dbTime,"&titleTime=",$titleTime,"&devKey=",$devKey,"\"/>";
 ?>

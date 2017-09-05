@@ -8,6 +8,6 @@ $db = DatabaseInit();
 $away = GetAppState("away", $db);
 if ($away ==  "False") $away = "True"; else $away = "False";    // Flip value
 SetAppState("away", $away, $db);
-echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta.php\"/>"; # Automatically go to home page
-//echo "<p><center><a href=\"/index.php\">Home</a></center>";
+echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta/vesta.php\"/>"; # Automatically re-display home page (assumes we've come from there)
+//echo "<p><center><a href=\"/vesta/index.php\">Home</a></center>";
 ?>

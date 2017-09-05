@@ -1,6 +1,6 @@
 <?php
 session_start();
-if ($_SESSION['user_is_logged_in'] != true) echo "<meta http-equiv=\"refresh\" content=\"0;url=/index.php\"/>"; # Automatically go to index if we're not logged in
+if ($_SESSION['user_is_logged_in'] != true) echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta/index.php\"/>"; # Automatically go to index if we're not logged in
 error_reporting(E_ALL); 
 include "HubCmd.php";
 include "database.php";
@@ -20,8 +20,8 @@ $db = DatabaseInit();
 $username = GetDevItem("userName", $devKey,$db);
 echo "<center><h1>",$username,"</h1>";
 ShowDeviceInfo($db, $devKey, $username);
-echo "<br><br><button type=\"button\" onclick=\"window.location.href='/ShowAllDevices.php'\">All Devices</button><br><br>";
-echo "<button type=\"button\" onclick=\"window.location.href='/index.php'\">Home</button><br><br>";
+echo "<br><br><button type=\"button\" onclick=\"window.location.href='/vesta/ShowAllDevices.php'\">All Devices</button><br><br>";
+echo "<button type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
 echo "</body></html>";
 
 function ShowDevStatus($item, $name, $devKey, $db)
@@ -53,9 +53,9 @@ function ShowDeviceInfo($db, $devKey, $username)
 {
     $nwkId = GetDevItem("nwkId", $devkey, $db);
     if ("0000" != $nwkId) {
-        echo "<button type=\"button\" onclick=\"window.location.href='/DelDevice.php/?devId=",$username,"'\">Remove Device</button><br><br>";
+        echo "<button type=\"button\" onclick=\"window.location.href='/vesta/DelDevice.php/?devId=",$username,"'\">Remove Device</button><br><br>";
     }
-    //echo "<center><form action=\"/UpdateDeviceName.php/?devKey=",$devKey,"\" method=\"post\">";
+    //echo "<center><form action=\"/vesta/UpdateDeviceName.php/?devKey=",$devKey,"\" method=\"post\">";
     echo "<table>";
     //echo "<tr><td>Name</td><td><input type=\"text\" name=\"UserName\" value=\"", $username, "\"></td>";
     ShowDevStatus("signal", "Radio Signal %", $devKey, $db);
@@ -89,21 +89,21 @@ function ShowDeviceInfo($db, $devKey, $username)
     }
     echo "</table>";
     //echo "<input type=\"submit\" value=\"Update name\"></form>";
-    echo "<br><button type=\"button\" onclick=\"window.location.href='/ChangeDevName.php/?devKey=",$devKey,"'\">Change Name</button>&nbsp&nbsp&nbsp";
-    echo "<button type=\"button\" onclick=\"window.location.href='/rules.php/?item=",$username,"'\">Rules</button>&nbsp&nbsp&nbsp";
-    echo "<button type=\"button\" onclick=\"window.location.href='/activity.php/?devKey=",$devKey,"'\">Activity Log</button>&nbsp&nbsp&nbsp";
+    echo "<br><button type=\"button\" onclick=\"window.location.href='/vesta/ChangeDevName.php/?devKey=",$devKey,"'\">Change Name</button>&nbsp&nbsp&nbsp";
+    echo "<button type=\"button\" onclick=\"window.location.href='/vesta/rules.php/?item=",$username,"'\">Rules</button>&nbsp&nbsp&nbsp";
+    echo "<button type=\"button\" onclick=\"window.location.href='/vesta/activity.php/?devKey=",$devKey,"'\">Activity Log</button>&nbsp&nbsp&nbsp";
     if ("0000" != $nwkId) {
-        echo "<button type=\"button\" onclick=\"window.location.href='/Command.php/?cmd=identify ",$username," 30'\">Identify for 30s</button>&nbsp&nbsp&nbsp";
+        echo "<button type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=identify ",$username," 30'\">Identify for 30s</button>&nbsp&nbsp&nbsp";
         $inClusters = GetDevItem("inClusters", $devKey, $db);
         if (strpos($inClusters, "0006") !== false) { // Is switchable, eg smartplug, bulb, etc.
-            echo "<button type=\"button\" onclick=\"window.location.href='/Command.php/?cmd=toggle ",$username,"'\">Toggle</button>&nbsp&nbsp&nbsp";
+            echo "<button type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=toggle ",$username,"'\">Toggle</button>&nbsp&nbsp&nbsp";
         }
         if (strpos($inClusters, "0008") !== false) { // Is dimmable, eg lamp, bulb
-            echo "Brightness: <a href=\"/ImageMap.php/?devId=",$username,"&cmd=dim&map=\"><img src=\"/UpRamp.png\" width=100 height=20 alt=\"Level\" ismap=\"ismap\"></a><br><br>";  // Php page will GET x,y,
+            echo "Brightness: <a href=\"/vesta/ImageMap.php/?devId=",$username,"&cmd=dim&map=\"><img src=\"/UpRamp.png\" width=100 height=20 alt=\"Level\" ismap=\"ismap\"></a><br><br>";  // Php page will GET x,y,
         }
         if (strpos($inClusters, "0300") !== false) { // ColorCtrl cluster, eg lamp, RGB bulbs
-            echo "Hue: <a href=\"/ImageMap.php/?devId=",$username,"&cmd=hue&map=\"><img src=\"/Hue.png\" width=360 height=20 alt=\"Hue\" ismap=\"ismap\"></a><br><br>";  // Php page will GET x,y, according to stackoverflow.com/questions/358387
-            echo "Saturation: <a href=\"/ImageMap.php/?devId=",$username,"&cmd=sat&map=\"><img src=\"/Sat.png\" width=100 height=20 alt=\"Saturation\" ismap=\"ismap\"></a><br><br>";
+            echo "Hue: <a href=\"/vesta/ImageMap.php/?devId=",$username,"&cmd=hue&map=\"><img src=\"/Hue.png\" width=360 height=20 alt=\"Hue\" ismap=\"ismap\"></a><br><br>";  // Php page will GET x,y, according to stackoverflow.com/questions/358387
+            echo "Saturation: <a href=\"/vesta/ImageMap.php/?devId=",$username,"&cmd=sat&map=\"><img src=\"/Sat.png\" width=100 height=20 alt=\"Saturation\" ismap=\"ismap\"></a><br><br>";
         }
     }
 }

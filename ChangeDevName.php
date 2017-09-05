@@ -13,14 +13,14 @@ $db = DatabaseInit();
 $username = GetDevItem("userName", $devKey,$db);
 echo "<center><h1>Change ",$username,"</h1>";
 ChangeName($db, $devKey, $username);
-echo "<a href=\"/ShowAllDevices.php\">All Devices</a><br><br>";
-echo "<a href=\"/ShowOneDevice.php/?devKey=",$devKey,"\">Show Device</a><br><br>";
-echo "<a href=\"/index.php\">Home</a>";
+echo "<a href=\"/vesta/ShowAllDevices.php\">All Devices</a><br><br>";
+echo "<a href=\"/vesta/ShowOneDevice.php/?devKey=",$devKey,"\">Show Device</a><br><br>";
+echo "<a href=\"/vesta/index.php\">Home</a>";
 echo "</body></html>";
 
 function ChangeName($db, $devKey, $username)
 {
-    echo "<center><form action=\"/UpdateDeviceName.php/?devKey=",$devKey,"\" method=\"post\">";
+    echo "<center><form action=\"/vesta/UpdateDeviceName.php/?devKey=",$devKey,"\" method=\"post\">";
     echo "<table>";
     echo "<tr><td>Name</td><td><input type=\"text\" name=\"UserName\" value=\"", $username, "\"></td>";
     echo "</table>";

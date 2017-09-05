@@ -1,6 +1,6 @@
 <?php 
 session_start();
-if ($_SESSION['user_is_logged_in'] != true) echo "<meta http-equiv=\"refresh\" content=\"0;url=/index.php\"/>"; # Automatically go to index if we're not logged in
+if ($_SESSION['user_is_logged_in'] != true) echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta/index.php\"/>"; # Automatically go to index if we're not logged in
 include "database.php";
 error_reporting(E_ALL); 
 
@@ -13,7 +13,7 @@ echo "<center><h1>Groups</h1>";
 $db = DatabaseInit();
 ShowGroups($db);
 echo "<br>";
-echo "<button type=\"button\" onclick=\"window.location.href='/index.php'\">Home</button><br><br>";
+echo "<button type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
 echo "</body></html>";
 
 function ShowGroups($db)
@@ -38,10 +38,10 @@ function ShowGroups($db)
         } else {
             $devs = "<i>empty</i>";
         }
-        echo "<tr><td><a href=\"/UpdateGroup.php/?groupName=",$groupName,"\">",$groupName,"</a></td>";
+        echo "<tr><td><a href=\"/vesta/UpdateGroup.php/?groupName=",$groupName,"\">",$groupName,"</a></td>";
         echo"<td> ".$devs." </td></tr>";
     }
-    echo"<tr><td> <a href=\"/UpdateGroup.php/?groupName=NewGroup\"><i>New Group</i></a> </td><td> <i>empty</i> </td></tr>";
+    echo"<tr><td> <a href=\"/vesta/UpdateGroup.php/?groupName=NewGroup\"><i>New Group</i></a> </td><td> <i>empty</i> </td></tr>";
     echo "</table>";
 }
 

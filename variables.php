@@ -1,6 +1,6 @@
 <?php 
 session_start();
-if ($_SESSION['user_is_logged_in'] != true) echo "<meta http-equiv=\"refresh\" content=\"0;url=/index.php\"/>"; # Automatically go to index if we're not logged in
+if ($_SESSION['user_is_logged_in'] != true) echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta/index.php\"/>"; # Automatically go to index if we're not logged in
 error_reporting(E_ALL); 
 include "HubCmd.php";
 
@@ -27,6 +27,6 @@ for ($index = 0; $index < count($varsArray); $index += 2) {
     echo "<tr><td>",$varsArray[$index], "</td><td>", $varsArray[$index+1], "</td></tr>";
 }
 echo "</table><br>";
-echo "<button type=\"button\" onclick=\"window.location.href='/index.php'\">Home</button><br><br>";
+echo "<button type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
 echo "</body></html>";
 ?>

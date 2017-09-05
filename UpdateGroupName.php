@@ -17,10 +17,10 @@ echo "About to send ",$query, " to DB<br>";
 $count = $db->exec($query);
 if ($count == 1) {
     UpdateRules($oldGroupName, $newGroupName, $db);    // Now go through the rules and make sure the old name is updated to the new
-    echo "<meta http-equiv=\"refresh\" content=\"1;url=/UpdateGroup.php/?groupName=",$newGroupName,"\"/>";
+    echo "<meta http-equiv=\"refresh\" content=\"1;url=/vesta/UpdateGroup.php/?groupName=",$newGroupName,"\"/>";
     echo "New name saved";
 } else {
     echo "Update failed, with count of:", $count, "<br>";
 }
-echo "<a href=/UpdateGroup.php/?groupName=",$newGroupName,">Show Group</a>";
+echo "<a href=/vesta/UpdateGroup.php/?groupName=",$newGroupName,">Show Group</a>";
 ?>

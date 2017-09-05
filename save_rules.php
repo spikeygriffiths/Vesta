@@ -23,6 +23,6 @@ if ($db) {
     $count = $db->exec($query);
 }
 echo "<meta http-equiv=\"refresh\" content=\"0;url=/rules.php/?item=", $item, "\"/>"; # Automatically go to rules page
-echo "<p><center><a href=\"/index.php\">Home</a></center>";
+echo "<p><center><a href=\"/vesta/index.php\">Home</a></center>";
 echo "</body></html>";
 ?>

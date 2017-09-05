@@ -9,6 +9,6 @@ $logName = "/home/pi/hubapp/today.log";
 $logHandle = fopen($logName, "r");
 $logText = fread($logHandle, 100000);
 echo nl2br($logText);
-echo "<br><br><a href=\"/index.php\">Home</a>";
+echo "<br><br><a href=\"/vesta/index.php\">Home</a>";
 echo "</body></html>";
 ?>

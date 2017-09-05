@@ -9,10 +9,10 @@ $query = "DELETE FROM Groups WHERE userName=\"".$groupName."\"";
 echo $query, "<br>";
 $count = $db->exec($query);
 if ($count == 1) {
-    echo "<meta http-equiv=\"refresh\" content=\"1;url=/Groups.php/\">";
+    echo "<meta http-equiv=\"refresh\" content=\"1;url=/vesta/Groups.php/\">";
     echo $groupName," successfully removed<br>";
 } else {
     echo "Update failed, with count of:", $count, "<br>";
 }
-echo "<a href='/Groups.php''>Groups</a>";
+echo "<a href='/vesta/Groups.php''>Groups</a>";
 ?>
