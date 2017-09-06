@@ -201,7 +201,7 @@ def Action(actList):
     elif action == "status":  # Was synopsis
         emailAddress = config.Get("emailAddress")
         if emailAddress != None:
-            with open("status.html", "r") as status:    # Send status.html page as body of email
+            with open("status.email", "r") as status:    # Send status.email file as body of email
                 emailBody = status.readlines()
             cmdList = ["echo", "\""+'\n'.join(emailBody)+"\"", "|", "mail", "-s", "\"Vesta Status\"", emailAddress]
             cmdStr = " ".join(cmdList)

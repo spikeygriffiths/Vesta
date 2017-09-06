@@ -10,14 +10,13 @@ issues = {} # Empty dictionary at start
 
 def BuildPage():
     log.debug("Building status.html...")
-    html = open("status.html", "w")    # Create local temporary file, so we can send it via email, or copy it for Apache to serve up
+    email = open("status.email", "w")    # Create text file for emailing.  Could put HTML inside here once I work out how!
+    html = open("status.html", "w")    # Create local temporary file, so we can copy it for Apache to serve up
     html.write("\n<html><head>")  # Blank line at start
-    html.write("<style>")
-    html.write(".good { color: green; }")
-    html.write(".bad { color: red; }")
-    html.write("</style>")
+    html.write("<style>.good { color: green; }.bad { color: red; }</style>")
     html.write("</head><body>")
     html.write("<center><h1>Vesta Status at " + datetime.now().strftime("%Y/%m/%d %H:%M:%S") + "</h1>")  # Put body here
+    email.write("Vesta Status at " + datetime.now().strftime("%Y/%m/%d %H:%M:%S")+"\n\n");
     keyList = database.GetAllDevKeys()  # Get a list of all the device identifiers from the database
     for devKey in keyList:  # Element 0 is hub, rest are devices
         if database.GetDeviceItem(devKey, "nwkId") != "0000":  # Ignore hub
@@ -29,12 +28,15 @@ def BuildPage():
     if len(issues) > 0:
         for items in issues.values():
             html.write(items + "<br>")
+            email.write(items + "\n")
         issues.clear()  # Clear the list, now that we've gone through it
     else:
         html.write("Everything OK!<br>")
+        email.write("Everything OK!\n")
     html.write("</body></html>")
     html.close()
-    os.system("sudo cp status.html /var/www/html")  # So vesta.php can refer to it
+    email.close()
+    os.system("sudo cp status.html /var/www/html/vesta")  # So vesta.php can refer to it
 
 def problem(key, value):
     issues[key] = value   # Add new, or update old, dictionary entry

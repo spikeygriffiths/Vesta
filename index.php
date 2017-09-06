@@ -81,11 +81,11 @@ if ($_SESSION['user_is_logged_in'] == true) {
     echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta/vesta.php\"/>"; # Automatically go to main page if we're logged in
 } else {
     $user = $_SESSION['user_name'];
-    if (strlen($user) == 0) {   # Check if PHP's garbage collector has logged us out
-        $event = "Last user Timed out";
+    /*if (strlen($user) == 0) {   # Check if PHP's garbage collector has logged us out
+        $event = "Last user Timed out"; # Only works when page is refreshed, and always writes two entries, so is not much use
         $db = DatabaseInit();
         NewEvent(0, $event, $db);
-    }
+    }*/
     echo "<html><body>";
     echo "<center><img src='vestaTitle.png' title=\"Vesta was the Roman goddess of hearth and home\" width=128 height=128><br>";
     $app = new OneFileLoginApplication();
