@@ -38,6 +38,7 @@ if ($appRunning) {
     echo "<button type=\"button\" onclick=\"window.location.href='https://docs.google.com/document/d/1BPCPYH9JV_Ekot3clXyhLmIPgkDzyd2aZhu5PGcCNKw/edit?usp=sharing'\">Documentation</button><br><br>";
     echo "<button type=\"button\" onclick=\"window.location.href='/vesta/logout.php'\">Log Out</button><br><br>";
     echo "<button type=\"button\" onclick=\"window.location.href='/vesta/ManageUsers.php'\">Manage users</button><br><br>";
+    echo "<button type=\"button\" onclick=\"window.location.href='/vesta/log.php'\">Error Logs</button><br><br>";
     echo "</center>";
  } else {
     echo "<br>";

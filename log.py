@@ -10,6 +10,8 @@ def Init(msg):
         debug(msg)
     except:
         os.remove("today.log") # Remove unusable log if necessary (we may be recovering from a power cut in the middle of writing the log?)
+    if os.path.isfile("err.log"):
+        os.rename("err.log", str(datetime.now())+"_err.log")    # If there's an "err.log" file, prepend the time (to ensure it won't overwrite any others) and continue
         
 def debug(msg):
     log("debug:" + msg)
