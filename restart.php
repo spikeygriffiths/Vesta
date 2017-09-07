@@ -1,5 +1,5 @@
 <?php
-$fh = fopen("/home/pi/hubapp/rebootflag", 'w');
+$fh = fopen("/home/pi/Vesta/rebootflag", 'w');
 fwrite($fh, "reboot now");  // Could write anything here - checkreboot.sh just checks for existence of file
 fclose($fh);
 echo "<html>";

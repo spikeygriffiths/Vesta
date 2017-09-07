@@ -1,6 +1,6 @@
 #!/bin/bash
-if [ -f /home/pi/hubapp/rebootflag ]; then
-    rm -f /home/pi/hubapp/rebootflag
+if [ -f /home/pi/Vesta/rebootflag ]; then
+    rm -f /home/pi/Vesta/rebootflag
     sudo /sbin/reboot
 fi
 

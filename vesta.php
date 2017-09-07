@@ -44,9 +44,9 @@ if ($appRunning) {
     echo "<br>";
     echo "<center><h2>Vesta app stopped</h2></center>"; 
     $fragmentSize = 1500;
-    $logName = "/home/pi/hubapp/err.log";
+    $logName = "/home/pi/Vesta/err.log";
     if (!file_exists($logName)) {
-        $logName = "/home/pi/hubapp/today.log";
+        $logName = "/home/pi/Vesta/today.log";
     }
     $logHandle = fopen($logName, "r");
     $logSize = filesize($logName);

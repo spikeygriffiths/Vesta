@@ -5,7 +5,7 @@ echo "<html><head>";
 echo "</head><body>";
 echo "<center><h1>Recent error logs</h1></center>";
 # See https://stackoverflow.com/questions/2667065/sort-files-by-date-in-php for details of the following sort
-$files = glob("/home/pi/hubapp/*_err.log");
+$files = glob("/home/pi/Vesta/*_err.log");
 if ($files) {
     echo "<P>NB Most recent error log first in the following list;<br>";
     usort($files, function($a, $b) {
