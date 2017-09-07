@@ -28,7 +28,7 @@ def EventHandler(eventId, eventArg):
         if variables.Get("sunrise") != None:
             variables.Set("morning", variables.Get("sunrise"))
             variables.Set("evening", variables.Get("sunset"))   # Set up defaults until we get a weather report
-        rules.Run("trigger==hubstart")
+        rules.Run("trigger==appstart")
         database.NewEvent(0, "App started") # 0 is always hub
     elif eventId == events.ids.SECONDS:
         now = datetime.now()
