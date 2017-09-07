@@ -1,6 +1,5 @@
 <?php
 error_reporting(E_ALL); 
-include "HubCmd.php";
 include "database.php";
 
 echo "<html>";

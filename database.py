@@ -13,7 +13,7 @@ flushDB = False
 def EventHandler(eventId, eventArg):
     global db, curs, flushDB
     if eventId == events.ids.PREINIT:
-        db = sqlite3.connect("hubstuff.db")
+        db = sqlite3.connect("vesta.db")
         curs = db.cursor()
     if eventId == events.ids.SECONDS:
         if flushDB:

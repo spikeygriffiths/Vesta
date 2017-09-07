@@ -4,7 +4,7 @@ session_start();
 
 function DatabaseInit()
 {
-    $dir = "sqlite:/home/pi/hubapp/hubstuff.db";
+    $dir = "sqlite:/home/pi/hubapp/vesta.db";
     $db = new PDO($dir) or die("Cannot open database");
     return $db;
 }

@@ -2,7 +2,7 @@
 session_start();
 if ($_SESSION['user_is_logged_in'] != true) echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta/index.php\"/>"; # Automatically go to index if we're not logged in
 error_reporting(E_ALL); 
-include "HubCmd.php";
+include "AppCmd.php";
 include "database.php";
 
 $refreshInterval = 5;   // Should probably be 10
@@ -79,8 +79,8 @@ function ShowDeviceInfo($db, $devKey, $username)
         ShowDevItem("binding", "Binding", $devKey, $db);
         ShowDevItem("reporting", "Reporting", $devKey, $db);
         ShowDevItem("iasZoneType", "IAS Zone Type", $devKey, $db);
-    } else {    // Is hub
-        $radioStr = HubCmd("radio", True);
+    } else {    // Is Vesta coordinator
+        $radioStr = AppCmd("radio", True);
         $radioInfo = explode(",", $radioStr);
         echo "<tr><td>Radio Channel</td><td>",$radioInfo[0],"</td></tr>";
         echo "<tr><td>Radio Power</td><td>",$radioInfo[1],"</td></tr>";

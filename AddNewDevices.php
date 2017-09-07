@@ -1,5 +1,5 @@
 <?php
-include "HubCmd.php";
+include "AppCmd.php";
 include "database.php";
 
 $url1 = $_SERVER['REQUEST_URI'];
@@ -9,7 +9,7 @@ echo "<head></head>";
 echo "<body>";
 echo "<center><h1>Add New Devices</h1> ";
 echo "Now: ", date('Y-m-d H:i:s'), "<br><br>"; // Show page refreshing
-echo HubCmd("open", false);
+echo AppCmd("open", false);
 echo "<h3>Top tip - Make sure the new devices are all different types so you can distinguish them later!</h3><br><br>";
 ShowNewDevices();
 echo "<br><br><br><br>";

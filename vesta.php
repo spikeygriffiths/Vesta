@@ -2,7 +2,7 @@
 session_start();
 if ($_SESSION['user_is_logged_in'] != true) echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta/index.php\"/>"; # Automatically go to index if we're not logged in
 error_reporting(E_ALL); 
-include "HubCmd.php";
+include "AppCmd.php";
 include "database.php";
 
 echo "<html><head>";
@@ -14,7 +14,7 @@ $appRunning = (strpos($ps, "vesta.py") !== false);
 //echo "Current PHP version: ".phpversion()."<br>";
 $statusPage = "status.html";
 if ($appRunning) {
-    echo "UpTime: ",HubCmd("uptime", True),"<br>";
+    echo "UpTime: ",AppCmd("uptime", True),"<br>";
     echo "<br>";
     echo "<button type=\"button\" onclick=\"window.location.href='/vesta/ShowAllDevices.php'\">Devices</button>&nbsp&nbsp&nbsp";
     echo "<button type=\"button\" onclick=\"window.location.href='/vesta/Groups.php'\">Groups</button><br><br>";
@@ -43,10 +43,8 @@ if ($appRunning) {
  } else {
     echo "<br>";
     echo "<center><h2>Vesta app stopped</h2></center>"; 
-    //$reason = shell_exec("tail --lines=20 /home/pi/hubapp/today.log");
-    //echo "<b>Last lines of today's hub log;</b><br>",nl2br($reason);
     $fragmentSize = 1500;
-    $logName = "/home/pi/hubapp/hubout.log";
+    $logName = "/home/pi/hubapp/err.log";
     if (!file_exists($logName)) {
         $logName = "/home/pi/hubapp/today.log";
     }

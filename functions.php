@@ -1,6 +1,6 @@
 <?php
 // functions.php
-include "HubCmd.php";
+include "AppCmd.php";
 
 function ElapsedTime($timeStamp)    // Creates a string describing age of $timeStamp
 {
@@ -18,7 +18,7 @@ function ElapsedTime($timeStamp)    // Creates a string describing age of $timeS
 function GetVarVal($varName)
 {
     $varsArray = [];
-    $varsList = HubCmd("vars", True);
+    $varsList = AppCmd("vars", True);
     $varsArray = explode(",", $varsList);
     $varVal = "Unknown";
     for ($index = 0; $index < count($varsArray); $index += 2) { // Search for variable name
@@ -32,6 +32,6 @@ function GetVarVal($varName)
 
 function SetVarVal($varName, $varVal)
 {
-    HubCmd("set " + $varName + " " + $varVal, False);
+    AppCmd("set " + $varName + " " + $varVal, False);
 }
 ?>

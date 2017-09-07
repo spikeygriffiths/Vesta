@@ -1,4 +1,4 @@
-sqlite3 hubstuff.db
+sqlite3 vesta.db
 
 BEGIN;
 CREATE TABLE IF NOT EXISTS Devices (
@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS Users (
 COMMIT;
 .quit
 # Next line needed to allow Python to write back to the database
-chmod 666 hubstuff.db
+chmod 666 vesta.db
 # Next line needed to allow SQL from Apache to write back to the database
 chmod 777 ..
 

@@ -2,7 +2,7 @@
 // ImageMap.php
 // Gets X and Y from mouse click pos as well as command & deviceId from URL
 error_reporting(E_ALL); 
-include "HubCmd.php";
+include "AppCmd.php";
 
 $cmd = $_GET['cmd'];
 $devId = $_GET['devId'];
@@ -14,7 +14,7 @@ $x = $coords[0];
 $y = $coords[1];
 if (($cmd == "hue") || ($cmd == "sat") || ($cmd == "dim")) {
     $cmd = $cmd." ".$devId." ".$x;  // Just use X for these commands
-    HubCmd($cmd, false);
+    AppCmd($cmd, false);
 }
 
 header('location:.' . $_SERVER['HTTP_REFERER']);

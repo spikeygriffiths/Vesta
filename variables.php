@@ -2,7 +2,7 @@
 session_start();
 if ($_SESSION['user_is_logged_in'] != true) echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta/index.php\"/>"; # Automatically go to index if we're not logged in
 error_reporting(E_ALL); 
-include "HubCmd.php";
+include "AppCmd.php";
 
 $varsArray = [];
 echo "<html><head>";
@@ -12,7 +12,7 @@ echo "td, th {border: 2px solid #dddddd;text-align: left;padding: 2px }";
 echo "tr:nth-child(even) { background-color: #dddddd; }</style></head>";
 echo "<body>";
 echo "<center><h1>Variables</h1>";
-$varsList = HubCmd("vars", True);
+$varsList = AppCmd("vars", True);
 $varsArray = explode(",", $varsList);
 for ($index = 0; $index < count($varsArray); $index ++) {
     $varsArray[$index] = str_replace("'", "", $varsArray[$index]);
