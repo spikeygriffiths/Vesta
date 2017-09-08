@@ -10,8 +10,12 @@ def Init(msg):
         debug(msg)
     except:
         os.remove("today.log") # Remove unusable log if necessary (we may be recovering from a power cut in the middle of writing the log?)
-    if os.path.isfile("olderr.log"):
-        os.rename("olderr.log", str(datetime.now())+"_err.log")    # If there's an "olderr.log" file, prepend the time (to ensure it won't overwrite any others) and continue
+    oldErr = "olderr.log"
+    if os.path.isfile(oldErr):
+        if os.path.getsize(oldErr) > 0:
+            os.rename(oldErr, str(datetime.now())+"_err.log")    # If there's an "olderr.log" file, prepend the time (to ensure it won't overwrite any others) and continue
+        else:
+            os.remove(oldErr)   # Just delete any empty error log file, since it just means the last run didn't generate any errors
         
 def debug(msg):
     log("debug:" + msg)
