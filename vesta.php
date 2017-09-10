@@ -6,6 +6,7 @@ include "AppCmd.php";
 include "database.php";
 
 echo "<html><head>";
+echo "<link rel=\"shortcut icon\" type=\"image/x-icon\" href=\"favicon.ico\">"; # Seems to be necessary
 echo "</head><body>";
 echo "<center><img src='vestaTitle.png' title=\"Vesta was the Roman goddess of hearth and home\" width=128 height=128><br>";
 //echo "Now: ", date('Y-m-d H:i:s'), "<br>";

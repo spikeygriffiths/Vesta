@@ -86,7 +86,9 @@ if ($_SESSION['user_is_logged_in'] == true) {
         $db = DatabaseInit();
         NewEvent(0, $event, $db);
     }*/
-    echo "<html><body>";
+    echo "<html><head>";
+    echo "<link rel=\"shortcut icon\" type=\"image/x-icon\" href=\"favicon.ico\">"; # Seems to be necessary
+    echo "</head><body>";
     echo "<center><img src='vestaTitle.png' title=\"Vesta was the Roman goddess of hearth and home\" width=128 height=128><br>";
     $app = new OneFileLoginApplication();
     echo "</body></html>";
