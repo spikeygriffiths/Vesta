@@ -62,7 +62,7 @@ def EventHandler(eventId, eventArg):
             nwkId = database.GetDeviceItem(devKey, "nwkId")
             cmdRsp = Check(devKey)   # Check to see if we want to know anything about the device
             if cmdRsp != None:
-                log.debug("Keep awake for 10 secs")
+                log.debug("Keep awake for 10 secs so we can send "+cmdRsp[0])
                 queue.Jump(devKey, ["AT+RAWZCL:"+nwkId+","+endPoint+",0020,11"+seq+"00012800", "DFTREP"]) # Tell device to enter Fast Poll for 40qs (==10s)
                 SetTempVal(devKey,"PollingUntil", datetime.now()+timedelta(seconds=10))
                 queue.EnqueueCmd(devKey, cmdRsp)  # This will go out after the Fast Poll Set
