@@ -1,6 +1,6 @@
 <?php
 // functions.php
-include "AppCmd.php";
+include "AppCmd.php";   # Not allowed to include same file more than once, so if including this "functions.php", must remove any previous include "AppCmd.php"
 
 function ElapsedTime($timeStamp)    // Creates a string describing age of $timeStamp
 {

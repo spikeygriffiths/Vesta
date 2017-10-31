@@ -2,8 +2,8 @@
 session_start();
 if ($_SESSION['user_is_logged_in'] != true) echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta/index.php\"/>"; # Automatically go to index if we're not logged in
 error_reporting(E_ALL); 
-include "AppCmd.php";
 include "database.php";
+include "functions.php";
 
 $refreshInterval = 5;   // Should probably be 10
 //$url1 = $_SERVER['PHP_SELF']; // Seems to lose args on URL line when refreshing?
@@ -28,6 +28,7 @@ function ShowDevStatus($item, $name, $devKey, $db)
 {
     $val = GetDevStatus($item, $devKey,$db);
     if ($val != null) {
+        if ($item == "presence_time") { $val = ElapsedTime($val); }   # Convert timestamp to elapsed time
         echo "<tr><td>",$name,"</td><td>$val</td></tr>";
     }
 }
@@ -63,6 +64,7 @@ function ShowDeviceInfo($db, $devKey, $username)
     ShowDevStatus("temperature", "Temperature 'C", $devKey, $db);
     ShowDevStatus("powerReadingW", "Power (W)", $devKey, $db);
     ShowDevStatus("presence", "Presence", $devKey, $db);
+    ShowDevStatus("presence_time", "Last heard", $devKey, $db);
     echo "<tr><td>Event</td>";
     ShowEvent($devKey, $db);
     echo "</tr>";

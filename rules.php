@@ -17,6 +17,7 @@ $db = DatabaseInit();
 ShowRules($db, $item);
 if ($item != "All") {
     echo "<button type=\"button\" onclick=\"window.location.href='/vesta/ShowAllDevices.php'\">Devices</button><br><br>";
+    echo "<button type=\"button\" onclick=\"window.location.href='/vesta/variables.php'\">Variables</button><br><br>";
 }
 echo "<button type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
 echo "</body></html>";
