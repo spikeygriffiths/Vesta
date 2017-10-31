@@ -51,6 +51,7 @@ def EventHandler(eventId, eventArg):
             events.Issue(events.ids.NEWDEVICE, devKey)  # Tell everyone that a new device has been seen, so it can be initialised
         else:
             NoteMsgDetails(devKey, eventArg)
+        SetTempVal(devKey, "GetNextBatteryAfter", datetime.now())    # Ask for battery shortly after Device Announce, either new or old one re-joining
     if eventId == events.ids.CHECKIN:   # See if we have anything to ask the device...
         endPoint = eventArg[2]
         seq = "00" # was seq = eventArg[3], but that's the RSSI
@@ -250,9 +251,9 @@ def SetAttrVal(devKey, clstrId, attrId, value):
             database.SetDeviceItem(devKey, "firmwareVersion", value)
 
 def Rule(devKey, state):
-    userName = GetDeviceItem(devKey, "userName")
+    userName = database.GetDeviceItem(devKey, "userName")
     if None != userName:
-        rules.Run(database.userName+"=="+state)
+        rules.Run(userName+"=="+state)
 
 def SetTempVal(devKey, name, value):
     global ephemera

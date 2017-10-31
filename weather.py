@@ -3,6 +3,7 @@
 
 # Standard Python modules
 import pyowm
+from datetime import datetime
 # App-specific Python modules
 import log
 import events
@@ -27,7 +28,7 @@ def EventHandler(eventId, eventArg):
                 obs = owm.weather_at_place(location)  # My location
             except:
                 database.NewEvent(0, "Weather Feed failed!")
-                status.problem("Weather", "Feed failed!")
+                status.problem("Weather", "Feed failed @ " + str(datetime.now()))
                 return
             w = obs.get_weather()
             cloudCover = w.get_clouds() # Percentage cloud cover

@@ -22,9 +22,9 @@ for ($index = 0; $index < count($varsArray); $index ++) {
     $varsArray[$index] = str_replace("]", "", $varsArray[$index]);   # Tidy up strings, by removing Python decoration
 }
 echo "<table>";
-echo "<tr><th>Name</th><th>Value</th></tr>";
-for ($index = 0; $index < count($varsArray); $index += 2) {
-    echo "<tr><td>",$varsArray[$index], "</td><td>", $varsArray[$index+1], "</td></tr>";
+echo "<tr><th>Name</th><th>Value</th><th>At</th></tr>";
+for ($index = 0; $index < count($varsArray); $index += 3) {
+    echo "<tr><td>",$varsArray[$index], "</td><td>", $varsArray[$index+1], "</td><td>", $varsArray[$index+2], "</td></tr>";
 }
 echo "</table><br>";
 echo "<button type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";

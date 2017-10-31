@@ -1,6 +1,7 @@
 #!variables.py
 
 import random
+from datetime import datetime
 # App-specific Python modules
 import log
 import events
@@ -30,8 +31,8 @@ def EventHandler(eventId, eventArg):
 def Set(name, value):
     global varList
     Del(name) # Remove old tuple if necessary
-    log.debug("Variable \""+name+"\" gets "+value)
-    varList.append((name, value)) # Add new one regardless
+    log.debug("Variable \""+name+"\" gets "+value+" @ "+"{0:%Y-%m-%d %H:%M:%S}".format(datetime.now()))
+    varList.append((name, value, "{0:%Y-%m-%d %H:%M:%S}".format(datetime.now()))) # Add new one regardless
 
 def Del(name):
     global varList
@@ -39,12 +40,21 @@ def Del(name):
         if item[0].lower() == name.lower(): # Case-independent name matching
             varList.remove(item) # Remove tuple
     
-def Get(name):
+def Get(name):  # Get value associated with name
     global varList
     if name.lower() == "rand":
         return random.random() * 100    # Could return random.randrange(0,101) to give an integer percentage
     for item in varList:
         if item[0].lower() == name.lower(): # Case-independent name matching
             return item[1] # Just return value associated with name
+    return None # Indicate item not found
+
+def GetTime(name):  # Get time when value associated with name was last updated
+    global varList
+    if name.lower() == "rand":
+        return random.random() * 100    # Could return random.randrange(0,101) to give an integer percentage
+    for item in varList:
+        if item[0].lower() == name.lower(): # Case-independent name matching
+            return item[2] # Just return time associated with name
     return None # Indicate item not found
 
