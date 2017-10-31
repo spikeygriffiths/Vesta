@@ -217,7 +217,7 @@ def SetAttrVal(devKey, clstrId, attrId, value):
         SetTempVal(devKey, "GetNextBatteryAfter", datetime.now()+timedelta(seconds=86400))    # Ask for battery every day
         if value != "FF":
             varVal = int(int(value, 16) / 2) # Arrives in 0.5% increments, but drop fractional component
-            #log.debug("Battery is "+str(varVal)+"%.  Get next reading at "+str(GetTempVal(devKey, "GetNextBatteryAfter")))
+            log.debug("Battery is "+str(varVal)+"%.  Get next reading at "+str(GetTempVal(devKey, "GetNextBatteryAfter")))
             database.SetStatus(devKey, "battery", varVal) # For web page
             if varVal < 10: # Batteries below 10% are considered "low"
                 devName = database.GetDeviceItem(devKey, "userName")
@@ -250,7 +250,9 @@ def SetAttrVal(devKey, clstrId, attrId, value):
             database.SetDeviceItem(devKey, "firmwareVersion", value)
 
 def Rule(devKey, state):
-    rules.Run(database.GetDeviceItem(devKey, "userName")+"=="+state)
+    userName = GetDeviceItem(devKey, "userName")
+    if None != userName:
+        rules.Run(database.userName+"=="+state)
 
 def SetTempVal(devKey, name, value):
     global ephemera
@@ -343,7 +345,7 @@ def Check(devKey):
             checkBatt = GetTempVal(devKey, "GetNextBatteryAfter")
             if checkBatt != None:
                 if datetime.now() > checkBatt:
-                    #log.debug("Now = "+str(datetime.now())+" and checkBatt = "+str(checkBatt))
+                    log.debug("Now = "+str(datetime.now())+" and checkBatt = "+str(checkBatt))
                     return telegesis.ReadAttr(nwkId, ep, zcl.Cluster.PowerConfig, zcl.Attribute.Batt_Percentage) # Get Battery percentage
         if zcl.Cluster.OTA in outClstr:
             if None == database.GetDeviceItem(devKey, "firmwareVersion"):
