@@ -9,6 +9,7 @@ import sys
 # App-specific Python modules
 import events
 import database
+import status
 import log
 
 def main():
@@ -23,12 +24,16 @@ def main():
 def EventHandler(eventId, eventArg):
     if eventId == events.ids.INIT:
         log.Init     ("   *********************************")
-        log.debug("   *** Starting Vesta, v1.0.0.0 ***")
+        log.debug("   *** Starting Vesta, v" +GetVersion() + " ***", )
         log.debug("   *********************************")
+        status.BuildPage()
     # end event handler
 
 if __name__ == "__main__":
     main()
+
+def GetVersion():
+    return "1.0.0.1"
 
 def Reboot():
     database.NewEvent(0, "Rebooting...") # 0 is always hub
