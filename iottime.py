@@ -116,3 +116,7 @@ def CheckTimedRule(name, now):
     if variables.Get(name) == now.strftime("%H:%M"):
         rules.Run("time=="+name) # Special rule for sunrise, sunset, etc.
 
+def Sanitise(val):  # Assume val is a string containing a hour:minute time
+    timeOfDay = datetime.strptime(val, "%H:%M") # Convert to time
+    return "'"+timeOfDay.strftime("%H:%M")+"'" # Normalise timestamp (cope with leading zeros)
+

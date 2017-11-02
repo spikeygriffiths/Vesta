@@ -143,7 +143,7 @@ def ParseCondition(ruleConditionList, trigger):
             subAnswers = subAnswers + str(GetConditionResult("==", condition))
     # End of loop
     if subAnswers != "":
-        #log.debug("About to evaluate:'"+subAnswers+"'")
+        log.debug("About to evaluate:'"+subAnswers+"'")
         try:
             finalAnswer = eval(subAnswers)
         except: # Catch all errors that the rule might raise
@@ -176,9 +176,10 @@ def GetConditionResult(test, condition):
         if isNumber(tstVal):
             varVal = str(varVal)
             tstVal = str(tstVal)
+        elif ":"  in varVal: # If HH:MM timestamp
+            varVal = iottime.Sanitise(varVal)   # Ensure timestamps are consistently formatted before comparing (to avoid "0:15" != "00:15")
+            tstVal = iottime.Sanitise(tstVal)
         else:
-            #if ":"  in varVal: # If HH:MM timestamp
-            #    varVal = datetime.strftime(datetime.strptime(varVal, "%H:%M")) # Normalise timestamp (cope with leading zeros)
             varVal = "'"+varVal.lower() + "'"
             tstVal = "'"+tstVal.lower() + "'"   # Surround strings with quotes to make string comparisons work (Tuesday==Tuesday fails, although 'Tuesday'=='Tuesday' works)
         condStr = varVal + test + tstVal
