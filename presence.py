@@ -69,7 +69,10 @@ def GetFreq(devKey):
             absence = 0 # Never absent
         presencePercentage = ((presence + absence) / presence) * 100
     else:
-        presencePercentage = 0  # Never present
+        if absenceFreq.get(devKey) != None:
+            presencePercentage = 0  # Never present, but we have decided we've been absent more than once
+        else:
+            presencePercentage = -1 # No information about presence or absence yet...
     return presencePercentage
 
 def ClearFreqs():
