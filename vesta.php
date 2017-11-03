@@ -1,12 +1,7 @@
 <?php 
-session_start();
-if ($_SESSION['user_is_logged_in'] != true) echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta/index.php\"/>"; # Automatically go to index if we're not logged in
-error_reporting(E_ALL); 
 include "AppCmd.php";
 include "database.php";
-
-echo "<html><head>";
-echo "<link rel=\"shortcut icon\" type=\"image/x-icon\" href=\"favicon.ico\">"; # Seems to be necessary
+include "header.php";   # Has other includes as well as log-out detection, and favicon.  NB Has "<html><head>" for favicon link!
 echo "</head><body>";
 echo "<center><img src='vestaTitle.png' title=\"Vesta was the Roman goddess of hearth and home\" width=128 height=128><br>";
 //echo "Now: ", date('Y-m-d H:i:s'), "<br>";

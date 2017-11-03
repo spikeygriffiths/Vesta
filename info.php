@@ -1,11 +1,7 @@
 <?php 
-session_start();
-error_reporting(E_ALL); 
 include "database.php";
-if ($_SESSION['user_is_logged_in'] != true) echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta/index.php\"/>"; # Automatically go to index if we're not logged in
 include "AppCmd.php";
-
-echo "<html><head>";
+include "header.php";   # Has other includes as well as log-out detection, and favicon.  NB Has "<html><head>" for favicon link!
 echo "</head><body>";
 echo "<center><h1>Info Command</h1></center>";
 echo nl2br(AppCmd("info", true));

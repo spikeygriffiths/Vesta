@@ -1,13 +1,11 @@
 <?php 
 // ShowAllDevices.php
-session_start();
-if ($_SESSION['user_is_logged_in'] != true) echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta/index.php\"/>"; # Automatically go to index if we're not logged in
-error_reporting(E_ALL); 
 include "database.php";
 include "functions.php";
-
-echo "<html>";
-echo "<head><style>table {font-family:arial, sans-serif;border-collapse: collapse;width: 100 % }";
+$url1 = $_SERVER['REQUEST_URI'];
+header("Refresh: 10;  URL=$url1");
+include "header.php";   # Has other includes as well as log-out detection, and favicon.  NB Has "<html><head>" for favicon link!
+echo "<style>table {font-family:arial, sans-serif;border-collapse: collapse;width: 100 % }";
 echo "td, th {border: 2px solid #dddddd;text-align: left;padding: 2px }";
 echo "tr:nth-child(even) { background-color: #dddddd; }</style></head>";
 echo "<body>";

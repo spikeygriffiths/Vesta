@@ -1,12 +1,10 @@
 <?php
 include "database.php";
-error_reporting(E_ALL); 
-
-echo "<html>";
-echo "<head><style>table {font-family:arial, sans-serif;border-collapse: collapse;width: 100 % }";
+include "header.php";   # Has other includes as well as log-out detection, and favicon.  NB Has "<html><head>" for favicon link!
+echo "<style>table {font-family:arial, sans-serif;border-collapse: collapse;width: 100 % }";
 echo "td, th {border: 2px solid #dddddd;text-align: left;padding: 2px }";
-echo "</style></head>";
-echo "<body>";
+echo "</style>";
+echo "</head><body>";
 $groupName=$_GET['groupName'];
 $db = DatabaseInit();
 echo "<center><h1>",$groupName,"</h1>";

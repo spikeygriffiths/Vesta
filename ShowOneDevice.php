@@ -1,20 +1,12 @@
 <?php
-session_start();
-if ($_SESSION['user_is_logged_in'] != true) echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta/index.php\"/>"; # Automatically go to index if we're not logged in
-error_reporting(E_ALL); 
 include "database.php";
 include "functions.php";
-
-$refreshInterval = 5;   // Should probably be 10
-//$url1 = $_SERVER['PHP_SELF']; // Seems to lose args on URL line when refreshing?
-//header("Refresh: $refreshInterval;  URL=$url1");
-echo "<html>";
-echo "<head><style>table {font-family:arial, sans-serif;border-collapse: collapse;width: 100 % }";
+include "header.php";   # Has other includes as well as log-out detection, and favicon.  NB Has "<html><head>" for favicon link!
+echo "<style>table {font-family:arial, sans-serif;border-collapse: collapse;width: 100 % }";
 echo "td, th {border: 2px solid #dddddd;text-align: left;padding: 2px }";
 echo "</style>";
 echo "<meta http-equiv=\"refresh\" content=\"",$refreshInterval,"\">";    // Auto-refresh page.  NB Must be inside <head>
-echo "</head>";
-echo "<body>";
+echo "</head><body>";
 $devKey=$_GET['devKey'];
 $db = DatabaseInit();
 $username = GetDevItem("userName", $devKey,$db);

@@ -1,12 +1,7 @@
 <?php
-session_start();
-if ($_SESSION['user_is_logged_in'] != true) echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta/index.php\"/>"; # Automatically go to index if we're not logged in
-error_reporting(E_ALL); 
 include "database.php";
-
-echo "<html>";
-echo "<head></head>";
-echo "<body>";
+include "header.php";   # Has other includes as well as log-out detection, and favicon.  NB Has "<html><head>" for favicon link!
+echo "</head><body>";
 echo "<center><h1>Users</h1>";
 $db = DatabaseInit();
 ShowUsers($db);

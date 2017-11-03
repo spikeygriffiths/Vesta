@@ -1,7 +1,5 @@
 <?php 
-error_reporting(E_ALL); 
-
-echo "<html><head>";
+include "header.php";   # Has other includes as well as log-out detection, and favicon.  NB Has "<html><head>" for favicon link!
 echo "</head><body>";
 echo "<center><h1>Recent error logs</h1></center>";
 # See https://stackoverflow.com/questions/2667065/sort-files-by-date-in-php for details of the following sort

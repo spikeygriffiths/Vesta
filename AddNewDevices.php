@@ -1,12 +1,9 @@
 <?php
-include "AppCmd.php";
 include "database.php";
-
 $url1 = $_SERVER['REQUEST_URI'];
 header("Refresh: 10;  URL=$url1");
-echo "<html>";
-echo "<head></head>";
-echo "<body>";
+include "header.php";   # Has other includes as well as log-out detection, and favicon.  NB Has "<html><head>" for favicon link!
+echo "</head><body>";
 echo "<center><h1>Add New Devices</h1> ";
 echo "Now: ", date('Y-m-d H:i:s'), "<br><br>"; // Show page refreshing
 echo AppCmd("open", false);

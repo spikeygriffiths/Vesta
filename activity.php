@@ -1,10 +1,6 @@
 <?php 
-session_start();
-if ($_SESSION['user_is_logged_in'] != true) echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta/index.php\"/>"; # Automatically go to index if we're not logged in
 include "database.php";
-error_reporting(E_ALL); 
-
-echo "<html><head>";
+include "header.php";   # Has other includes as well as log-out detection, and favicon.  NB Has "<html><head>" for favicon link!
 echo "<style>table {font-family:arial, sans-serif;border-collapse: collapse;width: 100 % }";
 echo "td, th {border: 2px solid #dddddd;text-align: left;padding: 2px }";
 echo "</style></head>";
@@ -26,16 +22,6 @@ echo "<option value='yesterday'>Yesterday onwards</option>";
 echo "<option value='week'>Last week</option>";
 echo "<option value='month'>Last 30 days</option>";
 echo "</select>";
-// Now see if user wants to select device
-/*echo "<p>Show events for:<select id='devKey' name='devKey'>";
-echo "<option value=-1>All devices</option>";
-$numDevs = GetDevCount($db);
-for ($idx=0; $idx<$numDevs; $idx++) {
-    $deviceKey = GetDevKey($idx, $db);
-    $userName = GetDevItem("userName", $deviceKey, $db);
-    echo "<option value='",$idx,"'>",$userName,"</option>";
-}
-echo "</select><p>";*/
 echo "<input type='submit' name='submit'/>";
 echo "</form>";
 ShowActivity($db, $dbTime, $titleTime, $devKey);
