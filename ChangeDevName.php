@@ -10,9 +10,9 @@ $db = DatabaseInit();
 $username = GetDevItem("userName", $devKey,$db);
 echo "<center><h1>Change ",$username,"</h1>";
 ChangeName($db, $devKey, $username);
-echo "<button type=\"button\" onclick=\"window.location.href='/vesta/ShowAllDevices.php'\">All Devices</button><br><br>";
-echo "<button type=\"button\" onclick=\"window.location.href='/vesta/ShowOneDevice.php/?devKey=",$devKey,"'\">This device</button><br><br>";
-echo "<button type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
+echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/ShowAllDevices.php'\">All Devices</button><br><br>";
+echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/ShowOneDevice.php/?devKey=",$devKey,"'\">This device</button><br><br>";
+echo "<button class=\"buttonHome\" type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
 echo "</body></html>";
 
 function ChangeName($db, $devKey, $username)

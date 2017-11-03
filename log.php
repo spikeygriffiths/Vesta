@@ -16,11 +16,11 @@ if ($files) {
         echo nl2br($logText);
         echo "<br><br>";
     }
-    echo "<button type=\"button\" onclick=\"window.location.href='/vesta/DelLogs.php'\">Remove All Error logs</button><br><br>";
+    echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/DelLogs.php'\">Remove All Error logs</button><br><br>";
 } else {
     echo "<center><h3>No error logs</h3></center>";
 }
 echo "<center>";
-echo "<button type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
+echo "<button class=\"buttonHome\" type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
 echo "</body></html>";
 ?>

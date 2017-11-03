@@ -1,19 +1,21 @@
 <?php
 include "database.php";
 include "functions.php";
+$url1 = $_SERVER['REQUEST_URI'];
+header("Refresh: 10;  URL=$url1");
 include "header.php";   # Has other includes as well as log-out detection, and favicon.  NB Has "<html><head>" for favicon link!
 echo "<style>table {font-family:arial, sans-serif;border-collapse: collapse;width: 100 % }";
 echo "td, th {border: 2px solid #dddddd;text-align: left;padding: 2px }";
 echo "</style>";
-echo "<meta http-equiv=\"refresh\" content=\"",$refreshInterval,"\">";    // Auto-refresh page.  NB Must be inside <head>
 echo "</head><body>";
 $devKey=$_GET['devKey'];
 $db = DatabaseInit();
 $username = GetDevItem("userName", $devKey,$db);
-echo "<center><h1>",$username,"</h1>";
+echo "<center>";
+echo "<button class=\"buttonHeader\" type=\"button\" onclick=\"window.location.href='/vesta/ChangeDevName.php/?devKey=",$devKey,"'\">",$username,"</button>";
 ShowDeviceInfo($db, $devKey, $username);
-echo "<br><br><button type=\"button\" onclick=\"window.location.href='/vesta/ShowAllDevices.php'\">All Devices</button><br><br>";
-echo "<button type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
+echo "<br><br><button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/ShowAllDevices.php'\">All Devices</button><br><br>";
+echo "<button class=\"buttonHome\" type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
 echo "</body></html>";
 
 function ShowDevStatus($item, $name, $devKey, $db)
@@ -46,7 +48,7 @@ function ShowDeviceInfo($db, $devKey, $username)
 {
     $nwkId = GetDevItem("nwkId", $devkey, $db);
     if ("0000" != $nwkId) {
-        echo "<button type=\"button\" onclick=\"window.location.href='/vesta/DelDevice.php/?devId=",$username,"'\">Remove Device</button><br><br>";
+        echo "<br><br><button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/DelDevice.php/?devId=",$username,"'\">Remove Device</button><br><br>";
     }
     //echo "<center><form action=\"/vesta/UpdateDeviceName.php/?devKey=",$devKey,"\" method=\"post\">";
     echo "<table>";
@@ -81,16 +83,15 @@ function ShowDeviceInfo($db, $devKey, $username)
         echo "<tr><td>PAN Id</td><td>",$radioInfo[2],"</td></tr>";
         echo "<tr><td>Extended PAN Id</td><td>",$radioInfo[3],"</td></tr>";
     }
-    echo "</table>";
+    echo "</table><br>";
     //echo "<input type=\"submit\" value=\"Update name\"></form>";
-    echo "<br><button type=\"button\" onclick=\"window.location.href='/vesta/ChangeDevName.php/?devKey=",$devKey,"'\">Change Name</button>&nbsp&nbsp&nbsp";
-    echo "<button type=\"button\" onclick=\"window.location.href='/vesta/rules.php/?item=",$username,"'\">Rules</button>&nbsp&nbsp&nbsp";
-    echo "<button type=\"button\" onclick=\"window.location.href='/vesta/activity.php/?devKey=",$devKey,"'\">Activity Log</button>&nbsp&nbsp&nbsp";
+    echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/rules.php/?item=",$username,"'\">Rules</button>&nbsp&nbsp&nbsp";
+    echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/activity.php/?devKey=",$devKey,"'\">Activity Log</button>&nbsp&nbsp&nbsp";
     if ("0000" != $nwkId) {
-        echo "<button type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=identify ",$username," 30'\">Identify for 30s</button>&nbsp&nbsp&nbsp";
+        echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=identify ",$username," 30'\">Identify for 30s</button>&nbsp&nbsp&nbsp";
         $inClusters = GetDevItem("inClusters", $devKey, $db);
         if (strpos($inClusters, "0006") !== false) { // Is switchable, eg smartplug, bulb, etc.
-            echo "<button type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=toggle ",$username,"'\">Toggle</button>&nbsp&nbsp&nbsp";
+            echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=toggle ",$username,"'\">Toggle</button>&nbsp&nbsp&nbsp";
         }
         if (strpos($inClusters, "0008") !== false) { // Is dimmable, eg lamp, bulb
             echo "Brightness: <a href=\"/vesta/ImageMap.php/?devId=",$username,"&cmd=dim&map=\"><img src=\"/vesta/UpRamp.png\" width=100 height=20 alt=\"Level\" ismap=\"ismap\"></a><br><br>";  // Php page will GET x,y,

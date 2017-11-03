@@ -9,7 +9,7 @@ echo "<center><h1>Groups</h1>";
 $db = DatabaseInit();
 ShowGroups($db);
 echo "<br>";
-echo "<button type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
+echo "<button class=\"buttonHome\" type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
 echo "</body></html>";
 
 function ShowGroups($db)

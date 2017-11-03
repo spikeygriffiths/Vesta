@@ -8,10 +8,10 @@ echo "</head><body>";
 $groupName=$_GET['groupName'];
 $db = DatabaseInit();
 echo "<center><h1>",$groupName,"</h1>";
-echo "<button type=\"button\" onclick=\"window.location.href='/vesta/DelGroup.php/?groupName=",$groupName,"'\">Remove all of ",$groupName,"</button><br><br>";
+echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/DelGroup.php/?groupName=",$groupName,"'\">Remove all of ",$groupName,"</button><br><br>";
 ShowGroupInfo($db, $groupName);
-echo "<button type=\"button\" onclick=\"window.location.href='/vesta/Groups.php'\">Groups</button><br><br>";
-echo "<button type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
+echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Groups.php'\">Groups</button><br><br>";
+echo "<button class=\"buttonHome\" type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
 echo "</body></html>";
 
 function ShowGroupInfo($db, $groupName)

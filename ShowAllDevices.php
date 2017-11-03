@@ -7,14 +7,14 @@ header("Refresh: 10;  URL=$url1");
 include "header.php";   # Has other includes as well as log-out detection, and favicon.  NB Has "<html><head>" for favicon link!
 echo "<style>table {font-family:arial, sans-serif;border-collapse: collapse;width: 100 % }";
 echo "td, th {border: 2px solid #dddddd;text-align: left;padding: 2px }";
-echo "tr:nth-child(even) { background-color: #dddddd; }</style></head>";
-echo "<body>";
+echo "tr:nth-child(even) { background-color: #dddddd; }</style>";
+echo "</head><body>";
 echo "<center><h1>Devices</h1> ";
-echo "<button type=\"button\" onclick=\"window.location.href='/vesta/AddNewDevices.php'\">Add new devices</button><br><br>";
+echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/AddNewDevices.php'\">Add new devices</button><br><br>";
 //print_r (PDO::getAvailableDrivers()); echo("<br>"); // Shows whether you have SQLite for PDO installed
 ShowDevices();
 echo "<br>";
-echo "<button type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
+echo "<button class=\"buttonHome\" type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
 echo "</body></html>";
 
 function ShowDevStatus($item, $devKey, $db, $suffix)

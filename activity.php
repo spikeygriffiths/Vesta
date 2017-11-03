@@ -26,7 +26,7 @@ echo "<input type='submit' name='submit'/>";
 echo "</form>";
 ShowActivity($db, $dbTime, $titleTime, $devKey);
 echo "<br>";
-echo "<button type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
+echo "<button class=\"buttonHome\" type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
 echo "</body></html>";
 
 function ShowActivity($db, $dbTime, $titleTime, $devKey)

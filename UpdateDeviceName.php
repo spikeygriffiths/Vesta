@@ -1,7 +1,7 @@
 <?php
-error_reporting(E_ALL);
 include "database.php";
-
+include "header.php";
+echo "</head><body>";
 ini_set('display_errors', '1');
 $devKey=$_GET['devKey'];
 $userName = $_POST["UserName"];  // Get new user name from form
@@ -23,6 +23,7 @@ if ($db) {
 } else {
     echo "Failed to get a handle onto the database<br>";
 }
-echo "<button type=\"button\" onclick=\"window.location.href='/vesta/ShowOneDevice.php/?devKey=",$devKey,"'>Show Device</button><br><br>"; # Let user go back to where we came from
-echo "<button type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
+echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/ShowOneDevice.php/?devKey=",$devKey,"'>Show Device</button><br><br>"; # Let user go back to where we came from
+echo "<button class=\"buttonHome\" type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
+echo "</body></html>";
 ?>

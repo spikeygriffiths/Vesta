@@ -1,8 +1,5 @@
 <?php
-session_start();
-error_reporting(E_ALL); 
 include "database.php";
-if ($_SESSION['user_is_logged_in'] != true) echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta/index.php\"/>"; # Automatically go to index if we're not logged in
 
 // Following code is freely adapted from:
 // @link https://github.com/panique/php-login-one-file/
@@ -83,11 +80,10 @@ class Register
     }
 }
 
-echo "<html><head>";
-echo "</head><body>";
+#include "header.php";
 echo "<center><img src='vestaTitle.png' title=\"Vesta was the Roman goddess of hearth and home\" width=128 height=128><br>";
 $app = new Register();
-echo "<button type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
+echo "<button class=\"buttonHome\" type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
 echo "</body></html>";
 
 ?>
