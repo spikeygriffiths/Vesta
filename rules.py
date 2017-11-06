@@ -176,17 +176,16 @@ def GetConditionResult(test, condition):
         if isNumber(tstVal):
             varVal = str(varVal)
             tstVal = str(tstVal)
-        elif ":"  in varVal: # If HH:MM timestamp
+        else:
             varVal = iottime.Sanitise(varVal)   # Ensure timestamps are consistently formatted before comparing (to avoid "0:15" != "00:15")
             tstVal = iottime.Sanitise(tstVal)
-        else:
             varVal = "'"+varVal.lower() + "'"
             tstVal = "'"+tstVal.lower() + "'"   # Surround strings with quotes to make string comparisons work (Tuesday==Tuesday fails, although 'Tuesday'=='Tuesday' works)
         condStr = varVal + test + tstVal
         try:
             answer = eval(condStr)
         except:
-            status.problem("Rule containing '" + condStr + "' Failed to evaluate!")
+            status.problem("Rule containing '" + condStr, "'Failed to evaluate")
             log.debug("Failed to evaluate '" + condStr + "'")
             answer = False  # Default answer to allow rest of rules to continue to run
         return answer
