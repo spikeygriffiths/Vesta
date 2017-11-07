@@ -186,7 +186,7 @@ def GetConditionResult(test, condition):
         try:
             answer = eval(condStr)
         except:
-            status.problem("Rule containing '" + condStr, "'Failed to evaluate")
+            status.problem("BadRule", "Failed to evaluate '" + condStr)
             log.debug("Failed to evaluate '" + condStr + "'")
             answer = False  # Default answer to allow rest of rules to continue to run
         return answer
