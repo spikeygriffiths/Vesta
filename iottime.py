@@ -28,6 +28,7 @@ def EventHandler(eventId, eventArg):
         if variables.Get("sunrise") != None:
             variables.Set("morning", variables.Get("sunrise"))
             variables.Set("evening", variables.Get("sunset"))   # Set up defaults until we get a weather report
+            variables.Set("dark", str(GetDark()))
         rules.Run("trigger==appstart")
         database.NewEvent(0, "App started") # 0 is always hub
     elif eventId == events.ids.SECONDS:
@@ -49,6 +50,11 @@ def EventHandler(eventId, eventArg):
             CheckTimedRule("evening", now)  # No longer proper daylight (depending on cloud)
             CheckTimedRule("sunset", now) # Sun on horizon
             CheckTimedRule("dusk", now) # Sky now getting dark after sunset
+            dark = str(GetDark()) # Work out whether "dark" is True or False
+            #log.debug("Old dark = " + variables.Get("dark") + " whereas new dark = " + dark)
+            if dark != variables.Get("dark"):   # Compare with previous
+                variables.Set("dark", dark)  # Update our idea of whether it's dark or light just now
+                rules.Run("dark=="+variables.Get("dark"))
     if eventId == events.ids.HOURS:
         now = datetime.now()
         if now.hour == 0: # Midnight, time to calculate sunrise and sunset for new day
@@ -58,31 +64,23 @@ def EventHandler(eventId, eventArg):
         log.RollLogs() # Roll the logs, to avoid running out of disc space
         SetDayInfo()
         status.BuildPage()  # Create status page, once/day, based upon reported problems during the previous day
-    if eventId == events.ids.WEATHER:
-        if variables.Get("sunrise") != None:    # Can only use weather if we know sunrise & sunset
-            # Replace all of the stuff below with a simple "sunlight" variable based on cloudcover, rain & snow as well as time of day
-            # Then use "if sunlight<25" for PIRs to turn on lights, etc.
-            now = datetime.now()
-            nowTime = datetime.strptime(now.strftime("%H:%M"), "%H:%M")
-            extraTime = int(variables.Get("cloudCover"))    # Just take percentage cloudiness as minutesx
-            extraTime = extraTime + float(variables.Get("rain"))   # Any rain just makes it even darker (Measured in mm/3hr)
-            extraTime = extraTime + float(variables.Get("snow"))   # Any snow just makes it even darker (Measured in mm/3hr)
-            sunrise = datetime.strptime(variables.Get("sunrise"), "%H:%M")
-            morning = sunrise + timedelta(minutes=extraTime)    # The more cloud, the later it gets light in the morning
-            oldMorning = variables.Get("morning")
-            if oldMorning != None:
-                oldMorning = datetime.strptime(oldMorning, "%H:%M")
-                if morning<nowTime and oldMorning>nowTime:  # If the new morning is before now and the old morning was after, then make sure we still issue the "morning" rule
-                    morning = now + timedelta(minutes=1) # Set morning to be in the next minute if the clouds are clearing away
-            variables.Set("morning", str(morning.strftime("%H:%M")))
-            sunset = datetime.strptime(variables.Get("sunset"), "%H:%M")
-            evening = sunset - timedelta(minutes=extraTime) # The more cloud, the earlier it gets dark in the evening
-            oldEvening = variables.Get("evening")
-            if oldEvening != None:
-                oldEvening = datetime.strptime(oldEvening, "%H:%M")
-                if evening<nowTime and oldEvening>nowTime:  # If the new evening is before now and the old evening was after, then make sure we still issue the "evening" rule
-                    evening = now + timedelta(minutes=1) # Set evening to be in the next minute if the clouds are building up
-            variables.Set("evening", str(evening.strftime("%H:%M")))
+
+def GetDark():
+    sunrise = datetime.strptime(variables.Get("sunrise"), "%H:%M")
+    sunset = datetime.strptime(variables.Get("sunset"), "%H:%M")
+    now = datetime.now()
+    if variables.Get("cloudCover") != None:
+        #nowTime = datetime.strptime(now.strftime("%H:%M"), "%H:%M")
+        extraTime = int(variables.Get("cloudCover"))    # Just take percentage cloudiness as minutesx
+        extraTime = extraTime + float(variables.Get("rain"))   # Any rain just makes it even darker (Measured in mm/3hr)
+        extraTime = extraTime + float(variables.Get("snow"))   # Any snow just makes it even darker (Measured in mm/3hr)
+        morning = sunrise + timedelta(minutes=extraTime)    # The more cloud, the later it gets light in the morning
+        evening = sunset - timedelta(minutes=extraTime) # The more cloud, the earlier it gets dark in the evening
+        variables.Set("morning", morning.strftime("%H:%M"))
+        variables.Set("evening", evening.strftime("%H:%M"))   # Set up variables accordingly
+        return (now < morning or now > evening) # True if dark, False if light
+    else:
+        return (now < sunrise or now > sunset) # True if dark, False if light
 
 def SetDayInfo():
     today = date.today()
