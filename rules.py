@@ -170,7 +170,7 @@ def GetConditionResult(test, condition):
         if isNumber(tstVal):
             varVal = str(varVal)
             tstVal = str(tstVal)
-        elif ":" in varVal:
+        elif ":" in tstVal:
             varVal = iottime.Sanitise(varVal)   # Ensure timestamps are consistently formatted before comparing (to avoid "0:15" != "00:15")
             tstVal = iottime.Sanitise(tstVal)
         else:
@@ -180,7 +180,7 @@ def GetConditionResult(test, condition):
         try:
             answer = eval(condStr)
         except:
-            status.problem("BadRule", "Failed to evaluate '" + condStr)
+            status.problem("BadRule", "Failed to evaluate '" + condStr + "'")
             log.debug("Failed to evaluate '" + condStr + "'")
             answer = False  # Default answer to allow rest of rules to continue to run
         return answer

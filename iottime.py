@@ -127,6 +127,6 @@ def Sanitise(val):  # Assume val is a string containing a hour:minute time
         except:
             status.problem("Bad time in Rule containing '" + val)
             return "BadTime"    # Must return something
-        return "'"+timeOfDay.strftime("%H:%M")+"'" # Normalise timestamp (cope with leading zeros)
+        return "\""+timeOfDay.strftime("%H:%M")+"\"" # Normalise timestamp (cope with leading zeros)
     else:
         return val  # Return original string if no colon
