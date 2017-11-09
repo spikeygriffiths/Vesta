@@ -126,11 +126,11 @@ def ParseCondition(ruleConditionList, trigger):
                 almostMidnight = datetime.strptime("23:59", "%H:%M")
                 midnight = datetime.strptime("0:00", "%H:%M")
                 if nowTime > datetime.strptime("12:00", "%H:%M"): # After midday but before midnight
-                   subAnswers = subAnswers + str(IsTimeBetween(startTime, nowTime, almostMidnight))
+                   subAnswers = subAnswers + str(iottime.IsTimeBetween(startTime, nowTime, almostMidnight))
                 else: # Assume after midnight
-                   subAnswers = subAnswers + str(IsTimeBetween(midnight, nowTime, endTime))
+                   subAnswers = subAnswers + str(iottime.IsTimeBetween(midnight, nowTime, endTime))
             else:   # Doesn't involve midnight
-               subAnswers = subAnswers + str(IsTimeBetween(startTime, nowTime, endTime))
+               subAnswers = subAnswers + str(iottime.IsTimeBetween(startTime, nowTime, endTime))
         elif "<=" in condition:
             subAnswers = subAnswers + str(GetConditionResult("<=", condition))
         elif ">=" in condition:
@@ -153,12 +153,6 @@ def ParseCondition(ruleConditionList, trigger):
         return finalAnswer
     else:
         return False    # Empty string is always False
-
-def IsTimeBetween(startTime, nowTime, endTime):
-    if startTime <= nowTime <= endTime:
-       return True
-    else:
-       return False
 
 def isNumber(s):
     try:

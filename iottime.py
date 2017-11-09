@@ -68,19 +68,19 @@ def EventHandler(eventId, eventArg):
 def GetDark():
     sunrise = datetime.strptime(variables.Get("sunrise"), "%H:%M")
     sunset = datetime.strptime(variables.Get("sunset"), "%H:%M")
-    now = datetime.now()
-    if variables.Get("cloudCover") != None:
-        #nowTime = datetime.strptime(now.strftime("%H:%M"), "%H:%M")
-        extraTime = int(variables.Get("cloudCover"))    # Just take percentage cloudiness as minutesx
+    now = datetime.strptime(datetime.now().strftime("%H:%M"), "%H:%M")  # Just time of day
+    cloudCover = variables.Get("cloudCover")
+    if cloudCover != None:
+        extraTime = int(cloudCover)    # Just take percentage cloudiness as minutes
         extraTime = extraTime + float(variables.Get("rain"))   # Any rain just makes it even darker (Measured in mm/3hr)
         extraTime = extraTime + float(variables.Get("snow"))   # Any snow just makes it even darker (Measured in mm/3hr)
-        morning = sunrise + timedelta(minutes=extraTime)    # The more cloud, the later it gets light in the morning
-        evening = sunset - timedelta(minutes=extraTime) # The more cloud, the earlier it gets dark in the evening
-        variables.Set("morning", morning.strftime("%H:%M"))
-        variables.Set("evening", evening.strftime("%H:%M"))   # Set up variables accordingly
-        return (now < morning or now > evening) # True if dark, False if light
     else:
-        return (now < sunrise or now > sunset) # True if dark, False if light
+        extraTime = 0   # No weather, so assume cloudless and dry
+    morning = sunrise + timedelta(minutes=extraTime)    # The more cloud, the later it gets light in the morning
+    evening = sunset - timedelta(minutes=extraTime) # The more cloud, the earlier it gets dark in the evening
+    variables.Set("morning", morning.strftime("%H:%M"))
+    variables.Set("evening", evening.strftime("%H:%M"))   # Set up variables accordingly
+    return not(IsTimeBetween(morning, now, evening)) # True if dark, False if light
 
 def SetDayInfo():
     today = date.today()
@@ -113,6 +113,12 @@ def Get(item):
 def CheckTimedRule(name, now):
     if variables.Get(name) == now.strftime("%H:%M"):
         rules.Run("time=="+name) # Special rule for sunrise, sunset, etc.
+
+def IsTimeBetween(startTime, nowTime, endTime):
+    if startTime <= nowTime <= endTime:
+       return True
+    else:
+       return False
 
 def Sanitise(val):  # Assume val is a string containing a hour:minute time
     if ":" in val:  # Check for colon before sanitising time stamp
