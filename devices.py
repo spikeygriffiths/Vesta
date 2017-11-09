@@ -220,7 +220,8 @@ def SetAttrVal(devKey, clstrId, attrId, value):
             varVal = int(int(value, 16) / 2) # Arrives in 0.5% increments, but drop fractional component
             log.debug("Battery is "+str(varVal)+"%.  Get next reading at "+str(GetTempVal(devKey, "GetNextBatteryAfter")))
             database.SetStatus(devKey, "battery", varVal) # For web page
-            if varVal < 10: # Batteries below 10% are considered "low"
+            lowBatt = int(config.Get("lowBattery", "5"))
+            if varVal < lowBatt:
                 devName = database.GetDeviceItem(devKey, "userName")
                 status.problem(devName + "_batt", devName + " low battery ("+str(varVal)+"%)")
     if clstrId == zcl.Cluster.Temperature and attrId == zcl.Attribute.Celsius:
