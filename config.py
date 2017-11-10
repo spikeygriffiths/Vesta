@@ -19,6 +19,9 @@ def Get(item, default=None):
                         value = value.strip()   # Discard leading or trailing spaces
                         #log.debug("Matched:"+lineList[0]+ "with value:"+value)
                         return value
-    status.problem("config", "Missing variable from config.txt : "+item)
+    if default != None:
+        log.debug("Missing variable from config.txt : " + item + "  Using default of " + default)
+    else:
+        log.debug("Missing variable from config.txt : " + item + "  No default")
     return default  # If we get all through the config file without finding a match, use default value
  
