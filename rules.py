@@ -16,6 +16,7 @@ import database
 import config
 import telegesis
 import status
+import sendmail
 
 # Example rules
 # if HallwayPir==active do SwitchOn HallwayLight for 120
@@ -34,6 +35,7 @@ def EventHandler(eventId, eventArg):
     if eventId == events.ids.TRIGGER:
         devKey = devices.GetKey(eventArg[1]) # Lookup device from network address in eventArg[1]
         if devKey != None:
+            devices.NoteMsgDetails(devKey, eventArg)    # Note presence
             now = datetime.now()
             nowStr = now.strftime("%H:%M")
             zoneType = database.GetDeviceItem(devKey, "iasZoneType") # Device type
@@ -203,20 +205,27 @@ def Action(actList):
     elif action == "status":  # Was synopsis
         emailAddress = config.Get("emailAddress")
         if emailAddress != None:
-            with open("status.email", "r") as status:    # Send status.email file as body of email
-                emailBody = status.readlines()
-            cmdList = ["echo", "\""+'\n'.join(emailBody)+"\"", "|", "mail", "-s", "\"Vesta Status\"", emailAddress]
-            cmdStr = " ".join(cmdList)
-            call(cmdStr, shell=True)
+            with open("status.email", "r") as status:   # Plain text of email
+                emailText = status.readlines()
+            text = ''.join(emailText)
+            with open("status.html", "r") as status:    # HTML of email
+                emailHtml = status.readlines()
+            html = ''.join(emailHtml)
+            sendmail.email("Vesta Status", text, html)
+            #cmdList = ["echo", "\""+'\n'.join(emailBody)+"\"", "|", "mail", "-s", "\"Vesta Status\"", emailAddress]
+            #cmdStr = " ".join(cmdList)
+            #call(cmdStr, shell=True)
     elif action == "email": # All args are body of the text.  Fixed subject and email address
         emailAddress = config.Get("emailAddress")
         if emailAddress != None:
             emailBody = []
             for item in actList[1:]:
                 emailBody.append(item)
-            cmdList = ["echo", "\""+' '.join(emailBody)+"\"", "|", "mail", "-s", "\"Alert from Vesta!\"", emailAddress]
-            cmdStr = " ".join(cmdList)
-            call(cmdStr, shell=True)
+            plainText = join(emailBody)
+            sendmail.email("Vesta Alert!", plainText, None)
+            #cmdList = ["echo", "\""+' '.join(emailBody)+"\"", "|", "mail", "-s", "\"Alert from Vesta!\"", emailAddress]
+            #cmdStr = " ".join(cmdList)
+            #call(cmdStr, shell=True)
     else: # Must be a command for a device, or group of devices
         name = actList[1]   # Second arg is name
         if database.IsGroupName(name): # Check if name is a groupName

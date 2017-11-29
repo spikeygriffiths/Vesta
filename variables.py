@@ -30,9 +30,10 @@ def EventHandler(eventId, eventArg):
 
 def Set(name, value):
     global varList
-    Del(name) # Remove old tuple if necessary
-    log.debug("Variable \""+name+"\" gets "+value+" @ "+"{0:%Y-%m-%d %H:%M:%S}".format(datetime.now()))
-    varList.append((name, value, "{0:%Y-%m-%d %H:%M:%S}".format(datetime.now()))) # Add new one regardless
+    if Get(name) != value:  # Only update value if it has changed
+        Del(name) # Remove old tuple if necessary
+        log.debug("Variable \""+name+"\" gets "+value+" @ "+"{0:%Y-%m-%d %H:%M:%S}".format(datetime.now()))
+        varList.append((name, value, "{0:%Y-%m-%d %H:%M:%S}".format(datetime.now()))) # Add new one regardless
 
 def Del(name):
     global varList

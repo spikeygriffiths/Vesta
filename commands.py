@@ -76,7 +76,8 @@ def EventHandler(eventId, eventArg):
                 else:
                     log.debug("Closing socket")
                     cliSck.close()
-                    sckLst.remove(cliSck)
+                    if cliSck in sckLst:
+                        sckLst.remove(cliSck)
     # End of Command EventHandler
 
 class Commands(cmd.Cmd):
