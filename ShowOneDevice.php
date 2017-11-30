@@ -73,11 +73,13 @@ function ShowClusters($item, $name, $devKey, $db)
 
 function ShowEvent($devKey, $db)
 {
-    $result = $db->query("SELECT event FROM Events WHERE devKey=".$devKey." ORDER BY TIMESTAMP DESC LIMIT 1");
+    $result = $db->query("SELECT * FROM Events WHERE devKey=".$devKey." ORDER BY TIMESTAMP DESC LIMIT 1");
     $result->setFetchMode(PDO::FETCH_ASSOC);
     $fetch = $result->fetch();
-    $val = $fetch[event];
-    if ($val != "") echo "<td>",$val,"</td>"; else echo "<td>N/A</td>";
+    $val = $fetch['event'];
+    $time = $fetch['timestamp'];
+    $time = ElapsedTime($time);
+    if ($val != "") echo "<td>",$val," (",$time, " ago)</td>"; else echo "<td>N/A</td>";
 }
 
 function ShowDeviceInfo($db, $devKey, $username)
