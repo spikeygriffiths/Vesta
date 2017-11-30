@@ -35,6 +35,42 @@ function ShowDevItem($item, $name, $devKey, $db)
     }
 }
 
+function ShowClusters($item, $name, $devKey, $db)
+{
+    $clusterDict = array(
+     "Basic" => "0000",
+     "PowerConfig" => "0001",
+     "Identify" => "0003",
+     "OnOff" => "0006",
+     "LevelCtrl" => "0008",
+     "OTA" => "0019",
+     "PollCtrl" => "0020",
+     "ColourCtrl" => "0300",
+     "Illuminance" => "0400",
+     "Temperature" => "0402",
+     "Occupancy" => "0406",
+     "IAS_Zone" => "0500",
+     "SimpleMetering" => "0702",
+     );
+
+    $val = GetDevItem($item, $devKey,$db);
+    if ($val != null) {
+        $val = str_replace("[", "", $val); # Remove square brackets from list of clusters
+        $val = str_replace("]", "", $val); # Remove square brackets from list of clusters
+        $val = str_replace("'", "", $val); # Remove single quotes from list of clusters
+        $list = explode(', ', $val);
+        $clusterNames = array();    # Empty array of names, ready to start populating with matched items in $list
+        foreach ($list as $item) {  # Go through $list, replacing 'xxxx' with named cluster
+            $cluster = array_search($item, $clusterDict);
+            if ($cluster === FALSE) $cluster = $item;  # If we didn't find a match, just show original item
+            $clusterNames[] = $cluster; # Append each item in turn
+        }
+        $finalList = implode(", ", $clusterNames);
+        if ($finalList == "") $finalList = "<empty>";
+        echo "<tr><td>",$name,"</td><td>$finalList</td></tr>";
+    }
+}
+
 function ShowEvent($devKey, $db)
 {
     $result = $db->query("SELECT event FROM Events WHERE devKey=".$devKey." ORDER BY TIMESTAMP DESC LIMIT 1");
@@ -70,10 +106,10 @@ function ShowDeviceInfo($db, $devKey, $username)
     ShowDevItem("endPoints", "Endpoints", $devKey, $db);
     ShowDevItem("firmwareVersion", "Firmware Version", $devKey, $db);
     if ("0000" != $nwkId) {
-        ShowDevItem("inClusters", "In Clusters", $devKey, $db);
-        ShowDevItem("outClusters", "Out Clusters", $devKey, $db);
-        ShowDevItem("binding", "Binding", $devKey, $db);
-        ShowDevItem("reporting", "Reporting", $devKey, $db);
+        ShowClusters("inClusters", "In Clusters", $devKey, $db);
+        ShowClusters("outClusters", "Out Clusters", $devKey, $db);
+        ShowClusters("binding", "Binding", $devKey, $db);
+        #ShowDevItem("reporting", "Reporting", $devKey, $db);
         ShowDevItem("iasZoneType", "IAS Zone Type", $devKey, $db);
     } else {    // Is Vesta coordinator
         $radioStr = AppCmd("radio", True);

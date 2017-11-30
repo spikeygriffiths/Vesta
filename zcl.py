@@ -15,22 +15,6 @@ class Cluster():
     IAS_Zone = "0500"
     SimpleMetering = "0702"
 
-clusterDict = {
- "0000": "Basic",
- "0001": "PowerConfig",
- "0003": "Identify",
- "0006": "OnOff",
- "0008": "LevelCtrl",
- "0019": "OTA",
- "0020": "PollCtrl",
- "0300": "ColourCtrl",
- "0400": "Illuminance",
- "0402": "Temperature",
- "0406": "Occupancy",
- "0500": "IAS_Zone",
- "0702": "SimpleMetering",
- }
- 
 class Attribute():
     Manuf_Name = "0004" # Basic cluster, string (Read Only)
     Model_Name = "0005" # Basic cluster, string (Read Only)
