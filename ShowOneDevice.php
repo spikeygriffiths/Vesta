@@ -22,8 +22,17 @@ function ShowDevStatus($item, $name, $devKey, $db)
 {
     $val = GetDevStatus($item, $devKey,$db);
     if ($val != null) {
-        if ($item == "presence_time") { $val = ElapsedTime($val); }   # Convert timestamp to elapsed time
         echo "<tr><td>",$name,"</td><td>$val</td></tr>";
+    }
+}
+
+function ShowDevStatusAndTime($item, $item_time, $name, $devKey, $db)
+{
+    $val = GetDevStatus($item, $devKey,$db);
+    if ($val != null) {
+        $time = GetDevStatus($item_time, $devKey,$db);
+        $time = ElapsedTime($time);   # Convert timestamp to elapsed time
+        echo "<tr><td>",$name,"</td><td>",$val," (",$time, " ago)</td></tr>";
     }
 }
 
@@ -92,11 +101,10 @@ function ShowDeviceInfo($db, $devKey, $username)
     echo "<table>";
     //echo "<tr><td>Name</td><td><input type=\"text\" name=\"UserName\" value=\"", $username, "\"></td>";
     ShowDevStatus("signal", "Radio Signal %", $devKey, $db);
-    ShowDevStatus("battery", "Battery %", $devKey, $db);
-    ShowDevStatus("temperature", "Temperature 'C", $devKey, $db);
-    ShowDevStatus("powerReadingW", "Power (W)", $devKey, $db);
-    ShowDevStatus("presence", "Presence", $devKey, $db);
-    ShowDevStatus("presence_time", "Last heard", $devKey, $db);
+    ShowDevStatusAndTime("battery", "battery_time", "Battery %", $devKey, $db);
+    ShowDevStatusAndTime("temperature", "temperature_time", "Temperature 'C", $devKey, $db);
+    ShowDevStatusAndTime("powerReadingW", "powerReadingW_time", "Power (W)", $devKey, $db);
+    ShowDevStatusAndTime("presence", "presence_time", "Presence", $devKey, $db);
     echo "<tr><td>Event</td>";
     ShowEvent($devKey, $db);
     echo "</tr>";
