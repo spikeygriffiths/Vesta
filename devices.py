@@ -72,6 +72,10 @@ def EventHandler(eventId, eventArg):
                 queue.EnqueueCmd(devKey, ["AT+RAWZCL:"+nwkId+","+endPoint+",0020,11"+seq+"00000100", "DFTREP"]) # Tell device to stop Poll
         else: # Unknown device, so assume it's been deleted from our database
             telegesis.Leave(eventArg[1])    # Tell device to leave the network, since we don't know anything about it
+    if eventId == events.ids.TRIGGER or eventId == events.ids.BUTTON:
+        devKey = GetKey(eventArg[1]) # Lookup device from network address in eventArg[1]
+        if devKey != None:
+            SetTempVal(devKey,"PollingUntil", datetime.now()+timedelta(seconds=1))  # Say that it's polling for a very short while so that we can try to set up a PollCtrl cluster
     if eventId == events.ids.RXMSG:
         if eventArg[0] == "AddrResp" and eventArg[1] == "00":
             devKey = GetKey(eventArg[2])
@@ -324,7 +328,10 @@ def Check(devKey):
     binding = database.GetDeviceItem(devKey, "binding")
     rprtg = database.GetDeviceItem(devKey, "reporting")
     if inClstr != None:
-        if binding != None and pendingBinding == None:  # Only try to add one binding at once
+        if binding == None:
+            database.SetDeviceItem(devKey, "binding", "[]")
+            binding = database.GetDeviceItem(devKey, "binding") # Initialise binding if not already done so and continue
+        if pendingBinding == None:  # Only try to add one binding at once
             if zcl.Cluster.PollCtrl in inClstr and zcl.Cluster.PollCtrl not in binding:
                 return SetBinding(devKey, zcl.Cluster.PollCtrl, "01") # 01 is our endpoint we want messages to come to
             if zcl.Cluster.OnOff in outClstr and zcl.Cluster.OnOff not in binding: # If device sends OnOff commands...
@@ -333,8 +340,6 @@ def Check(devKey):
                 return SetBinding(devKey, zcl.Cluster.Temperature, "01") # 01 is our endpoint we want messages to come to
             if zcl.Cluster.SimpleMetering in inClstr and zcl.Cluster.SimpleMetering not in binding:
                 return SetBinding(devKey, zcl.Cluster.SimpleMetering, "01") # 01 is our endpoint we want messages to come to
-        else:
-            database.SetDeviceItem(devKey, "binding", "[]")
         if zcl.Cluster.IAS_Zone in inClstr:
             if None == database.GetDeviceItem(devKey, "iasZoneType"):
                 return telegesis.ReadAttr(nwkId, ep, zcl.Cluster.IAS_Zone, zcl.Attribute.Zone_Type) # Get IAS device type (PIR or contact, etc.)

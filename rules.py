@@ -145,7 +145,7 @@ def ParseCondition(ruleConditionList, trigger):
             subAnswers = subAnswers + str(GetConditionResult("==", condition))
     # End of loop
     if subAnswers != "":
-        log.debug("About to evaluate:'"+subAnswers+"'")
+        #log.debug("About to evaluate:'"+subAnswers+"'")
         try:
             finalAnswer = eval(subAnswers)
         except: # Catch all errors that the rule might raise
