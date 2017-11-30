@@ -26,13 +26,13 @@ function ShowDevStatus($item, $name, $devKey, $db)
     }
 }
 
-function ShowDevStatusAndTime($item, $item_time, $name, $devKey, $db)
+function ShowDevStatusAndTime($item, $item_time, $name, $units, $devKey, $db)
 {
     $val = GetDevStatus($item, $devKey,$db);
     if ($val != null) {
         $time = GetDevStatus($item_time, $devKey,$db);
         $time = ElapsedTime($time);   # Convert timestamp to elapsed time
-        echo "<tr><td>",$name,"</td><td>",$val," (",$time, " ago)</td></tr>";
+        echo "<tr><td>",$name,"</td><td>",$val,$units,"<div style=\"float:right;width:50%;\">(",$time, " ago)</div></td></tr>";
     }
 }
 
@@ -88,7 +88,7 @@ function ShowEvent($devKey, $db)
     $val = $fetch['event'];
     $time = $fetch['timestamp'];
     $time = ElapsedTime($time);
-    if ($val != "") echo "<td>",$val," (",$time, " ago)</td>"; else echo "<td>N/A</td>";
+    if ($val != "") echo "<td>",$val,"<div style=\"float:right;width:50%;\">(",$time, " ago)</div></td>"; else echo "<td>N/A</td>";
 }
 
 function ShowDeviceInfo($db, $devKey, $username)
@@ -100,11 +100,11 @@ function ShowDeviceInfo($db, $devKey, $username)
     //echo "<center><form action=\"/vesta/UpdateDeviceName.php/?devKey=",$devKey,"\" method=\"post\">";
     echo "<table>";
     //echo "<tr><td>Name</td><td><input type=\"text\" name=\"UserName\" value=\"", $username, "\"></td>";
-    ShowDevStatus("signal", "Radio Signal %", $devKey, $db);
-    ShowDevStatusAndTime("battery", "battery_time", "Battery %", $devKey, $db);
-    ShowDevStatusAndTime("temperature", "temperature_time", "Temperature 'C", $devKey, $db);
-    ShowDevStatusAndTime("powerReadingW", "powerReadingW_time", "Power (W)", $devKey, $db);
-    ShowDevStatusAndTime("presence", "presence_time", "Presence", $devKey, $db);
+    ShowDevStatusAndTime("signal", "signal_time", "Radio Signal", "%", $devKey, $db);
+    ShowDevStatusAndTime("battery", "battery_time", "Battery", "%", $devKey, $db);
+    ShowDevStatusAndTime("temperature", "temperature_time", "Temperature", "'C", $devKey, $db);
+    ShowDevStatusAndTime("powerReadingW", "powerReadingW_time", "Power", "W", $devKey, $db);
+    ShowDevStatusAndTime("presence", "presence_time", "Presence", "", $devKey, $db);
     echo "<tr><td>Event</td>";
     ShowEvent($devKey, $db);
     echo "</tr>";
