@@ -13,4 +13,19 @@
     font-size: 32px;
     padding: 8px 12px;
 }
-
+.pageHead {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+.pageTitle {
+    font-size: 32px;
+    font-weight: bold;
+    margin-left: auto;
+}
+.buttonHead {
+    border-radius: 15px;
+    font-size: 20px;
+    padding: 8px 12px;
+    margin-left: auto;
+}

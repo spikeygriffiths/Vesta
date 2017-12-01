@@ -3,13 +3,21 @@ include "database.php";
 $item = $_GET['item'];
 include "header.php";   # Has other includes as well as log-out detection, and favicon.  NB Has "<html><head>" for favicon link!
 echo "</head><body>";
-echo "<center>";
+//echo "<center>";
+echo "<div class=\"pageHead\">";
+echo "<div class=\"pageTitle\">";
 if ($item == "All") {
-    echo "<H1>All Rules</H1>";
+    echo "All Rules";
 } else {
-    echo "<H1>Rules for ",$item,"</H1>";
+    echo "Rules for ",$item;
 }
+echo "</div>";
+echo "<div class=\"buttonHead\">";
+echo "<button class=\"buttonHead\" type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button>";
+echo "</div>";
+echo "</div>";
 $db = DatabaseInit();
+echo "<center>";
 ShowRules($db, $item);
 if ($item != "All") {
     echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/ShowAllDevices.php'\">Devices</button><br><br>";
