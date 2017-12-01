@@ -35,7 +35,7 @@ function ShowEvent($devKey, $db)
     $val = $fetch['event'];
     $time = $fetch['timestamp'];
     $time = ElapsedTime($time);
-    if ($val != "") echo "<td>",$val," (",$time, " ago)</td>"; else echo "<td>N/A</td>";
+    if ($val != "") echo "<td>",$val,"<div style=\"float:right;width:35%;\">(",$time, " ago)</td>"; else echo "<td>N/A</td>";
 }
 
 function ShowDevices()
@@ -44,7 +44,7 @@ function ShowDevices()
     $numDevs = GetDevCount($db);
     if ($numDevs > 0) {
         echo "<table>";
-        echo "<tr><th>Name</th><th>Battery</th><th>Signal</th><th>Presence</th><th>Time</th><th>Notes</th></tr>";
+        echo "<tr><th>Name</th><th>Battery</th><th>Signal</th><th>Presence</th><th width=\"400\">Notes</th></tr>";
         for ($index = 0; $index < $numDevs; $index++) {
             $devKey = GetDevKey($index, $db);
             echo "<tr>";
@@ -53,13 +53,6 @@ function ShowDevices()
 	        ShowDevStatus("battery", $devKey, $db, "%");
 	        ShowDevStatus("signal", $devKey, $db, "%");
       	    ShowDevStatus("presence", $devKey, $db, "");
-            $time = GetDevStatus("presence_time", $devKey, $db);
-            if ($time != null) {
-                $ago = ElapsedTime($time);
-                echo "<td>$ago</td>";
-            } else {
-                echo "<td>N/A</td>";
-            }
             ShowEvent($devKey, $db);
             echo "</tr>";
         }

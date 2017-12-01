@@ -172,6 +172,8 @@ def NewDevice(nwkId, eui64, devType):
 def RemoveDevice(devKey):
     global curs, db
     #curs.execute("DELETE FROM Groups WHERE devKey="+str(devKey)) # This has to remove devKey from within each group's devKeyList
+    userName = GetDeviceItem(devKey, "userName")
+    curs.execute("DELETE FROM Rules WHERE rule LIKE '%"+userName+"%'")  # Remove all rules associated with device
     curs.execute("DELETE FROM Status WHERE devKey="+str(devKey))
     curs.execute("DELETE FROM Events WHERE devKey="+str(devKey))
     curs.execute("DELETE FROM Devices WHERE devKey="+str(devKey))
