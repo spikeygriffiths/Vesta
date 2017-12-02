@@ -152,7 +152,6 @@ def SetDeviceItem(devKey, item, value):
         if value == "" or value == None:
             value = "(empty)"
         value = value.replace('\x00', '')   # Strip any NUL chars, after LEEDARSON bulb had one in the model name
-        log.debug("Value of value is " + value)
         curs.execute("UPDATE Devices SET "+item+"=\""+value+"\" WHERE devKey="+str(devKey))
     else: # Assume number (Integer or Float)
         curs.execute("UPDATE Devices SET "+item+"="+str(value)+" WHERE devKey="+str(devKey))
