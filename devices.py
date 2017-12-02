@@ -57,6 +57,7 @@ def EventHandler(eventId, eventArg):
         seq = "00" # was seq = eventArg[3], but that's the RSSI
         devKey = GetKey(eventArg[1])
         if devKey != None:
+            EnsureInBinding(devKey, zcl.Cluster.PollCtrl)   # Assume CheckIn means PollCtrl must be in binding, so make sure this is up-to-date
             NoteMsgDetails(devKey, eventArg)
             if database.GetDeviceItem(devKey, "endPoints") == None:
                 database.SetDeviceItem(devKey, "endPoints", endPoint) # Note endpoint that CheckIn came from, unless we already know this
@@ -206,6 +207,13 @@ def NoteReporting(devKey, clusterId, attrId):
     else:
         reporting = "['"+newRpt+"']"
     database.SetDeviceItem(devKey, "reporting", reporting) # Ready for next time
+    EnsureInBinding(devKey, clusterId)   # Assume reportable items must be in binding for us to receive them, so make sure this is up-to-date
+
+def EnsureInBinding(devKey, clusterId):  # Put clusterId in binding if not there already
+    binding = eval(database.GetDeviceItem(devKey, "binding"))
+    if clusterId not in binding:
+        binding.append(clusterId)
+        database.SetDeviceItem(devKey, "binding", str(binding))
 
 def GetKey(nwkId):
     return database.GetDevKey("nwkId", nwkId)
