@@ -110,8 +110,8 @@ def EventHandler(eventId, eventArg):
                 if "00" == eventArg[5]:
                     attrVal = eventArg[6]
                     SetAttrVal(devKey, clusterId, attrId, attrVal)
-                #else:
-                #    SetAttrVal(devKey, clusterId, attrId, "Failed (error "+eventArg[5]+")") # So that we don't keep asking
+                else:
+                    SetAttrVal(devKey, clusterId, attrId, "Failed (error "+eventArg[5]+")") # So that we don't keep asking
         elif eventArg[0] == "RESPMATTR":
             devKey = GetKey(eventArg[1])
             if devKey != None:
