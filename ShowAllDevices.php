@@ -9,7 +9,7 @@ echo "<style>table {font-family:arial, sans-serif;border-collapse: collapse;widt
 echo "td, th {border: 2px solid #dddddd;text-align: left;padding: 2px }";
 echo "tr:nth-child(even) { background-color: #dddddd; }</style>";
 echo "</head><body>";
-$rightBtn = "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/AddNewDevices.php'\">Add</button><br><br>";
+$rightBtn = "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/AddNewDevices.php'\">Add</button>";
 PageHeader("All Devices", $rightBtn);
 //print_r (PDO::getAvailableDrivers()); echo("<br>"); // Shows whether SQLite for PDO is installed
 ShowDevices();

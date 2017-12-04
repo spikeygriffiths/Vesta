@@ -210,7 +210,13 @@ def NoteReporting(devKey, clusterId, attrId):
     EnsureInBinding(devKey, clusterId)   # Assume reportable items must be in binding for us to receive them, so make sure this is up-to-date
 
 def EnsureInBinding(devKey, clusterId):  # Put clusterId in binding if not there already
-    binding = eval(database.GetDeviceItem(devKey, "binding"))
+    entry = database.GetDeviceItem(devKey, "binding")
+    if entry == None or '[' not in entry:
+        binding = []
+    else:
+        #log.debug("Binding in database is "+entry)
+        binding = eval(entry)
+    #log.debug("Binding is "+str(binding))
     if clusterId not in binding:
         binding.append(clusterId)
         database.SetDeviceItem(devKey, "binding", str(binding))
