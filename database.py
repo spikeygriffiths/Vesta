@@ -149,6 +149,9 @@ def GetDeviceItem(devKey, item):
 def SetDeviceItem(devKey, item, value):
     global curs, flushDB
     if type(value) is str:
+        if value == "" or value == None:
+            value = "(empty)"
+        value = value.replace('\x00', '')   # Strip any NUL chars, after LEEDARSON bulb had one in the model name
         curs.execute("UPDATE Devices SET "+item+"=\""+value+"\" WHERE devKey="+str(devKey))
     else: # Assume number (Integer or Float)
         curs.execute("UPDATE Devices SET "+item+"="+str(value)+" WHERE devKey="+str(devKey))
