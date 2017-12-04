@@ -1,5 +1,6 @@
 <?php
 include "database.php";
+include "functions.php";
 include "header.php";   # Has other includes as well as log-out detection, and favicon.  NB Has "<html><head>" for favicon link!
 echo "<style>table {font-family:arial, sans-serif;border-collapse: collapse;width: 100 % }";
 echo "td, th {border: 2px solid #dddddd;text-align: left;padding: 2px }";
@@ -7,11 +8,11 @@ echo "</style>";
 echo "</head><body>";
 $groupName=$_GET['groupName'];
 $db = DatabaseInit();
-echo "<center><h1>",$groupName,"</h1>";
+PageHeader("$groupName);
 echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/DelGroup.php/?groupName=",$groupName,"'\">Remove all of ",$groupName,"</button><br><br>";
 ShowGroupInfo($db, $groupName);
 echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Groups.php'\">Groups</button><br><br>";
-echo "<button class=\"buttonHome\" type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
+PageFooter();
 echo "</body></html>";
 
 function ShowGroupInfo($db, $groupName)

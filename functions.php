@@ -2,6 +2,26 @@
 // functions.php
 include "AppCmd.php";   # Not allowed to include same file more than once, so if including this "functions.php", must remove any previous include "AppCmd.php"
 
+function PageHeader($title, $right = Null)
+{
+    echo "<center>";
+    echo "<div class=\"pageHead\">";
+    echo "<div class=\"pageButton\"><a href=\"/vesta/index.php\"><img src=\"/vesta/vestaLogo.png\" width=32 height=32 title=\"Home\"></a></div>";
+    echo "<div class=\"pageTitle\">",$title,"</div>";
+    if ($right != Null) {
+        echo "<div class=\"pageButton\">",$right,"</div>";
+    } else {    // No right button supplied
+        echo "<div class=\"pageEmpty\">&nbsp;</div>";
+    }
+    echo "</div>";
+}
+
+function PageFooter()
+{
+    echo "<center><a href=\"/vesta/index.php\"><img src=\"/vesta/vestaLogo.png\" width=32 height=32 title=\"Home\"></a>";
+    //echo "<button class=\"buttonHome\" type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
+}
+
 function ElapsedTime($timeStamp)    // Creates a string describing age of $timeStamp
 {
     $now = date('Y-m-d H:i:s');

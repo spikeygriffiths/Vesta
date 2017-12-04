@@ -5,14 +5,14 @@ $url1 = $_SERVER['REQUEST_URI'];
 header("Refresh: 10;  URL=$url1");
 include "header.php";   # Has other includes as well as log-out detection, and favicon.  NB Has "<html><head>" for favicon link!
 echo "</head><body>";
-echo "<center><h1>Add New Devices</h1> ";
+PageHeader("Add New Devices");
 echo "Now: ", date('Y-m-d H:i:s'), "<br>"; // Show page refreshing
 echo AppCmd("open", False);
 echo "<br><h3>Top tip - Make sure the new devices are all different types so you can distinguish them later!</h3><br><br>";
 ShowNewDevices();
 echo "<br><br><br><br>";
 echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/ShowAllDevices.php'\">All Devices</button><br><br>";
-echo "<button class=\"buttonHome\" type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
+PageFooter();
 echo "</body>";
 echo "</html>";
 

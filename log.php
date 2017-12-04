@@ -1,7 +1,9 @@
 <?php 
 include "header.php";   # Has other includes as well as log-out detection, and favicon.  NB Has "<html><head>" for favicon link!
+include "functions.php";
 echo "</head><body>";
-echo "<center><h1>Recent error logs</h1></center>";
+PageHeader("Recent error logs");
+echo "</center>";
 # See https://stackoverflow.com/questions/2667065/sort-files-by-date-in-php for details of the following sort
 $files = glob("/home/pi/Vesta/*_err.log");
 if ($files) {
@@ -20,7 +22,6 @@ if ($files) {
 } else {
     echo "<center><h3>No error logs</h3></center>";
 }
-echo "<center>";
-echo "<button class=\"buttonHome\" type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
+PageFooter();
 echo "</body></html>";
 ?>

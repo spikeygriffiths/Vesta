@@ -1,5 +1,6 @@
 <?php
 include "database.php";
+include "functions.php";
 include "header.php";
 echo "</head><body>";
 ini_set('display_errors', '1');
@@ -24,6 +25,6 @@ if ($db) {
     echo "Failed to get a handle onto the database<br>";
 }
 echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/ShowOneDevice.php/?devKey=",$devKey,"'>Show Device</button><br><br>"; # Let user go back to where we came from
-echo "<button class=\"buttonHome\" type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
+PageFooter();
 echo "</body></html>";
 ?>

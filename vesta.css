@@ -16,16 +16,22 @@
 .pageHead {
     display: flex;
     justify-content: center;
+    flex-wrap: nowrap;
     width: 100%;
+    margin: 20px;
+}
+.pageButton {
+    margin: 10;
 }
 .pageTitle {
     font-size: 32px;
     font-weight: bold;
-    margin-left: auto;
+    /*background-color: DodgerBlue; /* For debugging */
+    /*margin: 20px;*/
+    width: 700px;
 }
-.buttonHead {
-    border-radius: 15px;
-    font-size: 20px;
-    padding: 8px 12px;
-    margin-left: auto;
+.pageEmpty {
+    width: 64px;
+    margin: 10;
 }
+

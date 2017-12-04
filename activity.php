@@ -1,5 +1,6 @@
 <?php 
 include "database.php";
+include "functions.php";
 include "header.php";   # Has other includes as well as log-out detection, and favicon.  NB Has "<html><head>" for favicon link!
 echo "<style>table {font-family:arial, sans-serif;border-collapse: collapse;width: 100 % }";
 echo "td, th {border: 2px solid #dddddd;text-align: left;padding: 2px }";
@@ -12,7 +13,7 @@ if (empty($titleTime) || empty($dbTime)) {
     $titleTime = "Today";
 }
 $devKey = $_GET['devKey'];
-echo "<center><h1>Activity</h1>";
+PageHeader("Activity");
 $db = DatabaseInit();
 // See if the time needs to be adjusted
 echo "<form action='/vesta/SelectActivityTime.php/?devKey=".$devKey."' method='post'>";
@@ -26,7 +27,7 @@ echo "<input type='submit' name='submit'/>";
 echo "</form>";
 ShowActivity($db, $dbTime, $titleTime, $devKey);
 echo "<br>";
-echo "<button class=\"buttonHome\" type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
+PageFooter();
 echo "</body></html>";
 
 function ShowActivity($db, $dbTime, $titleTime, $devKey)

@@ -6,7 +6,7 @@ echo "<style>table {font-family:arial, sans-serif;border-collapse: collapse;widt
 echo "td, th {border: 2px solid #dddddd;text-align: left;padding: 3px; padding-left: 10px; padding-right: 10px }";
 echo "tr:nth-child(even) { background-color: #dddddd; }</style>";
 echo "</head><body>";
-echo "<center><h1>Variables</h1>";
+PageHeader("Variables");
 $varsList = AppCmd("vars", True);
 $varsArray = explode(",", $varsList);
 for ($index = 0; $index < count($varsArray); $index ++) {
@@ -23,6 +23,6 @@ for ($index = 0; $index < count($varsArray); $index += 3) {
     echo "<tr><td>",$varsArray[$index], "</td><td>", $varsArray[$index+1], "</td><td>",ElapsedTime($varsArray[$index+2]), "</td><td onclick=\"window.location.href='/vesta/rules.php/?item=",$varsArray[$index],"'\">Rules</td></tr>";
 }
 echo "</table><br>";
-echo "<button class=\"buttonHome\" type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
+PageFooter();
 echo "</body></html>";
 ?>

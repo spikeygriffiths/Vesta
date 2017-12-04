@@ -9,12 +9,12 @@ echo "<style>table {font-family:arial, sans-serif;border-collapse: collapse;widt
 echo "td, th {border: 2px solid #dddddd;text-align: left;padding: 2px }";
 echo "tr:nth-child(even) { background-color: #dddddd; }</style>";
 echo "</head><body>";
-echo "<center><h1>Devices</h1> ";
-echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/AddNewDevices.php'\">Add new devices</button><br><br>";
-//print_r (PDO::getAvailableDrivers()); echo("<br>"); // Shows whether you have SQLite for PDO installed
+$rightBtn = "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/AddNewDevices.php'\">Add</button><br><br>";
+PageHeader("All Devices", $rightBtn);
+//print_r (PDO::getAvailableDrivers()); echo("<br>"); // Shows whether SQLite for PDO is installed
 ShowDevices();
 echo "<br>";
-echo "<button class=\"buttonHome\" type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
+PageFooter();
 echo "</body></html>";
 
 function ShowDevStatus($item, $devKey, $db, $suffix)

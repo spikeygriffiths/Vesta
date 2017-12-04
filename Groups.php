@@ -1,15 +1,16 @@
 <?php 
 include "database.php";
+include "functions.php";
 include "header.php";   # Has other includes as well as log-out detection, and favicon.  NB Has "<html><head>" for favicon link!
 echo "<style>table {font-family:arial, sans-serif;border-collapse: collapse;width: 100 % }";
 echo "td, th {border: 2px solid #dddddd;text-align: left;padding: 2px }";
 echo "</style>";
 echo "</head><body>";
-echo "<center><h1>Groups</h1>";
+PageHeader("Groups");
 $db = DatabaseInit();
 ShowGroups($db);
 echo "<br>";
-echo "<button class=\"buttonHome\" type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
+PageFooter();
 echo "</body></html>";
 
 function ShowGroups($db)

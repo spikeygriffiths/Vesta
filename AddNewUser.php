@@ -1,6 +1,6 @@
 <?php
 include "database.php";
-
+include "functions.php";
 // Following code is freely adapted from:
 // @link https://github.com/panique/php-login-one-file/
 // @license http://opensource.org/licenses/MIT MIT License
@@ -83,7 +83,7 @@ class Register
 #include "header.php";
 echo "<center><img src='vestaTitle.png' title=\"Vesta was the Roman goddess of hearth and home\" width=128 height=128><br>";
 $app = new Register();
-echo "<button class=\"buttonHome\" type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
+PageFooter();
 echo "</body></html>";
 
 ?>

@@ -12,10 +12,16 @@ echo "</head><body>";
 $db = DatabaseInit();
 $username = GetDevItem("userName", $devKey,$db);
 echo "<center>";
-echo "<button class=\"buttonHeader\" type=\"button\" onclick=\"window.location.href='/vesta/ChangeDevName.php/?devKey=",$devKey,"'\">",$username,"</button>";
+$title = "<button class=\"buttonHeader\" type=\"button\" onclick=\"window.location.href='/vesta/ChangeDevName.php/?devKey=".$devKey."'\">".$username."</button>";
+if (0 != $devKey) {
+    $rightBtn = "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/DelDevice.php/?devId=".$username."'\">Remove</button>";
+    PageHeader($title, $rightBtn);
+} else {
+    PageHeader($title);
+}
 ShowDeviceInfo($db, $devKey, $username);
 echo "<br><br><button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/ShowAllDevices.php'\">All Devices</button><br><br>";
-echo "<button class=\"buttonHome\" type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
+PageFooter();
 echo "</body></html>";
 
 function ShowDevStatus($item, $name, $devKey, $db)
@@ -94,9 +100,6 @@ function ShowEvent($devKey, $db)
 function ShowDeviceInfo($db, $devKey, $username)
 {
     $nwkId = GetDevItem("nwkId", $devkey, $db);
-    if ("0000" != $nwkId) {
-        echo "<br><br><button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/DelDevice.php/?devId=",$username,"'\">Remove Device</button><br><br>";
-    }
     //echo "<center><form action=\"/vesta/UpdateDeviceName.php/?devKey=",$devKey,"\" method=\"post\">";
     echo "<table>";
     //echo "<tr><td>Name</td><td><input type=\"text\" name=\"UserName\" value=\"", $username, "\"></td>";
