@@ -7,12 +7,14 @@ import log
 import database
 import presence
 import iottime
+import config
 import vesta
 
 issues = {} # Empty dictionary at start
 
 def BuildPage():
     upTime = datetime.now() - iottime.appStartTime
+    absUrl = config.Get("vestaURL", "")
     log.debug("Building status.html...")
     email = open("status.email", "w")    # Create text file for emailing.  Could put HTML inside here once I work out how!
     html = open("status.html", "w")    # Create local temporary file, so we can copy it for Apache to serve up
@@ -43,7 +45,7 @@ def BuildPage():
         email.write("Everything OK!\n")
     html.write("<br>(Vesta v" + vesta.GetVersion()+")<br>")
     email.write("\n(Vesta v" + vesta.GetVersion()+")\n")
-    html.write("<br><center><a href=\"/vesta/index.php\"><img src=\"/vesta/vestaLogo.png\" width=32 height=32 title=\"Home\"></a>")
+    html.write("<br><center><a href=\"/vesta/index.php\"><img src=\"" + absUrl + "/vesta/vestaLogo.png\" width=32 height=32 title=\"Home\"></a>")
     #html.write("<br><button type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>")
     html.write("</body></html>")
     html.close()

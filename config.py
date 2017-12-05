@@ -14,7 +14,7 @@ def Get(item, default=None):
             for line in config:
                 if line[0] != "#":  # Ignore comment lines
                     lineList = line.split("=") # Make each line into a list consisting of item on left side and value on right side of "="
-                    if lineList[0].strip() == item: # Strip leading & trailing spaces 
+                    if lineList[0].strip().lower == item.lower: # Strip leading & trailing spaces and do a case-insensitive match
                         value = lineList[1].splitlines()[0] # Discard trailing newline
                         value = value.strip()   # Discard leading or trailing spaces
                         #log.debug("Matched:"+lineList[0]+ "with value:"+value)
