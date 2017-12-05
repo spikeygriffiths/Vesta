@@ -45,7 +45,7 @@ def BuildPage():
         email.write("Everything OK!\n")
     html.write("<br>(Vesta v" + vesta.GetVersion()+")<br>")
     email.write("\n(Vesta v" + vesta.GetVersion()+")\n")
-    html.write("<br><center><a href=\"/vesta/index.php\"><img src=\"" + absUrl + "/vesta/vestaLogo.png\" width=32 height=32 title=\"Home\"></a>")
+    html.write("<br><center><a href=\"" + absUrl + "/vesta/index.php\"><img src=\"" + absUrl + "/vesta/vestaLogo.png\" width=32 height=32 title=\"Home\"></a>")
     #html.write("<br><button type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>")
     html.write("</body></html>")
     html.close()
