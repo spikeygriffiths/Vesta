@@ -20,7 +20,7 @@ for ($index = 0; $index < count($varsArray); $index ++) {
 echo "<table>";
 echo "<tr><th>Name</th><th>Value</th><th>Age</th><th>Rules</th></tr>";
 for ($index = 0; $index < count($varsArray); $index += 3) {
-    echo "<tr><td>",$varsArray[$index], "</td><td>", $varsArray[$index+1], "</td><td>",ElapsedTime($varsArray[$index+2]), "</td><td onclick=\"window.location.href='/vesta/rules.php/?item=",$varsArray[$index],"'\">Rules</td></tr>";
+    echo "<tr><td>",$varsArray[$index], "</td><td>", $varsArray[$index+1], "</td><td>",ElapsedTime($varsArray[$index+2]), "</td><td onclick=\"window.location.href='/vesta/rules.php/?item=",$varsArray[$index],"&type=vars'\">Rules</td></tr>";
 }
 echo "</table><br>";
 PageFooter();

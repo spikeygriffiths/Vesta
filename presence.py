@@ -12,7 +12,7 @@ import status
 
 class states():
     unknown = "Unknown"
-    absent = "Absent"
+    absent = "MISSING"
     present = "Present"
 
 presenceFreq = {}
@@ -55,6 +55,8 @@ def Check():  # Expected to be called infrequently - ie once/minute
                         Set(devKey, states.absent)
 
 def Set(devKey, newState):
+    if newState == states.absent:
+            database.SetStatus(devKey, "signal", 0) # Clear down signal strength when device goes missing
     database.SetStatus(devKey, "presence", newState)
 
 def Get(devKey):
