@@ -2,7 +2,8 @@
 
 from datetime import datetime
 import os
-# 
+import glob
+# Application-specific modules
 import log
 import database
 import presence
@@ -35,6 +36,9 @@ def BuildPage():
                 userName = database.GetDeviceItem(devKey, "userName")
                 problem(userName+"_avail", userName+ " availability only "+str(availability)+"%")
     presence.ClearFreqs()
+    errList = glob.glob("/home/pi/Vesta/*_err.log")   # Get list of all error logs
+    if len(errList):
+        problem("Number of error logs", len(errList))
     if len(issues) > 0:
         for items in issues.values():
             html.write(items + "<br>")
