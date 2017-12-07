@@ -55,6 +55,19 @@ function  GetDevStatus($item, $devKey, $db)
     return null;
 }
 
+function  GetDevStatusAtTime($item, $devKey, $db, $time)
+{
+    $result = $db->query("SELECT ".$item." FROM Status WHERE devKey=".$devKey." AND ".$item."_time > ".$time);
+    if ($result != null) {
+        $result->setFetchMode(PDO::FETCH_ASSOC);
+        $fetch = $result->fetch();
+        if ($fetch != null) {
+            return $fetch[$item];
+        }
+    }
+    return null;
+}
+
 function UpdateRules($oldUserName, $newUserName, $db)
 {
     $updates = [];    # Get ready to make a list of all the updates

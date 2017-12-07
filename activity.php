@@ -6,6 +6,7 @@ echo "<style>table {font-family:arial, sans-serif;border-collapse: collapse;widt
 echo "td, th {border: 2px solid #dddddd;text-align: left;padding: 2px }";
 echo "</style></head>";
 echo "<body>";
+$db = DatabaseInit();
 $dbTime = $_GET['dbTime'];
 $titleTime = $_GET['titleTime'];
 if (empty($titleTime) || empty($dbTime)) {
@@ -13,8 +14,13 @@ if (empty($titleTime) || empty($dbTime)) {
     $titleTime = "Today";
 }
 $devKey = $_GET['devKey'];
-PageHeader("Activity");
-$db = DatabaseInit();
+if ($devKey==-1) {
+    $title = "All activity from ".$titleTime;
+} else {
+    $userName = GetDevItem("userName", $devKey, $db);
+    $title = "Activity for ".$userName." from ".$titleTime;
+}
+PageHeader($title);
 // See if the time needs to be adjusted
 echo "<form action='/vesta/SelectActivityTime.php/?devKey=".$devKey."' method='post'>";
 echo "<p>Show events from:<select id='timePeriod' name='timePeriod'>";
@@ -33,11 +39,11 @@ echo "</body></html>";
 function ShowActivity($db, $dbTime, $titleTime, $devKey)
 {
     if ($devKey==-1) {
-        echo "<h3>Showing all activity from ",$titleTime,"</h3>";
+        //echo "<h3>Showing all activity from ",$titleTime,"</h3>";
         $sth = $db->prepare("SELECT * FROM Events WHERE timestamp > ".$dbTime);
     } else {
-        $userName = GetDevItem("userName", $devKey, $db);
-        echo "<h3>Showing activity for ",$userName," from ",$titleTime,"</h3>";
+        //$userName = GetDevItem("userName", $devKey, $db);
+        //echo "<h3>Showing activity for ",$userName," from ",$titleTime,"</h3>";
         $sth = $db->prepare("SELECT * FROM Events WHERE devKey=".$devKey." AND timestamp > ".$dbTime);
     }
     $sth->execute();

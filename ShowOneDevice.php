@@ -42,6 +42,22 @@ function ShowDevStatusAndTime($item, $item_time, $name, $units, $devKey, $db)
     }
 }
 
+function ShowDevEnergy($item, $item_time, $name, $units, $devKey, $db)
+{
+    $nowVal = GetDevStatus($item, $devKey,$db);
+    if ($nowVal != null) {
+        $dbTime = "date('now', 'start of day')";
+        $startVal = GetDevStatusAtTime($item, $devKey,$db, $dbTime);    # Get first Energy today
+        if ($startVal != null) {
+            $val = $nowVal - $startVal; # Energy used so far today
+            $time = GetDevStatus($item_time, $devKey,$db);
+            $time = ElapsedTime($time);   # Convert timestamp to elapsed time
+            //echo "<tr><td>",$name,"</td><td>",$val,$units,"<div style=\"float:right;width:50%;\">(",$time, " ago)</div></td></tr>";
+            echo "<tr><td>",$name,"</td><td>",$nowVal,"-",$startVal,"=",$val,$units,"<div style=\"float:right;width:50%;\">(",$time, " ago)</div></td></tr>";
+        }
+    }
+}
+
 function ShowDevItem($item, $name, $devKey, $db)
 {
     $val = GetDevItem($item, $devKey,$db);
@@ -107,6 +123,8 @@ function ShowDeviceInfo($db, $devKey, $username)
     ShowDevStatusAndTime("battery", "battery_time", "Battery", "%", $devKey, $db);
     ShowDevStatusAndTime("temperature", "temperature_time", "Temperature", "'C", $devKey, $db);
     ShowDevStatusAndTime("powerReadingW", "powerReadingW_time", "Power", "W", $devKey, $db);
+    ShowDevEnergy("energyForHourWh", "energyForHourWh_time", "Energy consumed today", "Wh", $devKey, $db);
+    ShowDevEnergy("absEnergyGeneratedWh", "absEnergyGeneratedWh_time", "Energy generated today", "Wh", $devKey, $db);
     ShowDevStatusAndTime("presence", "presence_time", "Presence", "", $devKey, $db);
     echo "<tr><td>Event</td>";
     ShowEvent($devKey, $db);
