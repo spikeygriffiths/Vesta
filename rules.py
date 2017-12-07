@@ -212,9 +212,6 @@ def Action(actList):
                 emailHtml = status.readlines()
             html = ''.join(emailHtml)
             sendmail.email("Vesta Status", text, html)
-            #cmdList = ["echo", "\""+'\n'.join(emailBody)+"\"", "|", "mail", "-s", "\"Vesta Status\"", emailAddress]
-            #cmdStr = " ".join(cmdList)
-            #call(cmdStr, shell=True)
     elif action == "email": # All args are body of the text.  Fixed subject and email address
         emailAddress = config.Get("emailAddress")
         if emailAddress != None:
@@ -223,9 +220,26 @@ def Action(actList):
                 emailBody.append(item)
             plainText = join(emailBody)
             sendmail.email("Vesta Alert!", plainText, None)
-            #cmdList = ["echo", "\""+' '.join(emailBody)+"\"", "|", "mail", "-s", "\"Alert from Vesta!\"", emailAddress]
-            #cmdStr = " ".join(cmdList)
-            #call(cmdStr, shell=True)
+    elif action == "set":   # Set a named variable to a value
+        expression = "".join(actList[1:])   # First recombine actList[1] onwards, with no spaces.  Now expression should be of the form "<var>=<val>"
+        if "--" in expression:
+            sep = expression.index("--")
+            varName = expression[:sep]
+            varVal = variables.Get(varName)
+            if isNumber(varVal):
+                newVal = str(eval(varVal+"-1"))
+                variables.Set(varName, newVal)
+            else:
+                log.fault(varName+" not a number at "+expression)
+        elif "=" in expression:
+            sep = expression.index("=")
+            varName = expression[:sep]
+            varVal = expression[sep+1:]
+            variables.Set(varName, varVal)
+        else:
+            log.fault("Badly formatted rule at "+expression)
+    elif action == "unset":   # Remove a named variable
+        variables.Del(actList[1])
     else: # Must be a command for a device, or group of devices
         name = actList[1]   # Second arg is name
         if database.IsGroupName(name): # Check if name is a groupName
