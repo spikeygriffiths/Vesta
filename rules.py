@@ -231,6 +231,15 @@ def Action(actList):
                 variables.Set(varName, newVal)
             else:
                 log.fault(varName+" not a number at "+expression)
+        elif "++" in expression:
+            sep = expression.index("++")
+            varName = expression[:sep]
+            varVal = variables.Get(varName)
+            if isNumber(varVal):
+                newVal = str(eval(varVal+"+1"))
+                variables.Set(varName, newVal)
+            else:
+                log.fault(varName+" not a number at "+expression)
         elif "=" in expression:
             sep = expression.index("=")
             varName = expression[:sep]

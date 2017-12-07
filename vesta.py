@@ -1,7 +1,7 @@
 #!/usr/bin/env python3 
 # vesta.py
 # (Vesta was the Roman goddess of hearth and home, hence the fire logo.)
-# For Raspberry Pi using Telegesis USB stick to talk to array of ZigBee devices
+# For Raspberry Pi using Telegesis USB stick to talk to array of ZigBee HA devices
 
 import time
 import os
@@ -33,7 +33,7 @@ if __name__ == "__main__":
     main()
 
 def GetVersion():
-    return "1.0.0.2"
+    return "1.0.0.3"
 
 def Reboot():
     database.NewEvent(0, "Rebooting...") # 0 is always hub
