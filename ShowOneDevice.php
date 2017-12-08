@@ -24,36 +24,31 @@ echo "<br><br><button class=\"button\" type=\"button\" onclick=\"window.location
 PageFooter();
 echo "</body></html>";
 
-function ShowDevStatus($item, $name, $devKey, $db)
-{
-    $val = GetDevStatus($item, $devKey,$db);
-    if ($val != null) {
-        echo "<tr><td>",$name,"</td><td>$val</td></tr>";
-    }
-}
-
 function ShowDevStatusAndTime($item, $item_time, $name, $units, $devKey, $db)
 {
-    $val = GetDevStatus($item, $devKey,$db);
-    if ($val != null) {
-        $time = GetDevStatus($item_time, $devKey,$db);
+    $row = GetLatestLoggedItem($item, $devKey,$db);
+    if ($row != null) {
+        $val = $row['value'];
+        $time = $row['time'];
         $time = ElapsedTime($time);   # Convert timestamp to elapsed time
         echo "<tr><td>",$name,"</td><td>",$val,$units,"<div style=\"float:right;width:50%;\">(",$time, " ago)</div></td></tr>";
     }
 }
+
+  ==== REWRITE Status & Energy next! ====
 
 function ShowDevEnergy($item, $item_time, $name, $units, $devKey, $db)
 {
     $nowVal = GetDevStatus($item, $devKey,$db);
     if ($nowVal != null) {
         $dbTime = "date('now', 'start of day')";
-        $startVal = GetDevStatusAtTime($item, $devKey,$db, $dbTime);    # Get first Energy today
+        $startVal = GetDevStatusAtTime($item, $devKey, $db, $dbTime);    # Get first Energy today
         if ($startVal != null) {
             $val = $nowVal - $startVal; # Energy used so far today
             $time = GetDevStatus($item_time, $devKey,$db);
             $time = ElapsedTime($time);   # Convert timestamp to elapsed time
             //echo "<tr><td>",$name,"</td><td>",$val,$units,"<div style=\"float:right;width:50%;\">(",$time, " ago)</div></td></tr>";
-            echo "<tr><td>",$name,"</td><td>",$nowVal,"-",$startVal,"=",$val,$units,"<div style=\"float:right;width:50%;\">(",$time, " ago)</div></td></tr>";
+            echo "<tr><td>",$name,"</td><td>from ",$dbTime," with ",$nowVal,"-",$startVal,"=",$val,$units,"<div style=\"float:right;width:50%;\">(",$time, " ago)</div></td></tr>";
         }
     }
 }

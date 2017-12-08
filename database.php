@@ -42,28 +42,30 @@ function GetDevItem($item, $devKey, $db)
     return null;
 }
 
-function  GetDevStatus($item, $devKey, $db)
+function GetTimedLoggedItem($item, $devKey, $time, $db) # For Battery, Signal, Presence, Temperature, PowerReadingW, etc.
 {
-    $result = $db->query("SELECT ".$item." FROM Status WHERE devKey=".$devKey);
+    $result = $db->query("SELECT * FROM ".$item." WHERE devKey=".$devKey." AND time > ".$time." LIMIT 1");  # Get first item after time
     if ($result != null) {
         $result->setFetchMode(PDO::FETCH_ASSOC);
         $fetch = $result->fetch();
-        if ($fetch != null) {
-            return $fetch[$item];
-        }
+        return $fetch;  # Return value and time
+        #if ($fetch != null) {
+        #    return $fetch['value'];
+        #}
     }
     return null;
 }
 
-function  GetDevStatusAtTime($item, $devKey, $db, $time)
+function GetLatestLoggedItem($item, $devKey, $db)
 {
-    $result = $db->query("SELECT ".$item." FROM Status WHERE devKey=".$devKey." AND ".$item."_time > ".$time);
+    $result = $db->query("SELECT * FROM ".$item." WHERE devKey=".$devKey." ORDER BY ROWID DESC LIMIT 1");  # Get last item
     if ($result != null) {
         $result->setFetchMode(PDO::FETCH_ASSOC);
         $fetch = $result->fetch();
-        if ($fetch != null) {
-            return $fetch[$item];
-        }
+        return $fetch;  # Return value and time
+        #if ($fetch != null) {
+        #    return $fetch['value'];
+        #}
     }
     return null;
 }

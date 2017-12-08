@@ -17,20 +17,36 @@ CREATE TABLE IF NOT EXISTS Devices (
   iasZoneType TEXT,
   firmwareVersion TEXT);
 
-CREATE TABLE IF NOT EXISTS Status (
-  devKey INTEGER,
-  battery INTEGER, battery_time DATETIME,
-  temperature INTEGER, temperature_time DATETIME,
-  signal INTEGER, signal_time DATETIME,
-  presence TEXT, presence_time DATETIME,
-  powerReadingW INTEGER, powerReadingW_time DATETIME,
-  energyForHourWh INTEGER, energyForHourWh_time DATETIME,
+CREATE TABLE IF NOT EXISTS Battery (
+  time DATETIME, value INTEGER, devKey INTEGER,
+  FOREIGN KEY(devKey) REFERENCES Devices(devKey));
+
+CREATE TABLE IF NOT EXISTS Temperature (
+  time DATETIME, value INTEGER, devKey INTEGER,
+  FOREIGN KEY(devKey) REFERENCES Devices(devKey));
+
+CREATE TABLE IF NOT EXISTS Signal (
+  time DATETIME, value INTEGER, devKey INTEGER,
+  FOREIGN KEY(devKey) REFERENCES Devices(devKey));
+
+CREATE TABLE IF NOT EXISTS Presence (
+  time DATETIME, value INTEGER, devKey INTEGER,
+  FOREIGN KEY(devKey) REFERENCES Devices(devKey));
+
+CREATE TABLE IF NOT EXISTS PowerReadingW (
+  time DATETIME, value INTEGER, devKey INTEGER,
+  FOREIGN KEY(devKey) REFERENCES Devices(devKey));
+
+CREATE TABLE IF NOT EXISTS EnergyConsumedWh (
+  time DATETIME, value INTEGER, devKey INTEGER,
+  FOREIGN KEY(devKey) REFERENCES Devices(devKey));
+
+CREATE TABLE IF NOT EXISTS EnergyGeneratedWh (
+  time DATETIME, value INTEGER, devKey INTEGER,
   FOREIGN KEY(devKey) REFERENCES Devices(devKey));
 
 CREATE TABLE IF NOT EXISTS Events (
-  timestamp DATETIME,
-  event TEXT,
-  devKey INTEGER,
+  timestamp DATETIME, event TEXT, devKey INTEGER,
   FOREIGN KEY(devKey) REFERENCES Devices(devKey));
 
 CREATE TABLE IF NOT EXISTS Groups (
