@@ -37,8 +37,12 @@ def BuildPage():
                 problem(userName+"_avail", userName+ " availability only "+str(availability)+"%")
     presence.ClearFreqs()
     errList = glob.glob("/home/pi/Vesta/*_err.log")   # Get list of all error logs
-    if len(errList):
-        problem("Number of error logs", str(len(errList)))
+    numLogs = len(errList)
+    if numLogs:
+        if numLogs == 1:
+            problem("error_logs", "1 error log")
+        else:
+            problem("error_logs", str(numLogs) + " error logs")
     if len(issues) > 0:
         for items in issues.values():
             html.write(items + "<br>")

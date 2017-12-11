@@ -24,31 +24,30 @@ echo "<br><br><button class=\"button\" type=\"button\" onclick=\"window.location
 PageFooter();
 echo "</body></html>";
 
-function ShowDevStatusAndTime($item, $item_time, $name, $units, $devKey, $db)
+function ShowDevStatus($item, $name, $units, $devKey, $db)
 {
     $row = GetLatestLoggedItem($item, $devKey,$db);
     if ($row != null) {
         $val = $row['value'];
-        $time = $row['time'];
+        $time = $row['timestamp'];
         $time = ElapsedTime($time);   # Convert timestamp to elapsed time
         echo "<tr><td>",$name,"</td><td>",$val,$units,"<div style=\"float:right;width:50%;\">(",$time, " ago)</div></td></tr>";
     }
 }
 
-  ==== REWRITE Status & Energy next! ====
-
-function ShowDevEnergy($item, $item_time, $name, $units, $devKey, $db)
+function ShowDevEnergy($item, $name, $units, $devKey, $db)
 {
-    $nowVal = GetDevStatus($item, $devKey,$db);
-    if ($nowVal != null) {
+    $row = GetLatestLoggedItem($item, $devKey,$db);
+    if ($row != null) {
+        $nowVal = $row['value'];
         $dbTime = "date('now', 'start of day')";
-        $startVal = GetDevStatusAtTime($item, $devKey, $db, $dbTime);    # Get first Energy today
-        if ($startVal != null) {
+        $row = GetTimedLoggedItem($item, $devKey,$dbTime,$db);    # Get first Energy today
+        if ($row != null) {
+            $startVal = $row['value'];
+            $dbTime = $row['timestamp'];    # Get actual time of first energy report
             $val = $nowVal - $startVal; # Energy used so far today
-            $time = GetDevStatus($item_time, $devKey,$db);
-            $time = ElapsedTime($time);   # Convert timestamp to elapsed time
-            //echo "<tr><td>",$name,"</td><td>",$val,$units,"<div style=\"float:right;width:50%;\">(",$time, " ago)</div></td></tr>";
-            echo "<tr><td>",$name,"</td><td>from ",$dbTime," with ",$nowVal,"-",$startVal,"=",$val,$units,"<div style=\"float:right;width:50%;\">(",$time, " ago)</div></td></tr>";
+            $time = ElapsedTime($dbTime);   # Convert timestamp to elapsed time
+            echo "<tr><td>",$name,"</td><td>",$val,$units,"<div style=\"float:right;width:50%;\">(Since midnight)</div></td></tr>";
         }
     }
 }
@@ -114,13 +113,13 @@ function ShowDeviceInfo($db, $devKey, $username)
     //echo "<center><form action=\"/vesta/UpdateDeviceName.php/?devKey=",$devKey,"\" method=\"post\">";
     echo "<table>";
     //echo "<tr><td>Name</td><td><input type=\"text\" name=\"UserName\" value=\"", $username, "\"></td>";
-    ShowDevStatusAndTime("signal", "signal_time", "Radio Signal", "%", $devKey, $db);
-    ShowDevStatusAndTime("battery", "battery_time", "Battery", "%", $devKey, $db);
-    ShowDevStatusAndTime("temperature", "temperature_time", "Temperature", "'C", $devKey, $db);
-    ShowDevStatusAndTime("powerReadingW", "powerReadingW_time", "Power", "W", $devKey, $db);
-    ShowDevEnergy("energyForHourWh", "energyForHourWh_time", "Energy consumed today", "Wh", $devKey, $db);
-    ShowDevEnergy("absEnergyGeneratedWh", "absEnergyGeneratedWh_time", "Energy generated today", "Wh", $devKey, $db);
-    ShowDevStatusAndTime("presence", "presence_time", "Presence", "", $devKey, $db);
+    ShowDevStatus("Presence", "Presence", "", $devKey, $db);
+    ShowDevStatus("SignalPercentage", "Radio Signal", "%", $devKey, $db);
+    ShowDevStatus("BatteryPercentage", "Battery", "%", $devKey, $db);
+    ShowDevStatus("TemperatureCelsius", "Temperature", "C", $devKey, $db);
+    ShowDevStatus("PowerReadingW", "Power", "W", $devKey, $db);
+    ShowDevEnergy("EnergyConsumedWh", "Energy consumed", "Wh", $devKey, $db);
+    ShowDevEnergy("EnergyGeneratedWh", "Energy generated", "Wh", $devKey, $db);
     echo "<tr><td>Event</td>";
     ShowEvent($devKey, $db);
     echo "</tr>";

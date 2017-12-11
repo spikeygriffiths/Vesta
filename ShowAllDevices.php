@@ -19,8 +19,9 @@ echo "</body></html>";
 
 function ShowDevStatus($item, $devKey, $db, $suffix)
 {
-    $val = GetDevStatus($item, $devKey,$db);
-    if ($val != null) {
+    $row = GetLatestLoggedItem($item, $devKey,$db);
+    if ($row != null) {
+        $val = $row['value'];
         echo "<td>$val$suffix</td>";
     } else {
         echo "<td>N/A</td>";
@@ -50,9 +51,9 @@ function ShowDevices()
             echo "<tr>";
             $username = GetDevItem("userName", $devKey, $db);
             echo "<td><a href=\"/vesta/ShowOneDevice.php/?devKey=",$devKey,"\">",$username,"</a></td>";
-	        ShowDevStatus("battery", $devKey, $db, "%");
-	        ShowDevStatus("signal", $devKey, $db, "%");
-      	    ShowDevStatus("presence", $devKey, $db, "");
+	        ShowDevStatus("BatteryPercentage", $devKey, $db, "%");
+	        ShowDevStatus("SignalPercentage", $devKey, $db, "%");
+      	    ShowDevStatus("Presence", $devKey, $db, "");
             ShowEvent($devKey, $db);
             echo "</tr>";
         }

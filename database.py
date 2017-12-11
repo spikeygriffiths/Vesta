@@ -4,6 +4,7 @@ import sqlite3
 from datetime import datetime
 # App-specific Python modules
 import events
+import rules    # For isNumber()
 import log
 
 db = None
@@ -29,11 +30,24 @@ def EventHandler(eventId, eventArg):
 
 def LogItem(devKey, item, value):
     global curs, flushDB
-    #log.debug("Setting status for "+item+" with "+str(value)+" for "+str(devKey))
-    curs.execute("INSERT INTO (?) VALUES (datetime('now', 'localtime'),(?), (?))", (item, str(value), devKey))
-    flushDB = True # Batch up the commits.  Commit status table for web access
+    log.debug("Setting "+item+" with "+str(value)+" for "+str(devKey))
+    if rules.isNumber(value):
+        dbCmd = "INSERT INTO "+item+" VALUES (datetime('now', 'localtime'),"+str(value)+","+str(devKey)+")"
+    else: # Assume string
+        dbCmd = "INSERT INTO "+item+" VALUES (datetime('now', 'localtime'),\""+str(value)+"\","+str(devKey)+")"
+    log.debug(dbCmd)
+    curs.execute(dbCmd)
+    flushDB = True # Batch up the commits.  Commit table for web access
 
-# See Events routines below if we need to GetLatestLoggedItem or FlushOldLoggedItems
+def GetLatestLoggedItem(devKey, item):
+    global curs
+    curs.execute("SELECT value, timestamp FROM "+item+" WHERE devKey="+str(devKey)+" ORDER BY timestamp DESC LIMIT 1")  # Get latest specified logged item
+    rows = curs.fetchone()
+    if rows != None:
+        return rows  # NB return row as list with (value, time)
+    return None
+
+# See Events routines below if we need to FlushOldLoggedItems
 
 # === Events ===
 def NewEvent(devKey, event):
@@ -43,7 +57,7 @@ def NewEvent(devKey, event):
 
 def GetLatestEvent(devKey):
     global curs
-    curs.execute("SELECT event FROM Events WHERE devKey="+str(devKey)+" ORDER BY TIMESTAMP DESC LIMIT 1")  # Get latest event of device
+    curs.execute("SELECT event FROM Events WHERE devKey="+str(devKey)+" ORDER BY timestamp DESC LIMIT 1")  # Get latest event of device
     rows = curs.fetchone()
     if rows != None:
         return rows[0]
@@ -141,7 +155,6 @@ def NewDevice(nwkId, eui64, devType):
     SetDeviceItem(devKey, "Username", "(New) "+nwkId)   # Default username of network ID, since that's unique
     SetDeviceItem(devKey,"devType",devType)    # SED, FFD or ZED
     SetDeviceItem(devKey,"eui64",eui64)
-    InitStatus(devKey)
     db.commit() # Flush db to disk immediately
     return devKey    # Return new devKey for newly added device
 
@@ -150,7 +163,13 @@ def RemoveDevice(devKey):
     #curs.execute("DELETE FROM Groups WHERE devKey="+str(devKey)) # This has to remove devKey from within each group's devKeyList
     userName = GetDeviceItem(devKey, "userName")
     curs.execute("DELETE FROM Rules WHERE rule LIKE '%"+userName+"%'")  # Remove all rules associated with device
-    curs.execute("DELETE FROM Status WHERE devKey="+str(devKey))
+    curs.execute("DELETE FROM Battery WHERE devKey="+str(devKey))
+    curs.execute("DELETE FROM Signal WHERE devKey="+str(devKey))
+    curs.execute("DELETE FROM Temperature WHERE devKey="+str(devKey))
+    curs.execute("DELETE FROM Presence WHERE devKey="+str(devKey))
+    curs.execute("DELETE FROM PowerReadingW WHERE devKey="+str(devKey))
+    curs.execute("DELETE FROM EnergyConsumedWh WHERE devKey="+str(devKey))
+    curs.execute("DELETE FROM EnergyGeneratedWh WHERE devKey="+str(devKey))
     curs.execute("DELETE FROM Events WHERE devKey="+str(devKey))
     curs.execute("DELETE FROM Devices WHERE devKey="+str(devKey))
     db.commit() # Flush db to disk immediately

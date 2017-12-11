@@ -44,7 +44,7 @@ function GetDevItem($item, $devKey, $db)
 
 function GetTimedLoggedItem($item, $devKey, $time, $db) # For Battery, Signal, Presence, Temperature, PowerReadingW, etc.
 {
-    $result = $db->query("SELECT * FROM ".$item." WHERE devKey=".$devKey." AND time > ".$time." LIMIT 1");  # Get first item after time
+    $result = $db->query("SELECT * FROM ".$item." WHERE devKey=".$devKey." AND timestamp > ".$time." LIMIT 1");  # Get first item after time
     if ($result != null) {
         $result->setFetchMode(PDO::FETCH_ASSOC);
         $fetch = $result->fetch();

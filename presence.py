@@ -36,7 +36,7 @@ def Check():  # Expected to be called infrequently - ie once/minute
     keyList = database.GetAllDevKeys()  # Get a list of all the device identifiers from the database
     for devKey in keyList:  # Element 0 is hub, rest are devices
         if database.GetDeviceItem(devKey, "nwkId") != "0000":  # Ignore hub
-            presence, lastSeen = Get(devKey)
+            lastSeen, presence = Get(devKey)
             if presence != None:    # It may have only just joined and still be unintialised (?)
                 if presence == states.present:  # Check database each minute to build up a picture of how often each device is present or absent
                     if presenceFreq.get(devKey) != None:
@@ -59,8 +59,10 @@ def Set(devKey, newState):
         database.LogItem(devKey, "Signal", 0) # Clear down signal strength when device goes missing
     database.LogItem(devKey, "Presence", newState)
 
-#def Get(devKey):
-#    return database.GetStatus(devKey, "presence")
+def Get(devKey):
+    entry = database.GetLatestLoggedItem(devKey, "Presence")
+    #log.debug("Presence entry says " + str(entry))
+    return datetime.strptime(entry[1], "%Y-%m-%d %H:%M:%S"), entry[0]   # Should be time, val
 
 def GetFreq(devKey):
     if presenceFreq.get(devKey) != None:

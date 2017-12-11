@@ -237,7 +237,7 @@ def SetAttrVal(devKey, clstrId, attrId, value):
         if value != "FF":
             varVal = int(int(value, 16) / 2) # Arrives in 0.5% increments, but drop fractional component
             log.debug("Battery is "+str(varVal)+"%.  Get next reading at "+str(GetTempVal(devKey, "GetNextBatteryAfter")))
-            database.LogItem(devKey, "Battery", varVal) # For web page
+            database.LogItem(devKey, "BatteryPercentage", varVal) # For web page
             lowBatt = int(config.Get("lowBattery", "5"))
             if varVal < lowBatt:
                 devName = database.GetDeviceItem(devKey, "userName")
@@ -245,7 +245,7 @@ def SetAttrVal(devKey, clstrId, attrId, value):
     if clstrId == zcl.Cluster.Temperature and attrId == zcl.Attribute.Celsius:
         if value != "FF9C": # Don't know where this value (of -100) comes from - should be "7FFF" (signed value)
             varVal = int(value, 16) / 100 # Arrives in 0.01'C increments 
-            database.LogItem(devKey, "Temperature", varVal) # For web page
+            database.LogItem(devKey, "TemperatureCelsius", varVal) # For web page
     if clstrId == zcl.Cluster.OnOff and attrId == zcl.Attribute.OnOffState:
         oldState = database.GetLatestEvent(devKey)
         if int(value, 16) == 0:
@@ -313,7 +313,7 @@ def NoteMsgDetails(devKey, arg):
             rssi = arg[-2]
             lqi = arg[-1]
             signal = int((int(lqi, 16) * 100) / 255)    # Convert 0-255 to 0-100.  Ignore RSSI for now
-            database.LogItem(devKey, "Signal", signal)
+            database.LogItem(devKey, "SignalPercentage", signal)
             arg.remove(rssi)
             arg.remove(lqi)
 
