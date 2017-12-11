@@ -27,8 +27,15 @@ class Attribute():
     Log_Lux = "0000" # Illuminance cluster, 16-bit as 10000 x log(10)Lux + 1 (Read Only)
     Celsius = "0000" # Temperature cluster, 16-bit in 0.01'C steps (Read Only)
     Zone_Type = "0001" # IAS Zone cluster, enum list - see below (Read Only)
-    CurrentSummationDelivered = "0000" # Simple Metering cluster. value in Wh (Read Only)
-    InstantaneousDemand =  "0400"  # Simple Metering cluster. value in W (Read Only)
+    # Simple Metering cluster
+    CurrentSummationDelivered = "0000" # Value in Wh (Read Only, unsigned 48-bit int).  Energy consumed
+    CurrentSummationReceived = "0001" # Value in Wh (Read Only, unsigned 48-bit int).  Energy generated
+    DefaultUpdatePeriod = "000A"    # Standard sampling period in seconds, probably 30s (Read Only, 8-bit)
+    FastPollUpdatePeriod = "000B"   # Fast sampling period in seconds, probably 5s (Read Only, 8-bit), for use with RequestFastPollMode command
+    UnitOfMeasure = "0300" # 8-bit enumeration, 0x00=kW/kWh, 1=m3/m3h
+    Multiplier = "0301" # Uint24
+    Divisor = "0302" # Uint24
+    InstantaneousDemand =  "0400"  # Value in W (Read Only, signed 24-bit int). +ve is consumed, -ve is generated
 
 class AttributeTypes():
     Boolean = "10"

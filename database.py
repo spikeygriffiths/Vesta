@@ -25,42 +25,15 @@ def EventHandler(eventId, eventArg):
         db.commit() # Flush events to disk prior to shutdown
 # end of EventHandler
 
-# === Status ===
-def InitStatus(devKey):
-    global curs, flushDB
-    curs.execute("SELECT presence FROM Status WHERE devKey="+ str(devKey))
-    rows = curs.fetchone()
-    if rows == None:    # If row doesn't exist, create it now
-        curs.execute("INSERT INTO Status DEFAULT VALUES")  # Insert blank row for status
-        rowId = curs.lastrowid
-        curs.execute("UPDATE Status SET devKey="+str(devKey)+" WHERE rowId="+str(rowId))
-        flushDB = True # Batch up the commits
+# === Logged items ===
 
-def SetStatus(devKey, item, value):
+def LogItem(devKey, item, value):
     global curs, flushDB
     #log.debug("Setting status for "+item+" with "+str(value)+" for "+str(devKey))
-    curs.execute("UPDATE Status SET "+item+"_time=datetime('now', 'localtime') WHERE devKey="+str(devKey))
-    if type(value) is str:
-        curs.execute("UPDATE Status SET "+item+"=\""+value+"\" WHERE devKey="+str(devKey))
-    else: # Assume number (Integer or Float)
-        curs.execute("UPDATE Status SET "+item+"="+str(value)+" WHERE devKey="+str(devKey))
+    curs.execute("INSERT INTO (?) VALUES (datetime('now', 'localtime'),(?), (?))", (item, str(value), devKey))
     flushDB = True # Batch up the commits.  Commit status table for web access
 
-def GetStatus(devKey, item): 
-    global curs
-    curs.execute("SELECT "+item+" FROM Status WHERE devKey="+str(devKey))
-    rows = curs.fetchone()
-    if rows != None:
-        value = rows[0]
-        curs.execute("SELECT "+item+"_time FROM Status WHERE devKey="+str(devKey))
-        rows = curs.fetchone()
-        if rows != None and rows[0] != None:
-            time = datetime.strptime(rows[0], "%Y-%m-%d %H:%M:%S")
-        else:
-            time = "Unknown"
-        #log.debug("value="+value+", time="+str(time))
-        return value, time # Return value, time
-    return None
+# See Events routines below if we need to GetLatestLoggedItem or FlushOldLoggedItems
 
 # === Events ===
 def NewEvent(devKey, event):

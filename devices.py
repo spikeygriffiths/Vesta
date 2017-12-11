@@ -237,7 +237,7 @@ def SetAttrVal(devKey, clstrId, attrId, value):
         if value != "FF":
             varVal = int(int(value, 16) / 2) # Arrives in 0.5% increments, but drop fractional component
             log.debug("Battery is "+str(varVal)+"%.  Get next reading at "+str(GetTempVal(devKey, "GetNextBatteryAfter")))
-            database.SetStatus(devKey, "battery", varVal) # For web page
+            database.LogItem(devKey, "Battery", varVal) # For web page
             lowBatt = int(config.Get("lowBattery", "5"))
             if varVal < lowBatt:
                 devName = database.GetDeviceItem(devKey, "userName")
@@ -245,7 +245,7 @@ def SetAttrVal(devKey, clstrId, attrId, value):
     if clstrId == zcl.Cluster.Temperature and attrId == zcl.Attribute.Celsius:
         if value != "FF9C": # Don't know where this value (of -100) comes from - should be "7FFF" (signed value)
             varVal = int(value, 16) / 100 # Arrives in 0.01'C increments 
-            database.SetStatus(devKey, "temperature", varVal) # For web page
+            database.LogItem(devKey, "Temperature", varVal) # For web page
     if clstrId == zcl.Cluster.OnOff and attrId == zcl.Attribute.OnOffState:
         oldState = database.GetLatestEvent(devKey)
         if int(value, 16) == 0:
@@ -257,7 +257,10 @@ def SetAttrVal(devKey, clstrId, attrId, value):
             Rule(devKey, newState)
     if clstrId == zcl.Cluster.SimpleMetering and attrId == zcl.Attribute.InstantaneousDemand:
         varVal = int(value, 16) # Arrives in Watts, so store it in the same way
-        database.SetStatus(devKey, "powerReadingW", varVal)
+        database.LogItem(devKey, "PowerReadingW", varVal)
+    if clstrId == zcl.Cluster.SimpleMetering and attrId == zcl.Attribute.CurrentSummationDelivered:
+        varVal = int(value, 16) # Arrives in accumulated WattHours, so store it in the same way
+        database.LogItem(devKey, "EnergyConsumedWh", varVal)
     if clstrId == zcl.Cluster.IAS_Zone and attrId == zcl.Attribute.Zone_Type:
         database.SetDeviceItem(devKey, "iasZoneType", value)
     if clstrId == zcl.Cluster.Basic:
@@ -310,7 +313,7 @@ def NoteMsgDetails(devKey, arg):
             rssi = arg[-2]
             lqi = arg[-1]
             signal = int((int(lqi, 16) * 100) / 255)    # Convert 0-255 to 0-100.  Ignore RSSI for now
-            database.SetStatus(devKey, "signal", signal)
+            database.LogItem(devKey, "Signal", signal)
             arg.remove(rssi)
             arg.remove(lqi)
 
@@ -381,10 +384,15 @@ def Check(devKey):
                     pendingRptAttrId = zcl.Attribute.Celsius
                     return ("AT+CFGRPT:"+nwkId+","+ep+",0,"+zcl.Cluster.Temperature+",0,"+zcl.Attribute.Celsius+","+zcl.AttributeTypes.Uint16+",012C,0E10,0064", "CFGRPTRSP") # 012C is 300==5 mins, 0E10 is 3600==1 hour, 0064 is 100, being 1.00'C
             if zcl.Cluster.SimpleMetering in inClstr:
-                tmpRpt = zcl.Cluster.SimpleMetering+":"+zcl.Attribute.InstantaneousDemand
-                if zcl.Cluster.SimpleMetering in binding and tmpRpt not in rprtg:
-                    pendingRptAttrId = zcl.Attribute.InstantaneousDemand
-                    return ("AT+CFGRPT:"+nwkId+","+ep+",0,"+zcl.Cluster.SimpleMetering+",0,"+zcl.Attribute.InstantaneousDemand+","+zcl.AttributeTypes.Sint24+",0005,003C,00000A", "CFGRPTRSP") # 5 second minimum, 1 minute maximum, 10 watt change
+                if zcl.Cluster.SimpleMetering in binding:
+                    pwrRpt = zcl.Cluster.SimpleMetering+":"+zcl.Attribute.InstantaneousDemand
+                    egyRpt = zcl.Cluster.SimpleMetering+":"+zcl.Attribute.CurrentSummationDelivered
+                    if pwrRpt not in rprtg:
+                        pendingRptAttrId = zcl.Attribute.InstantaneousDemand
+                        return ("AT+CFGRPT:"+nwkId+","+ep+",0,"+zcl.Cluster.SimpleMetering+",0,"+zcl.Attribute.InstantaneousDemand+","+zcl.AttributeTypes.Sint24+",0005,003C,00000A", "CFGRPTRSP") # 5 second minimum, 1 minute maximum, 10 watt change
+                    if egyRpt not in rprtg:
+                        pendingRptAttrId = zcl.Attribute.CurrentSummationDelivered
+                        return ("AT+CFGRPT:"+nwkId+","+ep+",0,"+zcl.Cluster.SimpleMetering+",0,"+zcl.Attribute.CurrentSummationDelivered+","+zcl.AttributeTypes.Uint48+",003C,003C,000000000000", "CFGRPTRSP") # Every 60 (0x3C) seconds report accumulated energy
         else:
             database.SetDeviceItem(devKey, "reporting", "[]")
     if GetTempVal(devKey, "JustSentOnOff"):
