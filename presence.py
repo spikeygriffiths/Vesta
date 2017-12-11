@@ -56,7 +56,7 @@ def Check():  # Expected to be called infrequently - ie once/minute
 
 def Set(devKey, newState):
     if newState == states.absent:
-        database.LogItem(devKey, "Signal", 0) # Clear down signal strength when device goes missing
+        database.LogItem(devKey, "SignalPercentage", 0) # Clear down signal strength when device goes missing
     database.LogItem(devKey, "Presence", newState)
 
 def Get(devKey):
