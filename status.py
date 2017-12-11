@@ -38,7 +38,7 @@ def BuildPage():
     presence.ClearFreqs()
     errList = glob.glob("/home/pi/Vesta/*_err.log")   # Get list of all error logs
     if len(errList):
-        problem("Number of error logs", len(errList))
+        problem("Number of error logs", str(len(errList)))
     if len(issues) > 0:
         for items in issues.values():
             html.write(items + "<br>")
