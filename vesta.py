@@ -33,7 +33,7 @@ if __name__ == "__main__":
     main()
 
 def GetVersion():
-    return "1.0.0.3"
+    return "1.0.0.4"
 
 def Reboot():
     database.NewEvent(0, "Rebooting...") # 0 is always hub

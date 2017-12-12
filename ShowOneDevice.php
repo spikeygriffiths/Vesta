@@ -24,14 +24,18 @@ echo "<br><br><button class=\"button\" type=\"button\" onclick=\"window.location
 PageFooter();
 echo "</body></html>";
 
-function ShowDevStatus($item, $name, $units, $devKey, $db)
+function ShowDevStatus($item, $name, $units, $withTime, $devKey, $db)
 {
     $row = GetLatestLoggedItem($item, $devKey,$db);
     if ($row != null) {
         $val = $row['value'];
-        $time = $row['timestamp'];
-        $time = ElapsedTime($time);   # Convert timestamp to elapsed time
-        echo "<tr><td>",$name,"</td><td>",$val,$units,"<div style=\"float:right;width:50%;\">(",$time, " ago)</div></td></tr>";
+        if ($withTime==true) {
+            $time = $row['timestamp'];
+            $time = ElapsedTime($time);   # Convert timestamp to elapsed time
+            echo "<tr><td>",$name,"</td><td>",$val,$units,"<div style=\"float:right;width:50%;\">(",$time, " ago)</div></td></tr>";
+        } else {    # Don't show time
+            echo "<tr><td>",$name,"</td><td>",$val,$units,"</td></tr>";
+        }
     }
 }
 
@@ -113,11 +117,11 @@ function ShowDeviceInfo($db, $devKey, $username)
     //echo "<center><form action=\"/vesta/UpdateDeviceName.php/?devKey=",$devKey,"\" method=\"post\">";
     echo "<table>";
     //echo "<tr><td>Name</td><td><input type=\"text\" name=\"UserName\" value=\"", $username, "\"></td>";
-    ShowDevStatus("Presence", "Presence", "", $devKey, $db);
-    ShowDevStatus("SignalPercentage", "Radio Signal", "%", $devKey, $db);
-    ShowDevStatus("BatteryPercentage", "Battery", "%", $devKey, $db);
-    ShowDevStatus("TemperatureCelsius", "Temperature", "C", $devKey, $db);
-    ShowDevStatus("PowerReadingW", "Power", "W", $devKey, $db);
+    ShowDevStatus("Presence", "Presence", "", true, $devKey, $db);
+    ShowDevStatus("SignalPercentage", "Radio Signal", "%", false, $devKey, $db);
+    ShowDevStatus("BatteryPercentage", "Battery", "%", true, $devKey, $db);
+    ShowDevStatus("TemperatureCelsius", "Temperature", "C", true, $devKey, $db);
+    ShowDevStatus("PowerReadingW", "Power", "W", false, $devKey, $db);
     ShowDevEnergy("EnergyConsumedWh", "Energy consumed", "Wh", $devKey, $db);
     ShowDevEnergy("EnergyGeneratedWh", "Energy generated", "Wh", $devKey, $db);
     echo "<tr><td>Event</td>";

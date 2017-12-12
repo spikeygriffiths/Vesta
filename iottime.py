@@ -64,6 +64,7 @@ def EventHandler(eventId, eventArg):
         log.RollLogs() # Roll the logs, to avoid running out of disc space
         SetDayInfo()
         status.BuildPage()  # Create status page, once/day, based upon reported problems during the previous day
+        status.clearProblems()
 
 def GetDark():
     sunrise = datetime.strptime(variables.Get("sunrise"), "%H:%M")
@@ -125,7 +126,7 @@ def Sanitise(val):  # Assume val is a string containing a hour:minute time
         try:
             timeOfDay = datetime.strptime(val, "%H:%M") # Convert to time
         except:
-            status.problem("Bad time in Rule containing '" + val)
+            status.problem("TimedRule", "Bad time in Rule containing '" + val)
             return "BadTime"    # Must return something
         return "\""+timeOfDay.strftime("%H:%M")+"\"" # Normalise timestamp (cope with leading zeros)
     else:

@@ -16,50 +16,54 @@ issues = {} # Empty dictionary at start
 def BuildPage():
     upTime = datetime.now() - iottime.appStartTime
     absUrl = config.Get("vestaURL", "")
-    log.debug("Building status.html...")
-    email = open("status.email", "w")    # Create text file for emailing.  Could put HTML inside here once I work out how!
-    html = open("status.html", "w")    # Create local temporary file, so we can copy it for Apache to serve up
+    log.debug("Building status page")
+    txt = open("status.txt", "w")    # Create text file for txt
+    html = open("status.html", "w")    # Create local html file, so we can copy it for Apache to serve up, or mail directly
     html.write("\n<html><head>")  # Blank line at start
-    html.write("<style>.good { color: green; }.bad { color: red; }</style>")
     html.write("</head><body>")
     html.write("<center><h1>Vesta Status</h1>")
-    html.write("At " + datetime.now().strftime("%H:%M") + " on " + datetime.now().strftime("%Y/%m/%d") + "<br>")
-    email.write("Vesta Status\n\n");
-    email.write("At " + datetime.now().strftime("%H:%M") + " on " + datetime.now().strftime("%Y/%m/%d") + "\n")
-    html.write("Uptime: %d days, %.2d:%.2d" % (upTime.days, upTime.seconds//3600, (upTime.seconds//60)%60)+"<br><br>") # Cribbed from "uptime" command
-    email.write("Uptime: %d days, %.2d:%.2d" % (upTime.days, upTime.seconds//3600, (upTime.seconds//60)%60)+"\n\n") # Cribbed from "uptime" command
+    txt.write("Vesta Status\n\n");
+    writeLine("At " + datetime.now().strftime("%H:%M") + " on " + datetime.now().strftime("%Y/%m/%d"), html, txt)
+    writeLine("Uptime: %d days, %.2d:%.2d" % (upTime.days, upTime.seconds//3600, (upTime.seconds//60)%60), html, txt) # Cribbed from "uptime" command
+    writeLine("", html, txt)    # Just newline
     keyList = database.GetAllDevKeys()  # Get a list of all the device identifiers from the database
+    noProblems = True
     for devKey in keyList:  # Element 0 is hub, rest are devices
         if database.GetDeviceItem(devKey, "nwkId") != "0000":  # Ignore hub
-            availability = presence.GetFreq(devKey)
-            if availability != -1 and availability < 100:  # If device missing even only occasionally, tell user.  (-1 means "no availability info")
-                userName = database.GetDeviceItem(devKey, "userName")
-                problem(userName+"_avail", userName+ " availability only "+str(availability)+"%")
-    presence.ClearFreqs()
+            availability = presence.GetAvailability(devKey)
+            if availability != "":  # If device missing even only occasionally, tell user (Entry string means "fine")
+                noProblems = False
+                writeLine(availability, html, txt)
     errList = glob.glob("/home/pi/Vesta/*_err.log")   # Get list of all error logs
     numLogs = len(errList)
     if numLogs:
+        noProblems = False
         if numLogs == 1:
             problem("error_logs", "1 error log")
         else:
             problem("error_logs", str(numLogs) + " error logs")
     if len(issues) > 0:
+        noProblems = False
         for items in issues.values():
-            html.write(items + "<br>")
-            email.write(items + "\n")
-        issues.clear()  # Clear the list, now that we've gone through it
-    else:
-        html.write("Everything OK!<br>")
-        email.write("Everything OK!\n")
-    html.write("<br>(Vesta v" + vesta.GetVersion()+")<br>")
-    email.write("\n(Vesta v" + vesta.GetVersion()+")\n")
+            writeLine(items, html, txt)
+    if noProblems:
+        writeLine("Everything OK!", html, txt)
+    writeLine("", html, txt)    # Just newline
+    writeLine("(Vesta v" + vesta.GetVersion()+")", html, txt)
     html.write("<br><center><a href=\"" + absUrl + "/vesta/index.php\"><img src=\"" + absUrl + "/vesta/vestaLogo.png\" width=32 height=32 title=\"Home\"></a>")
-    #html.write("<br><button type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>")
     html.write("</body></html>")
     html.close()
-    email.close()
+    txt.close()
     os.system("sudo cp status.html /var/www/html/vesta")  # So vesta.php can refer to it.  Will overrwrite any previous status
+
+def writeLine(string, html, txt):
+    html.write(string+"<br>")
+    txt.write(string+"\n")
 
 def problem(key, value):
     issues[key] = value   # Add new, or update old, dictionary entry
     log.fault(key + ":" + value)
+
+def clearProblems():    # Called at midnight each day
+    issues.clear()  # Clear the list, now that we've gone through it
+

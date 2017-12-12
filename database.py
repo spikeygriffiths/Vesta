@@ -30,21 +30,39 @@ def EventHandler(eventId, eventArg):
 
 def LogItem(devKey, item, value):
     global curs, flushDB
-    log.debug("Setting "+item+" with "+str(value)+" for "+str(devKey))
-    if rules.isNumber(value):
-        dbCmd = "INSERT INTO "+item+" VALUES (datetime('now', 'localtime'),"+str(value)+","+str(devKey)+")"
-    else: # Assume string
-        dbCmd = "INSERT INTO "+item+" VALUES (datetime('now', 'localtime'),\""+str(value)+"\","+str(devKey)+")"
-    log.debug(dbCmd)
-    curs.execute(dbCmd)
-    flushDB = True # Batch up the commits.  Commit table for web access
+    previousValue = GetLatestLoggedValue(devKey, item)
+    if previousValue != value:  # Only log the item if it has changed since last time
+        log.debug("Setting "+item+" with "+str(value)+" for "+str(devKey)+" (changed from "+str(previousValue))
+        if rules.isNumber(value):
+            dbCmd = "INSERT INTO "+item+" VALUES (datetime('now', 'localtime'),"+str(value)+","+str(devKey)+")"
+        else: # Assume string
+            dbCmd = "INSERT INTO "+item+" VALUES (datetime('now', 'localtime'),\""+str(value)+"\","+str(devKey)+")"
+        #log.debug(dbCmd)
+        curs.execute(dbCmd)
+        flushDB = True # Batch up the commits.  Commit table for web access
 
-def GetLatestLoggedItem(devKey, item):
+def GetLoggedItemsSinceTime(devKey, item, time):
     global curs
-    curs.execute("SELECT value, timestamp FROM "+item+" WHERE devKey="+str(devKey)+" ORDER BY timestamp DESC LIMIT 1")  # Get latest specified logged item
+    dbCmd = "SELECT value, timestamp FROM "+item+" WHERE devKey="+str(devKey)+" AND timestamp > "+time  # Get all items after time
+    curs.execute(dbCmd)
     rows = curs.fetchone()
     if rows != None:
         return rows  # NB return row as list with (value, time)
+    return None
+
+def GetLatestLoggedValue(devKey, item):
+    entry = GetLatestLoggedItem(devKey, item)
+    return entry[0] # Just the value
+
+def GetLatestLoggedItem(devKey, item):
+    return GetLastNLoggedItems(devKey, item, 1)
+
+def GetLastNLoggedItems(devKey, item, num):
+    global curs
+    curs.execute("SELECT value, timestamp FROM "+item+" WHERE devKey="+str(devKey)+" ORDER BY timestamp DESC LIMIT "+str(num))  # Get latest specified logged items
+    rows = curs.fetchone()
+    if rows != None:
+        return rows  # NB return rows as list with (value, time)
     return None
 
 # See Events routines below if we need to FlushOldLoggedItems

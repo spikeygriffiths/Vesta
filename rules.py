@@ -150,7 +150,7 @@ def ParseCondition(ruleConditionList, trigger):
             finalAnswer = eval(subAnswers)
         except: # Catch all errors that the rule might raise
             err = sys.exc_info()[0]
-            status.problem("Bad rule : '" + join(ruleConditionList) + "'", err) # Make a note in the status page so the user can fix the rule
+            status.problem("BadRule", "Bad rule : '" + join(ruleConditionList)) # Make a note in the status page so the user can fix the rule
             finalAnswer = False # Say rule failed
         return finalAnswer
     else:
@@ -203,6 +203,7 @@ def Action(actList):
             events.IssueEvent(events.ids.ALARM, actList[2])
         # Could have other events here...
     elif action == "status":  # Was synopsis
+        status.BuildPage()  # Create status page on demand
         emailAddress = config.Get("emailAddress")
         if emailAddress != None:
             with open("status.email", "r") as status:   # Plain text of email

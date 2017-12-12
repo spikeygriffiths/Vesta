@@ -15,17 +15,7 @@ class states():
     absent = "MISSING"
     present = "Present"
 
-presenceFreq = {}
-absenceFreq = {}
-
 def EventHandler(eventId, eventArg):
-    if eventId == events.ids.INIT:
-        keyList = database.GetAllDevKeys()  # Get a list of all the device identifiers from the database
-        for devKey in keyList:  # Hub and devices
-            if database.GetDeviceItem(devKey, "nwkId") != "0000":  # Ignore hub
-                Set(devKey, states.unknown)
-            else:   # Is hub, so must be Present
-                Set(devKey, states.present)
     if eventId == events.ids.NEWDEVICE:
         devKey = eventArg
         Set(devKey, states.present)   # Mark any new device as immediately present
@@ -38,16 +28,6 @@ def Check():  # Expected to be called infrequently - ie once/minute
         if database.GetDeviceItem(devKey, "nwkId") != "0000":  # Ignore hub
             lastSeen, presence = Get(devKey)
             if presence != None:    # It may have only just joined and still be unintialised (?)
-                if presence == states.present:  # Check database each minute to build up a picture of how often each device is present or absent
-                    if presenceFreq.get(devKey) != None:
-                        presenceFreq[devKey] = presenceFreq[devKey] + 1
-                    else:
-                        presenceFreq[devKey] = 1
-                elif presence == states.absent:
-                    if absenceFreq.get(devKey) != None:
-                        absenceFreq[devKey] = absenceFreq[devKey] + 1
-                    else:
-                        absenceFreq[devKey] = 1
                 if presence != states.absent:
                     if datetime.now() > lastSeen+timedelta(seconds=900) or (presence == states.unknown and "SED"!= database.GetDeviceItem(devKey, "devType")): # More than 15 minutes since we last heard from device, or it's unknown and listening
                         devcmds.Prod(devKey)    # Ask device a question, just to provoke a response                        
@@ -64,22 +44,24 @@ def Get(devKey):
     #log.debug("Presence entry says " + str(entry))
     return datetime.strptime(entry[1], "%Y-%m-%d %H:%M:%S"), entry[0]   # Should be time, val
 
-def GetFreq(devKey):
-    if presenceFreq.get(devKey) != None:
-        presence = presenceFreq.get(devKey)
-        if absenceFreq.get(devKey) != None:
-            absence = absenceFreq.get(devKey)
+def GetAvailability(devKey):    # Over last 24 hours
+    lastSeen, presence = Get(devKey)
+    userName = database.GetDeviceItem(devKey, "userName")
+    if lastSeen < datetime.now()-timedelta(hours=24):   # Check if any change in last 24 hours
+        if presence == states.present:
+            availability = ""   # Perfect availability for the whole time
+        else:   # Assume absent
+            availability = userName + " has been missing all day"
+    else:   # There's been some changes in presence in the last 24 hours
+        entries = database.GetLoggedItemsSinceTime(devKey, "Presence", "datetime('now', '-1 day')")
+        if len(entries) == 1:   # The device has changed only once in the last 24 hours
+            entries = database.GetLastNLoggedItems(devKey, "Presence", 2)   # Get last 2 entries
+            if len(entries) == 1:   # The device has changed only once ever
+                availability = ""   # Perfect availability for the whole time
+            else:   # Check when it changed, and what it changed to to work out 
+                availability = userName + " changed to "+presence+" since yesterday"   # Changeable
         else:
-            absence = 0 # Never absent
-        presencePercentage = ((presence + absence) / presence) * 100
-    else:
-        if absenceFreq.get(devKey) != None:
-            presencePercentage = 0  # Never present, but we have decided we've been absent more than once
-        else:
-            presencePercentage = -1 # No information about presence or absence yet...
-    return presencePercentage
+            availability = userName + "'s availability changed "+str(len(entries))+" times in last 24 hours and is now "+presence   # Changeable
+    return availability
 
-def ClearFreqs():
-    presenceFreq.clear()
-    absenceFreq.clear()
 
