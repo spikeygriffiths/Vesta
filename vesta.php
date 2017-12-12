@@ -26,9 +26,7 @@ if ($appRunning) {
     }
     echo "</button><br><br>";
     echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/variables.php'\">Variables</button>&nbsp&nbsp&nbsp";
-    if (file_exists($statusPage)) {
-        echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='$statusPage'\">Status</button>&nbsp&nbsp&nbsp";
-    }
+    echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/RequestStatus.php'\">Status</button>&nbsp&nbsp&nbsp";
     #echo "<button type=\"button\" onclick=\"window.location.href='/vesta/info.php'\">Send Info Command</button><br><br>";
     echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='https://docs.google.com/document/d/1BPCPYH9JV_Ekot3clXyhLmIPgkDzyd2aZhu5PGcCNKw/edit?usp=sharing'\">Documentation</button><br><br>";
     echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/logout.php'\">Log Out</button><br><br>";

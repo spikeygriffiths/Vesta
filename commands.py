@@ -218,3 +218,9 @@ class Commands(cmd.Cmd):
         """rolllog
         Rolls the logs - automatically done at midnight"""
         log.RollLogs()
+
+    def do_status(self, line):
+        """status
+        Constructs status.html page"""
+        status.BuildPage()
+
