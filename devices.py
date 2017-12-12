@@ -313,7 +313,12 @@ def NoteMsgDetails(devKey, arg):
             rssi = arg[-2]
             lqi = arg[-1]
             signal = int((int(lqi, 16) * 100) / 255)    # Convert 0-255 to 0-100.  Ignore RSSI for now
-            database.LogItem(devKey, "SignalPercentage", signal)
+            oldSignal = database.GetLatestLoggedValue(devKey, "SignalPercentage")
+            if oldSignal == None:
+                oldSignal = signal + 100  # Force an update if no previous signal
+            deltaSignal = signal - oldSignal
+            if deltaSignal > 5 or deltaSignal < -5:  # Only note signal level that's different enough
+                database.LogItem(devKey, "SignalPercentage", signal)
             arg.remove(rssi)
             arg.remove(lqi)
 

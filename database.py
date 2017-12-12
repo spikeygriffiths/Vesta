@@ -31,6 +31,11 @@ def EventHandler(eventId, eventArg):
 def LogItem(devKey, item, value):
     global curs, flushDB
     previousValue = GetLatestLoggedValue(devKey, item)
+    if previousValue == None:
+        if rules.isNumber(value):
+            previousValue = value + 1    # Force values to be different
+        else:
+            previousvalue = "Not"+value  # Force values to be different
     if previousValue != value:  # Only log the item if it has changed since last time
         log.debug("Setting "+item+" with "+str(value)+" for "+str(devKey)+" (changed from "+str(previousValue))
         if rules.isNumber(value):
@@ -52,7 +57,9 @@ def GetLoggedItemsSinceTime(devKey, item, time):
 
 def GetLatestLoggedValue(devKey, item):
     entry = GetLatestLoggedItem(devKey, item)
-    return entry[0] # Just the value
+    if entry != None:
+        return entry[0] # Just the value
+    return None
 
 def GetLatestLoggedItem(devKey, item):
     return GetLastNLoggedItems(devKey, item, 1)

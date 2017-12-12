@@ -41,12 +41,17 @@ def Set(devKey, newState):
 
 def Get(devKey):
     entry = database.GetLatestLoggedItem(devKey, "Presence")
-    #log.debug("Presence entry says " + str(entry))
-    return datetime.strptime(entry[1], "%Y-%m-%d %H:%M:%S"), entry[0]   # Should be time, val
+    if entry != None:
+        #log.debug("Presence entry says " + str(entry))
+        return datetime.strptime(entry[1], "%Y-%m-%d %H:%M:%S"), entry[0]   # Should be time, val
+    else:
+        return datetime.now(), states.unknown
 
 def GetAvailability(devKey):    # Over last 24 hours
     lastSeen, presence = Get(devKey)
     userName = database.GetDeviceItem(devKey, "userName")
+    if userName == None:
+        return "Unknown name for device"
     if lastSeen < datetime.now()-timedelta(hours=24):   # Check if any change in last 24 hours
         if presence == states.present:
             availability = ""   # Perfect availability for the whole time
@@ -54,6 +59,8 @@ def GetAvailability(devKey):    # Over last 24 hours
             availability = userName + " has been missing all day"
     else:   # There's been some changes in presence in the last 24 hours
         entries = database.GetLoggedItemsSinceTime(devKey, "Presence", "datetime('now', '-1 day')")
+        if entries == None:
+            return "No presence for "+userName
         if len(entries) == 1:   # The device has changed only once in the last 24 hours
             entries = database.GetLastNLoggedItems(devKey, "Presence", 2)   # Get last 2 entries
             if len(entries) == 1:   # The device has changed only once ever
