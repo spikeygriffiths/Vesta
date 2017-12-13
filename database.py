@@ -188,9 +188,9 @@ def RemoveDevice(devKey):
     #curs.execute("DELETE FROM Groups WHERE devKey="+str(devKey)) # This has to remove devKey from within each group's devKeyList
     userName = GetDeviceItem(devKey, "userName")
     curs.execute("DELETE FROM Rules WHERE rule LIKE '%"+userName+"%'")  # Remove all rules associated with device
-    curs.execute("DELETE FROM Battery WHERE devKey="+str(devKey))
-    curs.execute("DELETE FROM Signal WHERE devKey="+str(devKey))
-    curs.execute("DELETE FROM Temperature WHERE devKey="+str(devKey))
+    curs.execute("DELETE FROM BatteryPercentage WHERE devKey="+str(devKey))
+    curs.execute("DELETE FROM SignalPercentage WHERE devKey="+str(devKey))
+    curs.execute("DELETE FROM TemperatureCelsius WHERE devKey="+str(devKey))
     curs.execute("DELETE FROM Presence WHERE devKey="+str(devKey))
     curs.execute("DELETE FROM PowerReadingW WHERE devKey="+str(devKey))
     curs.execute("DELETE FROM EnergyConsumedWh WHERE devKey="+str(devKey))

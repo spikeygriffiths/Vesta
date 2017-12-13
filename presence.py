@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from datetime import timedelta
+import random
 # App-specific modules
 import events
 import devices
@@ -24,15 +25,24 @@ def EventHandler(eventId, eventArg):
 
 def Check():  # Expected to be called infrequently - ie once/minute
     keyList = database.GetAllDevKeys()  # Get a list of all the device identifiers from the database
+    notHeardFromList = []
     for devKey in keyList:  # Element 0 is hub, rest are devices
         if database.GetDeviceItem(devKey, "nwkId") != "0000":  # Ignore hub
             lastSeen, presence = Get(devKey)
             if presence != None:    # It may have only just joined and still be unintialised (?)
                 if presence != states.absent:
                     if datetime.now() > lastSeen+timedelta(seconds=900) or (presence == states.unknown and "SED"!= database.GetDeviceItem(devKey, "devType")): # More than 15 minutes since we last heard from device, or it's unknown and listening
-                        devcmds.Prod(devKey)    # Ask device a question, just to provoke a response                        
+                        notHeardFromList.append(devKey)    # Make a list of devices to query
                     if datetime.now() > lastSeen+timedelta(seconds=1800): # More than 30 minutes since we last heard from device
                         Set(devKey, states.absent)
+    if notHeardFromList != []:
+        numDevs = len(notHeardFromList)
+        if numDevs > 3:
+            for i in range(3):  # Prod 3 random devices from list
+                devcmds.Prod(random.choice(notHeardFromList))    # Ask device a question, just to provoke a response
+        else:   # Prod each device in list
+            for devKey in notHeardFromList:
+                devcmds.Prod(devKey)    # Ask device a question, just to provoke a response
 
 def Set(devKey, newState):
     if newState == states.absent:

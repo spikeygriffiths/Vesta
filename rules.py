@@ -206,7 +206,7 @@ def Action(actList):
         status.BuildPage()  # Create status page on demand
         emailAddress = config.Get("emailAddress")
         if emailAddress != None:
-            with open("status.email", "r") as status:   # Plain text of email
+            with open("status.txt", "r") as status:   # Plain text of email
                 emailText = status.readlines()
             text = ''.join(emailText)
             with open("status.html", "r") as status:    # HTML of email

@@ -9,7 +9,6 @@ import sys
 # App-specific Python modules
 import events
 import database
-import status
 import log
 
 def main():
@@ -26,7 +25,6 @@ def EventHandler(eventId, eventArg):
         log.Init     ("   *********************************")
         log.debug("   *** Starting Vesta, v" +GetVersion() + " ***", )
         log.debug("   *********************************")
-        status.BuildPage()
     # end event handler
 
 if __name__ == "__main__":
