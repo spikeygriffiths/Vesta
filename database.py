@@ -174,7 +174,12 @@ def NewDevice(nwkId, eui64, devType):
     curs.execute("INSERT INTO Devices DEFAULT VALUES")  # Insert blank row
     rowId = curs.lastrowid
     log.debug("Newly inserted row is ID "+str(rowId))
-    devKey = rowId # Just need a unique key
+    curs.execute("SELECT MAX(devkey) FROM Devices")
+    rows = curs.fetchone()
+    if rows != None:
+        devKey = rows[0]+1  # Add 1o largest devKey to create new unique devKey
+    else:
+        devKey = 0 # First item to be added
     curs.execute("UPDATE Devices SET devKey="+str(devKey)+" WHERE rowId="+str(rowId))   # Define device key first, since that's used everywhere!
     SetDeviceItem(devKey, "nwkId", nwkId)
     SetDeviceItem(devKey, "Username", "(New) "+nwkId)   # Default username of network ID, since that's unique
