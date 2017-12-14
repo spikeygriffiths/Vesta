@@ -14,7 +14,7 @@ import rules
 import variables
 import database
 import config
-import status
+import synopsis
 
 appStartTime = datetime.now()
 oldMins = -1
@@ -63,8 +63,8 @@ def EventHandler(eventId, eventArg):
         SetSunTimes()
         log.RollLogs() # Roll the logs, to avoid running out of disc space
         SetDayInfo()
-        status.BuildPage()  # Create status page, once/day, based upon reported problems during the previous day
-        status.clearProblems()
+        synopsis.BuildPage()  # Create status page, once/day, based upon reported problems during the previous day
+        synopsis.clearProblems()
 
 def GetDark():
     sunrise = datetime.strptime(variables.Get("sunrise"), "%H:%M")
@@ -126,7 +126,7 @@ def Sanitise(val):  # Assume val is a string containing a hour:minute time
         try:
             timeOfDay = datetime.strptime(val, "%H:%M") # Convert to time
         except:
-            status.problem("TimedRule", "Bad time in Rule containing '" + val)
+            synopsis.problem("TimedRule", "Bad time in Rule containing '" + val)
             return "BadTime"    # Must return something
         return "\""+timeOfDay.strftime("%H:%M")+"\"" # Normalise timestamp (cope with leading zeros)
     else:

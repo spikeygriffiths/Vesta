@@ -1,4 +1,4 @@
-#!status.py
+#!synopsis.py
 
 from datetime import datetime
 import os
@@ -17,8 +17,8 @@ def BuildPage():
     upTime = datetime.now() - iottime.appStartTime
     absUrl = config.Get("vestaURL", "")
     log.debug("Building status page")
-    txt = open("status.txt", "w")    # Create text file for txt
-    html = open("status.html", "w")    # Create local html file, so we can copy it for Apache to serve up, or mail directly
+    txt = open("synopsis.txt", "w")    # Create text file for txt
+    html = open("synopsis.html", "w")    # Create local html file, so we can copy it for Apache to serve up, or mail directly
     html.write("\n<html><head>")  # Blank line at start
     html.write("</head><body>")
     html.write("<center><h1>Vesta Status</h1>")
@@ -54,7 +54,7 @@ def BuildPage():
     html.write("</body></html>")
     html.close()
     txt.close()
-    os.system("sudo cp status.html /var/www/html/vesta")  # So vesta.php can refer to it.  Will overrwrite any previous status
+    os.system("sudo cp synopsis.html /var/www/html/vesta")  # So vesta.php can refer to it.  Will overrwrite any previous status
 
 def writeLine(string, html, txt):
     html.write(string+"<br>")
@@ -63,6 +63,7 @@ def writeLine(string, html, txt):
 def problem(key, value):
     issues[key] = value   # Add new, or update old, dictionary entry
     log.fault(key + ":" + value)
+
 
 def clearProblems():    # Called at midnight each day
     issues.clear()  # Clear the list, now that we've gone through it

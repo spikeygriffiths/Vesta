@@ -4,6 +4,7 @@ from datetime import datetime
 from datetime import timedelta
 from pathlib import Path
 from subprocess import call
+import sendmail
 # App-specific Python modules
 import events
 import log
@@ -15,8 +16,7 @@ import iottime
 import database
 import config
 import telegesis
-import status
-import sendmail
+import synopsis
 
 # Example rules
 # if HallwayPir==active do SwitchOn HallwayLight for 120
@@ -150,7 +150,7 @@ def ParseCondition(ruleConditionList, trigger):
             finalAnswer = eval(subAnswers)
         except: # Catch all errors that the rule might raise
             err = sys.exc_info()[0]
-            status.problem("BadRule", "Bad rule : '" + join(ruleConditionList)) # Make a note in the status page so the user can fix the rule
+            synopsis.problem("BadRule", "Bad rule : '" + join(ruleConditionList)) # Make a note in the status page so the user can fix the rule
             finalAnswer = False # Say rule failed
         return finalAnswer
     else:
@@ -182,8 +182,8 @@ def GetConditionResult(test, condition):
         try:
             answer = eval(condStr)
         except:
-            status.problem("BadRule", "Failed to evaluate '" + condStr + "'")
-            log.debug("Failed to evaluate '" + condStr + "'")
+            synopsis.problem("BadRule", "Failed to evaluate '" + condition + "'")
+            log.debug("Failed to evaluate '" + condition + "'")
             answer = False  # Default answer to allow rest of rules to continue to run
         return answer
     else:
@@ -202,17 +202,19 @@ def Action(actList):
         elif actList[1].lower() == "Alarm".lower():
             events.IssueEvent(events.ids.ALARM, actList[2])
         # Could have other events here...
-    elif action == "status":  # Was synopsis
-        status.BuildPage()  # Create status page on demand
+    elif action == "synopsis":  # Was status
         emailAddress = config.Get("emailAddress")
         if emailAddress != None:
-            with open("status.txt", "r") as status:   # Plain text of email
-                emailText = status.readlines()
+            synopsis.BuildPage()  # Create synopsis page on demand
+            with open("synopsis.txt", "r") as fh:   # Plain text of email
+                emailText = fh.readlines()
             text = ''.join(emailText)
-            with open("status.html", "r") as status:    # HTML of email
-                emailHtml = status.readlines()
+            with open("synopsis.html", "r") as fh:    # HTML of email
+                emailHtml = fh.readlines()
             html = ''.join(emailHtml)
             sendmail.email("Vesta Status", text, html)
+        else:
+            synopsis.problem("NoEmail", "No emailAddress entry in config.txt file, needed to send status mail")
     elif action == "email": # All args are body of the text.  Fixed subject and email address
         emailAddress = config.Get("emailAddress")
         if emailAddress != None:
@@ -221,6 +223,8 @@ def Action(actList):
                 emailBody.append(item)
             plainText = join(emailBody)
             sendmail.email("Vesta Alert!", plainText, None)
+        else:
+            synopsis.problem("NoEmail", "No emailAddress entry in config.txt file")
     elif action == "set":   # Set a named variable to a value
         expression = "".join(actList[1:])   # First recombine actList[1] onwards, with no spaces.  Now expression should be of the form "<var>=<val>"
         if "--" in expression:
@@ -263,7 +267,7 @@ def Action(actList):
 def CommandDev(action, devKey, actList):
     if devKey == None:
         log.fault("Device "+actList[1]+" from rules not found in devices")
-        status.problem("rules", "Unknown device "+actList[1]+" in rules")
+        synopsis.problem("rules", "Unknown device "+actList[1]+" in rules")
     else:
         if action == "SwitchOn".lower():
             devcmds.SwitchOn(devKey)

@@ -26,7 +26,7 @@ import vesta
 import log
 import iottime
 import database
-import status
+import synopsis
 
 sck = ""
 cliSck = ""
@@ -219,8 +219,8 @@ class Commands(cmd.Cmd):
         Rolls the logs - automatically done at midnight"""
         log.RollLogs()
 
-    def do_status(self, line):
-        """status
-        Constructs status.html page"""
-        status.BuildPage()
+    def do_synopsis(self, line):
+        """synopsis
+        Constructs synopsis.html page"""
+        synopsis.BuildPage()
 

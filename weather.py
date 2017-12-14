@@ -9,7 +9,7 @@ import log
 import events
 import variables
 import config
-import status
+import synopsis
 import database
 
 owm = None
@@ -28,7 +28,7 @@ def EventHandler(eventId, eventArg):
                 obs = owm.weather_at_place(location)  # My location
             except:
                 database.NewEvent(0, "Weather Feed failed!")
-                status.problem("Weather", "Feed failed @ " + str(datetime.now()))
+                synopsis.problem("Weather", "Feed failed @ " + str(datetime.now()))
                 return
             w = obs.get_weather()
             cloudCover = w.get_clouds() # Percentage cloud cover

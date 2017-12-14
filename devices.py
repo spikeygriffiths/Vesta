@@ -17,7 +17,7 @@ import presence
 import config
 import devcmds
 import queue
-import status
+import synopsis
 
 globalDevKey = None
 pendingBinding = None # Needed because the BIND response doesn't include the cluster
@@ -241,7 +241,7 @@ def SetAttrVal(devKey, clstrId, attrId, value):
             lowBatt = int(config.Get("lowBattery", "5"))
             if varVal < lowBatt:
                 devName = database.GetDeviceItem(devKey, "userName")
-                status.problem(devName + "_batt", devName + " low battery ("+str(varVal)+"%)")
+                synopsis.problem(devName + "_batt", devName + " low battery ("+str(varVal)+"%)")
     if clstrId == zcl.Cluster.Temperature and attrId == zcl.Attribute.Celsius:
         if value != "FF9C": # Don't know where this value (of -100) comes from - should be "7FFF" (signed value)
             varVal = int(value, 16) / 100 # Arrives in 0.01'C increments 

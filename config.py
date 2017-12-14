@@ -3,7 +3,6 @@
 from pathlib import Path
 # App-specific modules
 import log
-import status
 
 configFilename = "config.txt"
 

@@ -9,7 +9,6 @@ import devices
 import devcmds
 import database
 import log
-import status
 
 class states():
     unknown = "Unknown"
