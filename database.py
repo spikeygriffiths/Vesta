@@ -22,6 +22,7 @@ def EventHandler(eventId, eventArg):
             flushDB = False
     if eventId == events.ids.NEWDAY:
         FlushOldEvents()    # Flush old events to avoid database getting too big and slow
+        FlushOldLoggedItems()
     if eventId == events.ids.SHUTDOWN:
         db.commit() # Flush events to disk prior to shutdown
 # end of EventHandler
@@ -77,7 +78,16 @@ def GetLastNLoggedItems(devKey, item, num):
         return rows  # NB return rows as list with (value, time)
     return None
 
-# See Events routines below if we need to FlushOldLoggedItems
+def FlushOldLoggedItems():
+    global curs, flushDB
+    curs.execute("DELETE FROM BatteryPercentage WHERE timestamp <= datetime('now', '-1 month')")
+    curs.execute("DELETE FROM TemperatureCelsius WHERE timestamp <= datetime('now', '-1 month')")
+    curs.execute("DELETE FROM SignalPercentage WHERE timestamp <= datetime('now', '-1 month')")
+    curs.execute("DELETE FROM Presence WHERE timestamp <= datetime('now', '-3 days')")
+    curs.execute("DELETE FROM PowerReadingW WHERE timestamp <= datetime('now', '-3 days')")
+    curs.execute("DELETE FROM EnergyGeneratedWh WHERE timestamp <= datetime('now', '-1 year')")
+    curs.execute("DELETE FROM EnergyConsumedWh WHERE timestamp <= datetime('now', '-1 year')")
+    flushDB = True # Batch up the commits
 
 # === Events ===
 def NewEvent(devKey, event):
