@@ -255,14 +255,15 @@ def Action(actList):
     elif action == "unset":   # Remove a named variable
         variables.Del(actList[1])
     else: # Must be a command for a device, or group of devices
-        name = actList[1]   # Second arg is name
-        if database.IsGroupName(name): # Check if name is a groupName
-            devKeyList = GetGroupDevs(name)
-            for devKey in devKeyList:
-                CommandDev(action, devKey, actList) # Command each device in list
-        else:
-            devKey = database.GetDevKey("userName", name)
-            CommandDev(action, devKey, actList) # Command one device
+        if len(actList) >= 2:   # Check that we have a second arg...
+            name = actList[1]   # Second arg is name
+            if database.IsGroupName(name): # Check if name is a groupName
+                devKeyList = GetGroupDevs(name)
+                for devKey in devKeyList:
+                    CommandDev(action, devKey, actList) # Command each device in list
+            else:
+                devKey = database.GetDevKey("userName", name)
+                CommandDev(action, devKey, actList) # Command one device
 
 def CommandDev(action, devKey, actList):
     if devKey == None:

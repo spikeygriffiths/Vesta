@@ -244,23 +244,29 @@ def SetAttrVal(devKey, clstrId, attrId, value):
                 synopsis.problem(devName + "_batt", devName + " low battery ("+str(varVal)+"%)")
     if clstrId == zcl.Cluster.Temperature and attrId == zcl.Attribute.Celsius:
         if value != "FF9C": # Don't know where this value (of -100) comes from - should be "7FFF" (signed value)
-            varVal = int(value, 16) / 100 # Arrives in 0.01'C increments 
-            database.LogItem(devKey, "TemperatureCelsius", varVal) # For web page
+            try:
+                varVal = int(value, 16) / 100 # Arrives in 0.01'C increments 
+                database.LogItem(devKey, "TemperatureCelsius", varVal) # For web page
+            except ValueError:
+                log.debug("Bad temperature of "+ value)
     if clstrId == zcl.Cluster.OnOff and attrId == zcl.Attribute.OnOffState:
-        oldState = database.GetLatestEvent(devKey)
-        if int(value, 16) == 0:
-            newState = "SwitchedOff"
-        else:
-            newState = "SwitchedOn"
-        if oldState != newState:
-            database.NewEvent(devKey, newState)
-            Rule(devKey, newState)
+        if isNumber(value):
+            oldState = database.GetLatestEvent(devKey)
+            if int(value, 16) == 0:
+                newState = "SwitchedOff"
+            else:
+                newState = "SwitchedOn"
+            if oldState != newState:
+                database.NewEvent(devKey, newState)
+                Rule(devKey, newState)
     if clstrId == zcl.Cluster.SimpleMetering and attrId == zcl.Attribute.InstantaneousDemand:
-        varVal = int(value, 16) # Arrives in Watts, so store it in the same way
-        database.LogItem(devKey, "PowerReadingW", varVal)
+        if isNumber(value):
+            varVal = int(value, 16) # Arrives in Watts, so store it in the same way
+            database.LogItem(devKey, "PowerReadingW", varVal)
     if clstrId == zcl.Cluster.SimpleMetering and attrId == zcl.Attribute.CurrentSummationDelivered:
-        varVal = int(value, 16) # Arrives in accumulated WattHours, so store it in the same way
-        database.LogItem(devKey, "EnergyConsumedWh", varVal)
+        if isNumber(value):
+            varVal = int(value, 16) # Arrives in accumulated WattHours, so store it in the same way
+            database.LogItem(devKey, "EnergyConsumedWh", varVal)
     if clstrId == zcl.Cluster.IAS_Zone and attrId == zcl.Attribute.Zone_Type:
         database.SetDeviceItem(devKey, "iasZoneType", value)
     if clstrId == zcl.Cluster.Basic:
@@ -312,13 +318,14 @@ def NoteMsgDetails(devKey, arg):
         if int(arg[-2]) < 0: # Assume penultimate item is RSSI, and thus that ultimate one is LQI
             rssi = arg[-2]
             lqi = arg[-1]
-            signal = int((int(lqi, 16) * 100) / 255)    # Convert 0-255 to 0-100.  Ignore RSSI for now
-            oldSignal = database.GetLatestLoggedValue(devKey, "SignalPercentage")
-            if oldSignal == None:
-                oldSignal = signal + 100  # Force an update if no previous signal
-            deltaSignal = signal - oldSignal
-            if deltaSignal > 5 or deltaSignal < -5:  # Only note signal level that's different enough
-                database.LogItem(devKey, "SignalPercentage", signal)
+            if isNumber(lqi):
+                signal = int((int(lqi, 16) * 100) / 255)    # Convert 0-255 to 0-100.  Ignore RSSI for now
+                oldSignal = database.GetLatestLoggedValue(devKey, "SignalPercentage")
+                if oldSignal == None:
+                    oldSignal = signal + 100  # Force an update if no previous signal
+                deltaSignal = signal - oldSignal
+                if deltaSignal > 5 or deltaSignal < -5:  # Only note signal level that's different enough
+                    database.LogItem(devKey, "SignalPercentage", signal)
             arg.remove(rssi)
             arg.remove(lqi)
 
