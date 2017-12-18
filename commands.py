@@ -74,7 +74,7 @@ def EventHandler(eventId, eventArg):
                     cliSck.send(str.encode(cmdOut))
                     call("rm cmdoutput.txt", shell=True) # Remove cmd output after we've used it
                 else:
-                    log.debug("Closing socket")
+                    #log.debug("Closing socket")
                     cliSck.close()
                     if cliSck in sckLst:
                         sckLst.remove(cliSck)

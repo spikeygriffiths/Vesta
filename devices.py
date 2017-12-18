@@ -250,7 +250,7 @@ def SetAttrVal(devKey, clstrId, attrId, value):
             except ValueError:
                 log.debug("Bad temperature of "+ value)
     if clstrId == zcl.Cluster.OnOff and attrId == zcl.Attribute.OnOffState:
-        if isNumber(value):
+        if isnumeric(value):
             oldState = database.GetLatestEvent(devKey)
             if int(value, 16) == 0:
                 newState = "SwitchedOff"
@@ -260,11 +260,11 @@ def SetAttrVal(devKey, clstrId, attrId, value):
                 database.NewEvent(devKey, newState)
                 Rule(devKey, newState)
     if clstrId == zcl.Cluster.SimpleMetering and attrId == zcl.Attribute.InstantaneousDemand:
-        if isNumber(value):
+        if isnumeric(value):
             varVal = int(value, 16) # Arrives in Watts, so store it in the same way
             database.LogItem(devKey, "PowerReadingW", varVal)
     if clstrId == zcl.Cluster.SimpleMetering and attrId == zcl.Attribute.CurrentSummationDelivered:
-        if isNumber(value):
+        if isnumeric(value):
             varVal = int(value, 16) # Arrives in accumulated WattHours, so store it in the same way
             database.LogItem(devKey, "EnergyConsumedWh", varVal)
     if clstrId == zcl.Cluster.IAS_Zone and attrId == zcl.Attribute.Zone_Type:
@@ -318,8 +318,11 @@ def NoteMsgDetails(devKey, arg):
         if int(arg[-2]) < 0: # Assume penultimate item is RSSI, and thus that ultimate one is LQI
             rssi = arg[-2]
             lqi = arg[-1]
-            if isNumber(lqi):
+            try:
                 signal = int((int(lqi, 16) * 100) / 255)    # Convert 0-255 to 0-100.  Ignore RSSI for now
+            except ValueError:
+                signal = -1   # Cannot get signal
+            if signal != -1:
                 oldSignal = database.GetLatestLoggedValue(devKey, "SignalPercentage")
                 if oldSignal == None:
                     oldSignal = signal + 100  # Force an update if no previous signal

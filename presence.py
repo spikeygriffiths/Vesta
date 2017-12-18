@@ -28,12 +28,11 @@ def Check():  # Expected to be called infrequently - ie once/minute
     for devKey in keyList:  # Element 0 is hub, rest are devices
         if database.GetDeviceItem(devKey, "nwkId") != "0000":  # Ignore hub
             lastSeen, presence = Get(devKey)
-            if presence != None:    # It may have only just joined and still be unintialised (?)
-                if presence != states.absent:
-                    if datetime.now() > lastSeen+timedelta(seconds=900) or (presence == states.unknown and "SED"!= database.GetDeviceItem(devKey, "devType")): # More than 15 minutes since we last heard from device, or it's unknown and listening
-                        notHeardFromList.append(devKey)    # Make a list of devices to query
-                    if datetime.now() > lastSeen+timedelta(seconds=1800): # More than 30 minutes since we last heard from device
-                        Set(devKey, states.absent)
+            if presence != states.absent:
+                if datetime.now() > lastSeen+timedelta(seconds=900) and "SED"!= database.GetDeviceItem(devKey, "devType"): # More than 15 minutes since we last heard from device, and it's listening
+                    notHeardFromList.append(devKey)    # Make a list of devices to query
+                if datetime.now() > lastSeen+timedelta(seconds=1800): # More than 30 minutes since we last heard from device
+                    Set(devKey, states.absent)
     if notHeardFromList != []:
         numDevs = len(notHeardFromList)
         if numDevs > 3:
@@ -68,11 +67,12 @@ def GetAvailability(devKey):    # Over last 24 hours
             availability = userName + " has been missing all day"
     else:   # There's been some changes in presence in the last 24 hours
         entries = database.GetLoggedItemsSinceTime(devKey, "Presence", "datetime('now', '-1 day')")
+        log.debug(userName+"'s presence for last 24 hours;"+str(entries))
         if entries == None:
-            return "No presence for "+userName
-        if len(entries) == 1:   # The device has changed only once in the last 24 hours
-            entries = database.GetLastNLoggedItems(devKey, "Presence", 2)   # Get last 2 entries
-            if len(entries) == 1:   # The device has changed only once ever
+            availability = "No presence for "+userName
+        elif len(entries) == 1:   # The device has changed only once in the last 24 hours
+            lastTwoEntries = database.GetLastNLoggedItems(devKey, "Presence", 2)   # Get last 2 entries
+            if len(lastTwoEntries) == 1:   # The device has changed only once ever
                 availability = ""   # Perfect availability for the whole time
             else:   # Check when it changed, and what it changed to to work out 
                 availability = userName + " changed to "+presence+" since yesterday"   # Changeable

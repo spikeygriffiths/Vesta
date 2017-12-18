@@ -36,21 +36,23 @@ def LogItem(devKey, item, value):
             previousValue = value + 1    # Force values to be different
         else:
             previousvalue = "Not"+value  # Force values to be different
-    if previousValue != value:  # Only log the item if it has changed since last time
+    if previousValue != value:  # Only log the item if it has changed since last time.  Not a good idea for presence!
         log.debug("Setting "+item+" with "+str(value)+" for "+str(devKey)+" (changed from "+str(previousValue))
         if rules.isNumber(value):
             dbCmd = "INSERT INTO "+item+" VALUES (datetime('now', 'localtime'),"+str(value)+","+str(devKey)+")"
         else: # Assume string
             dbCmd = "INSERT INTO "+item+" VALUES (datetime('now', 'localtime'),\""+str(value)+"\","+str(devKey)+")"
-        #log.debug(dbCmd)
-        curs.execute(dbCmd)
-        flushDB = True # Batch up the commits.  Commit table for web access
+    else:  # Value unchanged, so update timestamp of the latest entry
+        dbCmd = "UPDATE "+item+" SET timestamp=datetime('now', 'localtime') WHERE devKey="+str(devKey)+" ORDER BY timestamp DESC LIMIT 1"
+    log.debug(dbCmd)
+    curs.execute(dbCmd)
+    flushDB = True # Batch up the commits.  Commit table for web access
 
 def GetLoggedItemsSinceTime(devKey, item, time):
     global curs
     dbCmd = "SELECT value, timestamp FROM "+item+" WHERE devKey="+str(devKey)+" AND timestamp > "+time  # Get all items after time
     curs.execute(dbCmd)
-    rows = curs.fetchone()
+    rows = curs.fetchall()
     if rows != None:
         return rows  # NB return row as list with (value, time)
     return None
@@ -67,7 +69,10 @@ def GetLatestLoggedItem(devKey, item):
 def GetLastNLoggedItems(devKey, item, num):
     global curs
     curs.execute("SELECT value, timestamp FROM "+item+" WHERE devKey="+str(devKey)+" ORDER BY timestamp DESC LIMIT "+str(num))  # Get latest specified logged items
-    rows = curs.fetchone()
+    if num == 1:
+        rows = curs.fetchone()
+    else:
+        rows = curs.fetchmany(num)	# Or could use fetchall(), I think
     if rows != None:
         return rows  # NB return rows as list with (value, time)
     return None
