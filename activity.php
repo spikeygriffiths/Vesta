@@ -33,6 +33,9 @@ echo "<input type='submit' name='submit'/>";
 echo "</form>";
 ShowActivity($db, $dbTime, $titleTime, $devKey);
 echo "<br>";
+if ($devKey!=-1) {
+    echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/ShowOneDevice.php/?devKey=",$devKey,"'\">",$userName,"</button><br><br>";
+}
 PageFooter();
 echo "</body></html>";
 
