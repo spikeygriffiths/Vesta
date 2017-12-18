@@ -67,7 +67,7 @@ def GetAvailability(devKey):    # Over last 24 hours
             availability = userName + " has been missing all day"
     else:   # There's been some changes in presence in the last 24 hours
         entries = database.GetLoggedItemsSinceTime(devKey, "Presence", "datetime('now', '-1 day')")
-        log.debug(userName+"'s presence for last 24 hours;"+str(entries))
+        #log.debug(userName+"'s presence for last 24 hours;"+str(entries))
         if entries == None:
             availability = "No presence for "+userName
         elif len(entries) == 1:   # The device has changed only once in the last 24 hours

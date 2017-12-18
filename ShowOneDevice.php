@@ -41,7 +41,7 @@ function ShowDevStatus($item, $name, $units, $withTime, $devKey, $db)
 
 function ShowDevEnergy($item, $name, $units, $devKey, $db)
 {
-    $row = GetLatestLoggedItem($item, $devKey,$db);
+    $row = GetLatestLoggedItem($item, $devKey,$db); # Get energy now
     if ($row != null) {
         $nowVal = $row['value'];
         $dbTime = "date('now', 'start of day')";
@@ -52,6 +52,7 @@ function ShowDevEnergy($item, $name, $units, $devKey, $db)
             $val = $nowVal - $startVal; # Energy used so far today
             $time = ElapsedTime($dbTime);   # Convert timestamp to elapsed time
             echo "<tr><td>",$name,"</td><td>",$val,$units,"<div style=\"float:right;width:50%;\">(Since midnight)</div></td></tr>";
+            #echo "<tr><td>",$name,"</td><td>",$val,$units,"<div style=\"float:right;width:50%;\">(last ",$time,")</div></td></tr>";
         }
     }
 }
