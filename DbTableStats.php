@@ -7,31 +7,21 @@ echo "td, th {border: 2px solid #dddddd;text-align: left;padding: 2px }";
 echo "tr:nth-child(even) { background-color: #dddddd; }</style>";
 echo "</style></head>";
 echo "<body>";
-PageHeader("Database Stats");
+$table = $_GET['table'];
+PageHeader("Database Table Stats for ".$table);
 $db = DatabaseInit();
-ShowAllStats($db);
+ShowTableStats($db, $table);
 echo "<br>";
+echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/DatabaseStats.php'\">Database Stats</button><br><br>";
 PageFooter();
 echo "</body></html>";
 
-function ShowAllStats($db)
+function ShowTableStats($db, $table)
 {
-    $dbSize = GetDbFileSize();
     echo "<table>";
     echo "<tr><th>Table</th><th>Entries</th></tr>";
-    ShowStat($db, "Devices");
-    ShowStat($db, "Groups");
-    ShowStat($db, "Rules");
-    ShowStat($db, "Events");
-    ShowStat($db, "Presence");
-    ShowStat($db, "SignalPercentage");
-    ShowStat($db, "TemperatureCelsius");
-    ShowStat($db, "BatteryPercentage");
-    ShowStat($db, "PowerReadingW");
-    ShowStat($db, "EnergyConsumedWh");
-    ShowStat($db, "EnergyGeneratedWh");
+    ShowStat($db, $table);
     echo "</table>";
-    echo "<br>(Database file size on disk: ",number_format($dbSize / (1024*1024), 2, '.', ''),"MB for ",GetDevCount($db)," devices)<br>";
 }
 
 function ShowStat($db, $table)
