@@ -31,7 +31,7 @@ function ShowAllStats($db)
     ShowStat($db, "EnergyConsumedWh");
     ShowStat($db, "EnergyGeneratedWh");
     echo "</table>";
-    echo "<br>(Database file size on disk: ",number_format($dbSize / (1024*1024), 2, '.', ''),"MB for ",GetDevCount($db)," devices)<br>";
+    echo "<br>(Database file: ",number_format($dbSize / (1024*1024), 2, '.', ''),"MB for ",GetDevCount($db)," devices)<br>";
 }
 
 function ShowStat($db, $table)
