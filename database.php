@@ -9,10 +9,28 @@ function DatabaseInit()
     return $db;
 }
 
+function GetDbFileSize()
+{
+    $dir = "/home/pi/Vesta/vesta.db";
+    return filesize($dir);
+}
+
+function GetCount($db, $table, $qualifier = "")
+{
+    if ($qualifier == "") {
+        $result = $db->query("SELECT COUNT(*) FROM ".$table);
+    } else {
+        $result = $db->query("SELECT count(*) FROM ".$table." WHERE ".$qualifier);  # $qualifier may be "devKey= 21" or "timestamp<('now','-2 days')", etc.
+    }
+    if ($result != null) {
+        return $result->fetchColumn();
+    }
+    return null;
+}
+
 function GetDevCount($db)
 {
-    $result = $db->query("SELECT COUNT(*) FROM Devices");
-    return $result->fetchColumn();
+    return GetCount($db, "Devices");
 }
 
 function GetDevKey($index, $db)
