@@ -323,12 +323,20 @@ def NoteMsgDetails(devKey, arg):
             except ValueError:
                 signal = -1   # Cannot get signal
             if signal != -1:
-                oldSignal = database.GetLatestLoggedValue(devKey, "SignalPercentage")
-                if oldSignal == None:
-                    oldSignal = signal + 100  # Force an update if no previous signal
-                deltaSignal = signal - oldSignal
-                if deltaSignal > 5 or deltaSignal < -5:  # Only note signal level that's different enough
-                    database.LogItem(devKey, "SignalPercentage", signal)
+                entry = database.GetLatestLoggedItem(devKey, "SignalPercentage")
+                if entry != None:
+                    oldSignal = entry[0] # Just the value
+                    fmt = "%Y-%m-%d %H:%M:%S"
+                    oldTimestamp = datetime.strptime(entry[1], fmt)
+                    if oldSignal == None:
+                        oldSignal = signal + 100  # Force an update if no previous signal
+                    deltaSignal = signal - oldSignal
+                    deltaTime = datetime.now() - oldTimestamp
+                    if abs(deltaSignal) > 5:
+                        if deltaTime.minutes > 10:  # Only note signal level that's different enough and at least 10 minutes since last one
+                            database.LogItem(devKey, "SignalPercentage", signal)
+                    else:   # signal is sufficiently similar to last one, so update timestamp
+                        database.RefreshLoggedItem(devKey, "SignalPercentage")  # Update timestamp to avoid too many >10 minutes!
             arg.remove(rssi)
             arg.remove(lqi)
 

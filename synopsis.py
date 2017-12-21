@@ -34,6 +34,10 @@ def BuildPage():
             if availability != "":  # If device missing even only occasionally, tell user (Entry string means "fine")
                 noProblems = False
                 writeLine(availability, html, txt)
+    dbSize = database.GetFileSize() 
+    if (dbSize / len(keyList)) > (30 * 1024):   # Arbitrary limit of 30K per device
+        noProblems = False
+        problem("dbSize", "Database file size is " + "{0:.2f}".format(dbSize/(1024 * 1024)) + "MB which is " + "{0:.0f}".format((dbSize / len(keyList)) / 1024) + "KB per device")
     errList = glob.glob("/home/pi/Vesta/*_err.log")   # Get list of all error logs
     numLogs = len(errList)
     if numLogs:

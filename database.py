@@ -2,6 +2,7 @@
 
 import sqlite3
 from datetime import datetime
+import os
 # App-specific Python modules
 import events
 import rules    # For isNumber()
@@ -27,6 +28,10 @@ def EventHandler(eventId, eventArg):
         db.commit() # Flush events to disk prior to shutdown
 # end of EventHandler
 
+# === Miscellaneous ===
+def GetFileSize():
+    return os.stat("vesta.db").st_size
+
 # === Logged items ===
 
 def LogItem(devKey, item, value):
@@ -45,6 +50,13 @@ def LogItem(devKey, item, value):
             dbCmd = "INSERT INTO "+item+" VALUES (datetime('now', 'localtime'),\""+str(value)+"\","+str(devKey)+")"
     else:  # Value unchanged, so update timestamp of the latest entry
         dbCmd = "UPDATE "+item+" SET timestamp=datetime('now', 'localtime') WHERE devKey="+str(devKey)+" ORDER BY timestamp DESC LIMIT 1"
+    log.debug(dbCmd)
+    curs.execute(dbCmd)
+    flushDB = True # Batch up the commits.  Commit table for web access
+
+def RefreshLoggedItem(devKey, item):
+    global curs, flushDB
+    dbCmd = "UPDATE "+item+" SET timestamp=datetime('now', 'localtime') WHERE devKey="+str(devKey)+" ORDER BY timestamp DESC LIMIT 1"
     log.debug(dbCmd)
     curs.execute(dbCmd)
     flushDB = True # Batch up the commits.  Commit table for web access
@@ -80,11 +92,11 @@ def GetLastNLoggedItems(devKey, item, num):
 
 def FlushOldLoggedItems():
     global curs, flushDB
-    curs.execute("DELETE FROM BatteryPercentage WHERE timestamp <= datetime('now', '-1 month')")
+    curs.execute("DELETE FROM BatteryPercentage WHERE timestamp <= datetime('now', '-1 year')")
     curs.execute("DELETE FROM TemperatureCelsius WHERE timestamp <= datetime('now', '-1 month')")
-    curs.execute("DELETE FROM SignalPercentage WHERE timestamp <= datetime('now', '-1 month')")
-    curs.execute("DELETE FROM Presence WHERE timestamp <= datetime('now', '-3 days')")
-    curs.execute("DELETE FROM PowerReadingW WHERE timestamp <= datetime('now', '-3 days')")
+    curs.execute("DELETE FROM SignalPercentage WHERE timestamp <= datetime('now', '-3 days')")  # Signal strength is only a worry for a while
+    curs.execute("DELETE FROM Presence WHERE timestamp <= datetime('now', '-3 days')")  # Don't care about presence after a while
+    curs.execute("DELETE FROM PowerReadingW WHERE timestamp <= datetime('now', '-3 days')") # We have the energy readings for long-term comparisons
     curs.execute("DELETE FROM EnergyGeneratedWh WHERE timestamp <= datetime('now', '-1 year')")
     curs.execute("DELETE FROM EnergyConsumedWh WHERE timestamp <= datetime('now', '-1 year')")
     flushDB = True # Batch up the commits

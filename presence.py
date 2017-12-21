@@ -75,9 +75,14 @@ def GetAvailability(devKey):    # Over last 24 hours
             if len(lastTwoEntries) == 1:   # The device has changed only once ever
                 availability = ""   # Perfect availability for the whole time
             else:   # Check when it changed, and what it changed to to work out 
-                availability = userName + " changed to "+presence+" since yesterday"   # Changeable
-        else:
+                availability = ""   # Hasn't changed enough to be a worry
+        elif len(entries) > 1:
             availability = userName + "'s availability changed "+str(len(entries))+" times in last 24 hours and is now "+presence   # Changeable
+        else:
+            if presence == states.present:
+                availability = ""   # Perfect availability for the whole time
+            else:   # Assume absent or unknown
+                availability = userName + " has not been heard from all day"
     return availability
 
 

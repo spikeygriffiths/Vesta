@@ -61,7 +61,7 @@ def EventHandler(eventId, eventArg):
                 try:
                     cmd = cliSck.recv(100)
                 except OSError as err:  # OSError: [Errno 9] Bad file descriptor"
-                    database.NewEvent(0, "Web command failed with " + err.args[1]) # 0 is always hub
+                    synopsis.problem("Web command failed with ", err.args[1])
                     cmd = ""    # No command if there was a failure                
                 if cmd:
                     cmd = cmd.decode()

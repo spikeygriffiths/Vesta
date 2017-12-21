@@ -25,12 +25,15 @@ function ShowTableStats($db, $table)
         for ($index = 0; $index < $numDevs; $index++) {
             $devKey = GetDevKey($index, $db);
             $username = GetDevItem("userName", $devKey, $db);
-            echo "<tr>";
-            echo "<td><a href=\"/vesta/ShowOneDevice.php/?devKey=",$devKey,"\">",$username,"</a></td>";
-            ShowStat($db, $table, "devKey=".$devKey." and timestamp>datetime('now', '-24 hours')");
-            ShowStat($db, $table, "devKey=".$devKey." and timestamp>datetime('now', '-7 days')");
-            ShowStat($db, $table, "devKey=".$devKey);
-            echo "</tr>";
+            $entries = GetCount($db, $table, "devKey=".$devKey);
+            if ($entries > 100) {
+                echo "<tr>";
+                echo "<td><a href=\"/vesta/ShowOneDevice.php/?devKey=",$devKey,"\">",$username,"</a></td>";
+                ShowStat($db, $table, "devKey=".$devKey." and timestamp>datetime('now', '-24 hours')");
+                ShowStat($db, $table, "devKey=".$devKey." and timestamp>datetime('now', '-7 days')");
+                echo "<td>",$entries,"</td>";
+                echo "</tr>";
+            }
         }
         echo "<tr>";
         echo "<td><b>Totals</b></td>";
