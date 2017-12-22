@@ -41,14 +41,19 @@ def EventHandler(eventId, eventArg):
     if eventId == events.ids.INIT:
         msp_ota = config.Get("MSP_OTA")
     if eventId == events.ids.DEVICE_ANNOUNCE:
+        eui64 = eventArg[1]
         nwkId = eventArg[2]
         devKey = GetKey(nwkId)
-        if devKey == None:  # Which will only be the case if this device is actually new, and not just reset and announced
-            devKey = Add(nwkId, eventArg[1], eventArg[0])
-            log.debug("New key for new device is "+ str(devKey))
-            if eventArg[0] == "SED":
-                SetTempVal(devKey,"PollingUntil", datetime.now()+timedelta(seconds=300))
-            events.Issue(events.ids.NEWDEVICE, devKey)  # Tell everyone that a new device has been seen, so it can be initialised
+        if devKey == None:  # Which will only be the case if we've not seen this short Id before
+            devKey = database.GetDevKey("eui64", eui64)
+            if devKey == None:  # Which will be the case if we've not seen the long Id either
+                devKey = Add(nwkId, eui64, eventArg[0])
+                log.debug("New key for new device is "+ str(devKey))
+                if eventArg[0] == "SED":
+                    SetTempVal(devKey,"PollingUntil", datetime.now()+timedelta(seconds=300))
+                events.Issue(events.ids.NEWDEVICE, devKey)  # Tell everyone that a new device has been seen, so it can be initialised
+            else:   # Same long Id, but short Id needs updating after it has changed
+                database.SetDeviceItem(devKey, "nwkId", nwkId)
         else:
             NoteMsgDetails(devKey, eventArg)
         SetTempVal(devKey, "GetNextBatteryAfter", datetime.now())    # Ask for battery shortly after Device Announce, either new or old one re-joining

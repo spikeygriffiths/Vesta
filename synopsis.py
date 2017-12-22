@@ -20,6 +20,7 @@ def BuildPage():
     txt = open("synopsis.txt", "w")    # Create text file for txt
     html = open("synopsis.html", "w")    # Create local html file, so we can copy it for Apache to serve up, or mail directly
     html.write("\n<html><head>")  # Blank line at start
+    html.write("<META HTTP-EQUIV=\"CACHE-CONTROL\" CONTENT=\"NO-CACHE, no-store, must-revalidate\">") # Try to force browser to discard any previous version of this page
     html.write("</head><body>")
     html.write("<center><h1>Vesta Status</h1>")
     txt.write("Vesta Status\n\n");
@@ -31,7 +32,7 @@ def BuildPage():
     for devKey in keyList:  # Element 0 is hub, rest are devices
         if database.GetDeviceItem(devKey, "nwkId") != "0000":  # Ignore hub
             availability = presence.GetAvailability(devKey)
-            if availability != "":  # If device missing even only occasionally, tell user (Entry string means "fine")
+            if availability != "":  # If device missing even only occasionally, tell user (Empty string means "fine")
                 noProblems = False
                 writeLine(availability, html, txt)
     dbSize = database.GetFileSize() 
