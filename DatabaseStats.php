@@ -17,6 +17,7 @@ echo "</body></html>";
 function ShowAllStats($db)
 {
     $dbSize = GetDbFileSize();
+    $numDevs = GetDevCount($db);
     echo "<table>";
     echo "<tr><th>Table</th><th>Entries</th></tr>";
     ShowStat($db, "Devices");
@@ -31,7 +32,7 @@ function ShowAllStats($db)
     ShowStat($db, "EnergyConsumedWh");
     ShowStat($db, "EnergyGeneratedWh");
     echo "</table>";
-    echo "<br>(Database file: ",number_format($dbSize / (1024*1024), 2, '.', ''),"MB for ",GetDevCount($db)," devices)<br>";
+    echo "<br>(Database file: ",number_format($dbSize / (1024*1024), 2, '.', ''),"MB for ",$numDevs," devices=",number_format(($dbSize/($numDevs*1024)), 0, '.', ''),"KB per device)<br>";
 }
 
 function ShowStat($db, $table)

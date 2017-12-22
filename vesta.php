@@ -1,10 +1,12 @@
 <?php 
-include "AppCmd.php";
+include "functions.php";
 include "database.php";
 include "header.php";   # Has other includes as well as log-out detection, and favicon.  NB Has "<html><head>" for favicon link!
 echo "</head><body>";
-echo "<center><img src='vestaTitle.png' title=\"Vesta was the Roman goddess of hearth and home\" width=128 height=128><br>";
-//echo "Now: ", date('Y-m-d H:i:s'), "<br>";
+echo "<center>";
+$title = "<img src='vestaTitle.png' title=\"Vesta was the Roman goddess of hearth and home\" width=128 height=128>";
+$rightBtn = "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/logout.php'\">Log Out</button><br><br>";
+PageHeader($title, $rightBtn);
 $ps = shell_exec("ps ax");
 $appRunning = (strpos($ps, "vesta.py") !== false);
 //echo "Current PHP version: ".phpversion()."<br>";
@@ -29,7 +31,6 @@ if ($appRunning) {
     echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/RequestStatus.php'\">Status</button>&nbsp&nbsp&nbsp";
     #echo "<button type=\"button\" onclick=\"window.location.href='/vesta/info.php'\">Send Info Command</button><br><br>";
     echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='https://docs.google.com/document/d/1BPCPYH9JV_Ekot3clXyhLmIPgkDzyd2aZhu5PGcCNKw/edit?usp=sharing'\">Documentation</button><br><br>";
-    echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/logout.php'\">Log Out</button><br><br>";
     echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/DatabaseStats.php'\">Database Stats</button><br><br>";
     echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/ManageUsers.php'\">Manage users</button><br><br>";
     echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/AppLog.php'\">Application Log</button>&nbsp&nbsp&nbsp";

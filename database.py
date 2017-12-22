@@ -24,6 +24,7 @@ def EventHandler(eventId, eventArg):
     if eventId == events.ids.NEWDAY:
         FlushOldEvents()    # Flush old events to avoid database getting too big and slow
         FlushOldLoggedItems()
+        Defragment()    # Compact the database now that we've flushed the old items
     if eventId == events.ids.SHUTDOWN:
         db.commit() # Flush events to disk prior to shutdown
 # end of EventHandler
@@ -31,6 +32,11 @@ def EventHandler(eventId, eventArg):
 # === Miscellaneous ===
 def GetFileSize():
     return os.stat("vesta.db").st_size
+
+def Defragment():
+    global curs
+    curs.execute("VACUUM")  # Rebuild database in order to compress its file size
+    flushDB = True # Commit newly-built table 
 
 # === Logged items ===
 
