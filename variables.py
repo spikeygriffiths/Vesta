@@ -28,9 +28,9 @@ def EventHandler(eventId, eventArg):
                 database.NewEvent(0, "Gone Away")
             Set("away", away)  # Keep our variable in sync with the value from the database, so now user can update the db via the web and we'll know...
 
-def Set(name, value):
+def Set(name, value, force=False):
     global varList
-    if Get(name) != value:  # Only update value if it has changed
+    if force==True or Get(name) != value:  # Only update value if it has changed, unless forced
         Del(name) # Remove old tuple if necessary
         log.debug("Variable \""+name+"\" gets "+value+" @ "+"{0:%Y-%m-%d %H:%M:%S}".format(datetime.now()))
         varList.append((name, value, "{0:%Y-%m-%d %H:%M:%S}".format(datetime.now()))) # Add new one regardless

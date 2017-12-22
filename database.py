@@ -19,8 +19,11 @@ def EventHandler(eventId, eventArg):
         curs = db.cursor()
     if eventId == events.ids.SECONDS:
         if flushDB:
-            db.commit() # Flush events to disk
-            flushDB = False
+            try:
+                db.commit() # Flush events to disk
+                flushDB = False
+            except:
+                log.fault("Database couldn't commit")
     if eventId == events.ids.NEWDAY:
         FlushOldEvents()    # Flush old events to avoid database getting too big and slow
         FlushOldLoggedItems()

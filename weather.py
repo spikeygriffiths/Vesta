@@ -32,23 +32,23 @@ def EventHandler(eventId, eventArg):
                 return
             w = obs.get_weather()
             cloudCover = w.get_clouds() # Percentage cloud cover
-            variables.Set("cloudCover", str(cloudCover))
+            variables.Set("cloudCover", str(cloudCover), True)
             outsideTemp = w.get_temperature("celsius")["temp"] # Outside temperature in celsius
-            variables.Set("outsideTemperature", str(outsideTemp))
+            variables.Set("outsideTemperature", str(outsideTemp), True)
             windSpeed = w.get_wind()["speed"]
-            variables.Set("windSpeed", str(windSpeed))
+            variables.Set("windSpeed", str(windSpeed), True)
             rain = w.get_rain()
             if rain != {}:
                 rain = rain["3h"]   # Rain volume in last 3 hours.  Unknown units, may be ml(?)
             else:
                 rain = 0    # No rain
-            variables.Set("rain", str(rain))
+            variables.Set("rain", str(rain), True)
             snow = w.get_snow()
             if snow != {}:
                 snow = snow["3h"]   # Snow volume in last 3 hours.  Unknown units, may be ml(?)
             else:
                 snow = 0    # No snow
-            variables.Set("snow", str(snow))
+            variables.Set("snow", str(snow), True)
             database.NewEvent(0, "Weather now "+str(cloudCover)+"% cloudy")
             events.Issue(events.ids.WEATHER)    # Tell system that we have a new weather report
 

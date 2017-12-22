@@ -54,7 +54,8 @@ def EventHandler(eventId, eventArg):
             #log.debug("Old dark = " + variables.Get("dark") + " whereas new dark = " + dark)
             if dark != variables.Get("dark"):   # Compare with previous
                 variables.Set("dark", dark)  # Update our idea of whether it's dark or light just now
-                rules.Run("dark=="+variables.Get("dark"))
+                rules.Run("dark=="+variables.Get("dark"))  # This will also delete the variable afterwards
+                variables.Set("dark", dark)  # Re-instate the variable after the rule has deleted it
     if eventId == events.ids.HOURS:
         now = datetime.now()
         if now.hour == 0: # Midnight, time to calculate sunrise and sunset for new day
@@ -79,8 +80,8 @@ def GetDark():
         extraTime = 0   # No weather, so assume cloudless and dry
     morning = sunrise + timedelta(minutes=extraTime)    # The more cloud, the later it gets light in the morning
     evening = sunset - timedelta(minutes=extraTime) # The more cloud, the earlier it gets dark in the evening
-    variables.Set("morning", morning.strftime("%H:%M"))
-    variables.Set("evening", evening.strftime("%H:%M"))   # Set up variables accordingly
+    variables.Set("morning", morning.strftime("%H:%M"), True)
+    variables.Set("evening", evening.strftime("%H:%M"), True)   # Set up variables accordingly
     return not(IsTimeBetween(morning, now, evening)) # True if dark, False if light
 
 def SetDayInfo():
@@ -101,10 +102,10 @@ def SetSunTimes():
         a.solar_depression= "civil"
         city = a[cityName]
         sun = city.sun(date=datetime.now(), local=True)
-        variables.Set("dawn", str(sun['dawn'].strftime("%H:%M")))
-        variables.Set("sunrise", str(sun['sunrise'].strftime("%H:%M")))
-        variables.Set("sunset", str(sun['sunset'].strftime("%H:%M")))
-        variables.Set("dusk", str(sun['dusk'].strftime("%H:%M")))
+        variables.Set("dawn", str(sun['dawn'].strftime("%H:%M")), True)
+        variables.Set("sunrise", str(sun['sunrise'].strftime("%H:%M")), True)
+        variables.Set("sunset", str(sun['sunset'].strftime("%H:%M")), True)
+        variables.Set("dusk", str(sun['dusk'].strftime("%H:%M")), True)
 
 def Get(item):
     if ":" not in item: # If named item rather than HH:MM timestamp
