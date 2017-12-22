@@ -255,7 +255,7 @@ def SetAttrVal(devKey, clstrId, attrId, value):
             except ValueError:
                 log.debug("Bad temperature of "+ value)
     if clstrId == zcl.Cluster.OnOff and attrId == zcl.Attribute.OnOffState:
-        if isnumeric(value):
+        if isnumeric(value, 16):
             oldState = database.GetLatestEvent(devKey)
             if int(value, 16) == 0:
                 newState = "SwitchedOff"
@@ -265,11 +265,11 @@ def SetAttrVal(devKey, clstrId, attrId, value):
                 database.NewEvent(devKey, newState)
                 Rule(devKey, newState)
     if clstrId == zcl.Cluster.SimpleMetering and attrId == zcl.Attribute.InstantaneousDemand:
-        if isnumeric(value):
+        if isnumeric(value, 16):
             varVal = int(value, 16) # Arrives in Watts, so store it in the same way
             database.LogItem(devKey, "PowerReadingW", varVal)
     if clstrId == zcl.Cluster.SimpleMetering and attrId == zcl.Attribute.CurrentSummationDelivered:
-        if isnumeric(value):
+        if isnumeric(value, 16):
             varVal = int(value, 16) # Arrives in accumulated WattHours, so store it in the same way
             database.LogItem(devKey, "EnergyConsumedWh", varVal)
     if clstrId == zcl.Cluster.IAS_Zone and attrId == zcl.Attribute.Zone_Type:
@@ -345,9 +345,9 @@ def NoteMsgDetails(devKey, arg):
             arg.remove(rssi)
             arg.remove(lqi)
 
-def isnumeric(item):
+def isnumeric(item, base=10):
     try:
-        val = int(item)
+        val = int(item, base)
         return True
     except ValueError:
         return False
