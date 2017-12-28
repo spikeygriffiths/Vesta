@@ -47,11 +47,11 @@ def EventHandler(eventId, eventArg):
         sck.listen(0)
         sckLst = [sck]
     if eventId == events.ids.SECONDS:
-        if select.select([sys.stdin], [], [], 0)[0]:
+        if select.select([sys.stdin], [], [], 0)[0]:    # Read from stdin (for working with the console)
             cmd = sys.stdin.readline()
             if cmd:
                 Commands().onecmd(cmd)
-        rd, wr, er = select.select(sckLst, [], [], 0)
+        rd, wr, er = select.select(sckLst, [], [], 0)   # Read from remote socket (for working with web pages)
         for s in rd:
             if s is sck:
                 cliSck, addr = sck.accept()
@@ -73,11 +73,11 @@ def EventHandler(eventId, eventArg):
                     cmdOut = f.read()
                     cliSck.send(str.encode(cmdOut))
                     call("rm cmdoutput.txt", shell=True) # Remove cmd output after we've used it
-                else:
+                #else:
                     #log.debug("Closing socket")
-                    cliSck.close()
-                    if cliSck in sckLst:
-                        sckLst.remove(cliSck)
+                    #cliSck.close() # Can't do this, since server can't close the socket
+                    #if cliSck in sckLst:
+                    #    sckLst.remove(cliSck)
     # End of Command EventHandler
 
 class Commands(cmd.Cmd):

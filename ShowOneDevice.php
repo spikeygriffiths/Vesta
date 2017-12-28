@@ -109,7 +109,11 @@ function ShowEvent($devKey, $db)
     $val = $fetch['event'];
     $time = $fetch['timestamp'];
     $time = ElapsedTime($time);
-    if ($val != "") echo "<td>",$val,"<div style=\"float:right;width:50%;\">(",$time, " ago)</div></td>"; else echo "<td>N/A</td>";
+    if ($val != "") {
+        echo "<tr><td>Event</td>";
+        echo "<td>",$val,"<div style=\"float:right;width:50%;\">(",$time, " ago)</div></td>";
+        echo "</tr>";
+    }
 }
 
 function ShowDeviceInfo($db, $devKey, $username)
@@ -125,9 +129,7 @@ function ShowDeviceInfo($db, $devKey, $username)
     ShowDevStatus("PowerReadingW", "Power", "W", false, $devKey, $db);
     ShowDevEnergy("EnergyConsumedWh", "Energy consumed", "Wh", $devKey, $db);
     ShowDevEnergy("EnergyGeneratedWh", "Energy generated", "Wh", $devKey, $db);
-    echo "<tr><td>Event</td>";
     ShowEvent($devKey, $db);
-    echo "</tr>";
     ShowDevItem("manufName", "Manufacturer", $devKey, $db);
     ShowDevItem("modelName", "Model", $devKey, $db);
     ShowDevItem("eui64", "EUI", $devKey, $db);

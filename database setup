@@ -17,6 +17,15 @@ CREATE TABLE IF NOT EXISTS Devices (
   iasZoneType TEXT,
   firmwareVersion TEXT);
 
+# Add new entries to Devices above;
+# batteryReporting TEXT,
+# temperatureReporting TEXT,
+# powerReporting TEXT,
+# energyConsumedReporting TEXT,
+# energyGeneratedReporting TEXT,
+# checkInFrequency TEXT,
+# pirSensitivity TEXT,
+
 CREATE TABLE IF NOT EXISTS BatteryPercentage (
   timestamp DATETIME, value INTEGER, devKey INTEGER,
   FOREIGN KEY(devKey) REFERENCES Devices(devKey));
