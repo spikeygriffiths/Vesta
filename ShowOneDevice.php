@@ -153,6 +153,12 @@ function ShowDeviceInfo($db, $devKey, $username)
     }
     echo "</table><br>";
     //echo "<input type=\"submit\" value=\"Update name\"></form>";
+    if ("0000" != $nwkId) {    // Only show Config button if not Vesta
+        $inClusters = GetDevItem("inClusters", $devKey, $db);
+        if (strpos($inClusters, "0001") || strpos($inClusters, "0402") || strpos($inClusters, "0702")) { // Check if we have suitable clusters
+            echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/DevConfig.php/?devKey=",$devKey,"'\">Configure device</button>&nbsp&nbsp&nbsp";
+        }
+    }
     echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/rules.php/?item=",$username,"&type=dev&devKey=",$devKey,"'\">Rules</button>&nbsp&nbsp&nbsp";
     echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/activity.php/?devKey=",$devKey,"'\">Activity Log</button>&nbsp&nbsp&nbsp";
     if ("0000" != $nwkId) {

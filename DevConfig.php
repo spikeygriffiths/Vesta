@@ -14,32 +14,49 @@ echo "<center>";
 $title = "Configuration for ".$username;
 PageHeader($title);
 ShowDeviceConfig($db, $devKey, $username);
+echo "<br><br><button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/ShowOneDevice.php/?devKey=",$devKey,"'\">",$username,"</button>";
 echo "<br><br><button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/ShowAllDevices.php'\">All Devices</button><br><br>";
 PageFooter();
 echo "</body></html>";
 
+function ShowItemConfig($name, $field, $notes, $default, $devKey, $db)
+{
+    $reporting = GetDevItem($field, $devKey,$db);
+    if (($reporting == None) || (substr_count($reporting, ",") != 2)) {
+        $reporting = $default;  # Convert any illegal strings to a sensible default
+    }
+    $reportingList = str_getcsv($reporting);
+    $min = $reportingList[0];
+    $max = $reportingList[1];
+    $delta = $reportingList[2];
+    echo "<tr><td>",$name,"</td>";
+    echo "<form action=\"/vesta/configChange.php/?devKey=", $devKey, "&field=", $field, "\" method=\"post\">";
+    echo "<td><input type=\"number\" min=\"1\" max=\"65534\" name=\"min\" value=\"", $min, "\"></td>";
+    echo "<td><input type=\"number\" min=\"-1\" max=\"65534\" name=\"max\" value=\"", $max, "\"></td>";
+    echo "<td><input type=\"number\" min=\"0\" name=\"delta\" value=\"", $delta, "\"></td>";
+    echo "<td><input type=\"submit\" value=\"Update\"></td>";
+    echo "<td>",$notes,"</td>";
+    echo "</form>";
+    echo "</tr>";
+}
 
 function ShowDeviceConfig($db, $devKey, $username)
-    $val = GetDevItem("inClusters", $devKey,$db);
+{
+   $val = GetDevItem("inClusters", $devKey,$db);
     if ($val != null) {
+        echo "(Disable report by using -1 as Max time)<br><br>";
         echo "<table>";
-        echo "<tr><th>Reportable item</th><th>Min (Secs)</th><th>Max (Secs)</th><th>Delta</th><th>Enabled</th></tr>";
-        if (strpos($val, "0001") != false) {   # Found PowerConfig
-            $battReporting[] = str_getcsv(GetDevItem("batteryReporting", $devKey,$db));
-            $enabled = $battReporting[0];
-            $min = $battReporting[1];
-            $max = $battReporting[2];
-            $delta = $battReporting[3];
-            echo "<tr><td>Battery</td>";
-            echo "<td><input type=\"text\" name=\"battEnabled\" value=\"", $enabled, "\"></td>";
-            echo "<td><input type=\"text\" name=\"battMinS\" value=\"", $min, "\"></td>";
-            echo "<td><input type=\"text\" name=\"battMaxS\" value=\"", $max, "\"></td>";
-            echo "<td><input type=\"text\" name=\"battDelta\" value=\"", $delta, "\"></td>";
-            echo "</tr>";
+        echo "<tr><th>Reportable item</th><th>Min (Secs)</th><th>Max (Secs)</th><th>Delta</th><th>Update</th><th>Notes</th></tr>";
+        if (strpos($val, "0001") !== false) {   # Found PowerConfig
+            ShowItemConfig("Battery", "batteryReporting", "in 100mV units", "43200,43200,1", $devKey, $db);
         }
-        if (strpos($val, "0402") != false) {   # Found Temperature
+        if (strpos($val, "0402") !== false) {   # Found Temperature
+            ShowItemConfig("Temperature", "temperatureReporting", "in 0.01'C units", "600,3600,50", $devKey, $db);
         }
-        if (strpos($val, "0702") != false) {   # Found SimpleMetering - need three items here
+        if (strpos($val, "0702") !== false) {   # Found SimpleMetering - need three items here
+            ShowItemConfig("Power", "powerReporting", "in Watts", "5,900,10", $devKey, $db);
+            ShowItemConfig("EnergyConsumed", "energyConsumedReporting", "in WattHours", "60,900,100", $devKey, $db);
+            ShowItemConfig("EnergyGenerated", "energyGeneratedReporting", "in WattHours", "60,900,100", $devKey,$db);
         }
         echo "</table>";
         if (strpos($val, "0020") != false) {   # Found PollCtrl
@@ -48,8 +65,6 @@ function ShowDeviceConfig($db, $devKey, $username)
         if (strpos($val, "0406") != false) {   # Found Occupancy
             # Has PIR sensitivity, so is different to other reporting
         }
-
-
     }
 }
 ?>

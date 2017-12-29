@@ -126,7 +126,7 @@ def GetLatestEvent(devKey):
 
 def FlushOldEvents():
     global curs, flushDB
-    curs.execute("DELETE FROM Events WHERE timestamp <= datetime('now', '-1 months')")  # Remove all events older than 1 month
+    curs.execute("DELETE FROM Events WHERE timestamp <= datetime('now', '-7 days')")  # Remove all events older than 1 week
     flushDB = True # Batch up the commits
 
 # === Groups ===

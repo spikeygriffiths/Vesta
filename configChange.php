@@ -1,0 +1,23 @@
+<?php
+# configChange.php
+error_reporting(E_ALL);
+ini_set('display_errors', '1');
+include "database.php";
+
+echo "<html><body>";
+$devKey=$_GET['devKey'];
+$field=$_GET['field'];
+$min = $_POST["min"];  // Get new values from form
+$max = $_POST["max"];
+$delta = $_POST["delta"];
+
+$db = DatabaseInit();
+if ($db) {
+    $query = "UPDATE Devices SET ".$field."=\"".$min.",".$max.",".$delta."\" WHERE devKey=".$devKey; # Update existing configuration
+    echo "About to send ",$query, " to DB<br>"; # For debugging only
+    $count = $db->exec($query);
+}
+echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta/DevConfig.php/?devKey=",$devKey,"\"/>"; # Automatically go back to Device Configuration page
+echo "<p><center><a href=\"/vesta/index.php\">Home</a></center>";   # Shouldn't be needed
+echo "</body></html>";
+?>

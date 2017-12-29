@@ -18,13 +18,14 @@ CREATE TABLE IF NOT EXISTS Devices (
   firmwareVersion TEXT);
 
 # Add new entries to Devices above;
-# batteryReporting TEXT,
-# temperatureReporting TEXT,
-# powerReporting TEXT,
-# energyConsumedReporting TEXT,
-# energyGeneratedReporting TEXT,
-# checkInFrequency TEXT,
-# pirSensitivity TEXT,
+# xxxReporting format is <minS>,<maxS>,<delta>
+ALTER TABLE Devices ADD COLUMN batteryReporting TEXT;
+ALTER TABLE Devices ADD COLUMN temperatureReporting TEXT;
+ALTER TABLE Devices ADD COLUMN powerReporting TEXT;
+ALTER TABLE Devices ADD COLUMN energyConsumedReporting TEXT;
+ALTER TABLE Devices ADD COLUMN energyGeneratedReporting TEXT;
+ALTER TABLE Devices ADD COLUMN checkInFrequency TEXT;
+ALTER TABLE Devices ADD COLUMN pirSensitivity TEXT;
 
 CREATE TABLE IF NOT EXISTS BatteryPercentage (
   timestamp DATETIME, value INTEGER, devKey INTEGER,
