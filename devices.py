@@ -417,7 +417,7 @@ def Check(devKey):
                     egyRpt = zcl.Cluster.SimpleMetering+":"+zcl.Attribute.CurrentSummationDelivered
                     if pwrRpt not in rprtg:
                         pendingRptAttrId = zcl.Attribute.InstantaneousDemand
-                        return ("AT+CFGRPT:"+nwkId+","+ep+",0,"+zcl.Cluster.SimpleMetering+",0,"+zcl.Attribute.InstantaneousDemand+","+zcl.AttributeTypes.Sint24+",0005,003C,00000A", "CFGRPTRSP") # 5 second minimum, 1 minute maximum, 10 watt change
+                        return ("AT+CFGRPT:"+nwkId+","+ep+",0,"+zcl.Cluster.SimpleMetering+",0,"+zcl.Attribute.InstantaneousDemand+","+zcl.AttributeTypes.Sint24+",0005,0384,00000A", "CFGRPTRSP") # 5 second minimum, 900 second (==15 minute) maximum, 10 watt change
                     if egyRpt not in rprtg:
                         pendingRptAttrId = zcl.Attribute.CurrentSummationDelivered
                         return ("AT+CFGRPT:"+nwkId+","+ep+",0,"+zcl.Cluster.SimpleMetering+",0,"+zcl.Attribute.CurrentSummationDelivered+","+zcl.AttributeTypes.Uint48+",003C,003C,000000000000", "CFGRPTRSP") # Every 600 (0x258) seconds report accumulated energy
