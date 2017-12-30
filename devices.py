@@ -338,7 +338,7 @@ def NoteMsgDetails(devKey, arg):
                     deltaSignal = signal - oldSignal
                     deltaTime = datetime.now() - oldTimestamp
                     if abs(deltaSignal) > 5:
-                        if deltaTime.minutes > 10:  # Only note signal level that's different enough and at least 10 minutes since last one
+                        if deltaTime.seconds > 600:  # Only note signal level that's different enough and at least 10 minutes since last one
                             database.LogItem(devKey, "SignalPercentage", signal)
                     else:   # signal is sufficiently similar to last one, so update timestamp
                         database.RefreshLoggedItem(devKey, "SignalPercentage")  # Update timestamp to avoid too many >10 minutes!
