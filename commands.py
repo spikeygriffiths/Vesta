@@ -224,3 +224,15 @@ class Commands(cmd.Cmd):
         Constructs synopsis.html page"""
         synopsis.BuildPage()
 
+    def do_config(self, line):
+        """config devKey field
+        Tells app to use new reporting configuration field from database"""
+        argList = line.split()
+        if len(argList) >= 2:
+            confField = argList[1]
+            devKey = argList[0]
+            if devKey != None:
+                devices.Config(devKey, confField)
+        else:
+            log.fault("Insufficient Args")
+

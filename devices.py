@@ -41,72 +41,75 @@ def EventHandler(eventId, eventArg):
     if eventId == events.ids.INIT:
         msp_ota = config.Get("MSP_OTA")
     if eventId == events.ids.DEVICE_ANNOUNCE:
-        eui64 = eventArg[1]
-        nwkId = eventArg[2]
-        devKey = GetKey(nwkId)
-        if devKey == None:  # Which will only be the case if we've not seen this short Id before
-            devKey = database.GetDevKey("eui64", eui64)
-            if devKey == None:  # Which will be the case if we've not seen the long Id either
-                devKey = Add(nwkId, eui64, eventArg[0])
-                log.debug("New key for new device is "+ str(devKey))
-                if eventArg[0] == "SED":
-                    SetTempVal(devKey,"PollingUntil", datetime.now()+timedelta(seconds=300))
-                events.Issue(events.ids.NEWDEVICE, devKey)  # Tell everyone that a new device has been seen, so it can be initialised
-            else:   # Same long Id, but short Id needs updating after it has changed
-                database.SetDeviceItem(devKey, "nwkId", nwkId)
-        else:
-            NoteMsgDetails(devKey, eventArg)
-        SetTempVal(devKey, "GetNextBatteryAfter", datetime.now())    # Ask for battery shortly after Device Announce, either new or old one re-joining
-    if eventId == events.ids.CHECKIN:   # See if we have anything to ask the device...
-        endPoint = eventArg[2]
-        seq = "00" # was seq = eventArg[3], but that's the RSSI
-        devKey = GetKey(eventArg[1])
-        if devKey != None:
-            EnsureInBinding(devKey, zcl.Cluster.PollCtrl)   # Assume CheckIn means PollCtrl must be in binding, so make sure this is up-to-date
-            NoteMsgDetails(devKey, eventArg)
-            if database.GetDeviceItem(devKey, "endPoints") == None:
-                database.SetDeviceItem(devKey, "endPoints", endPoint) # Note endpoint that CheckIn came from, unless we already know this
-            nwkId = database.GetDeviceItem(devKey, "nwkId")
-            cmdRsp = Check(devKey)   # Check to see if we want to know anything about the device
-            if cmdRsp != None:
-                log.debug("Keep awake for 10 secs so we can send "+cmdRsp[0])
-                queue.Jump(devKey, ["AT+RAWZCL:"+nwkId+","+endPoint+",0020,11"+seq+"00012800", "DFTREP"]) # Tell device to enter Fast Poll for 40qs (==10s)
-                SetTempVal(devKey,"PollingUntil", datetime.now()+timedelta(seconds=10))
-                queue.EnqueueCmd(devKey, cmdRsp)  # This will go out after the Fast Poll Set
+        if len(eventArg) >= 3:
+            eui64 = eventArg[1]
+            nwkId = eventArg[2]
+            devKey = GetKey(nwkId)
+            if devKey == None:  # Which will only be the case if we've not seen this short Id before
+                devKey = database.GetDevKey("eui64", eui64)
+                if devKey == None:  # Which will be the case if we've not seen the long Id either
+                    devKey = Add(nwkId, eui64, eventArg[0])
+                    log.debug("New key for new device is "+ str(devKey))
+                    if eventArg[0] == "SED":
+                        SetTempVal(devKey,"PollingUntil", datetime.now()+timedelta(seconds=300))
+                    events.Issue(events.ids.NEWDEVICE, devKey)  # Tell everyone that a new device has been seen, so it can be initialised
+                else:   # Same long Id, but short Id needs updating after it has changed
+                    database.SetDeviceItem(devKey, "nwkId", nwkId)
             else:
-                SetTempVal(devKey,"PollingUntil", datetime.now()+timedelta(seconds=2))  # Say that it's polling for a short while, so that we can tell it to stop(!)
-                queue.EnqueueCmd(devKey, ["AT+RAWZCL:"+nwkId+","+endPoint+",0020,11"+seq+"00000100", "DFTREP"]) # Tell device to stop Poll
-        else: # Unknown device, so assume it's been deleted from our database
-            telegesis.Leave(eventArg[1])    # Tell device to leave the network, since we don't know anything about it
+                NoteMsgDetails(devKey, eventArg)
+            SetTempVal(devKey, "GetNextBatteryAfter", datetime.now())    # Ask for battery shortly after Device Announce, either new or old one re-joining
+    if eventId == events.ids.CHECKIN:   # See if we have anything to ask the device...
+        if len(eventArg) >= 3:
+            endPoint = eventArg[2]
+            seq = "00" # was seq = eventArg[3], but that's the RSSI
+            devKey = GetKey(eventArg[1])
+            if devKey != None:
+                EnsureInBinding(devKey, zcl.Cluster.PollCtrl)   # Assume CheckIn means PollCtrl must be in binding, so make sure this is up-to-date
+                NoteMsgDetails(devKey, eventArg)
+                if database.GetDeviceItem(devKey, "endPoints") == None:
+                    database.SetDeviceItem(devKey, "endPoints", endPoint) # Note endpoint that CheckIn came from, unless we already know this
+                nwkId = database.GetDeviceItem(devKey, "nwkId")
+                cmdRsp = Check(devKey)   # Check to see if we want to know anything about the device
+                if cmdRsp != None:
+                    log.debug("Keep awake for 10 secs so we can send "+cmdRsp[0])
+                    queue.Jump(devKey, ["AT+RAWZCL:"+nwkId+","+endPoint+",0020,11"+seq+"00012800", "DFTREP"]) # Tell device to enter Fast Poll for 40qs (==10s)
+                    SetTempVal(devKey,"PollingUntil", datetime.now()+timedelta(seconds=10))
+                    queue.EnqueueCmd(devKey, cmdRsp)  # This will go out after the Fast Poll Set
+                else:
+                    SetTempVal(devKey,"PollingUntil", datetime.now()+timedelta(seconds=2))  # Say that it's polling for a short while, so that we can tell it to stop(!)
+                    queue.EnqueueCmd(devKey, ["AT+RAWZCL:"+nwkId+","+endPoint+",0020,11"+seq+"00000100", "DFTREP"]) # Tell device to stop Poll
+            else: # Unknown device, so assume it's been deleted from our database
+                telegesis.Leave(eventArg[1])    # Tell device to leave the network, since we don't know anything about it
     if eventId == events.ids.TRIGGER or eventId == events.ids.BUTTON:
-        devKey = GetKey(eventArg[1]) # Lookup device from network address in eventArg[1]
-        if devKey != None:
-            SetTempVal(devKey,"PollingUntil", datetime.now()+timedelta(seconds=1))  # Say that it's polling for a very short while so that we can try to set up a PollCtrl cluster
+        if len(eventArg) >= 2:
+            devKey = GetKey(eventArg[1]) # Lookup device from network address in eventArg[1]
+            if devKey != None:
+                SetTempVal(devKey,"PollingUntil", datetime.now()+timedelta(seconds=1))  # Say that it's polling for a very short while so that we can try to set up a PollCtrl cluster
     if eventId == events.ids.RXMSG:
-        if eventArg[0] == "AddrResp" and eventArg[1] == "00":
+        if eventArg[0] == "AddrResp" and eventArg[1] == "00" and len(eventArg) >= 3:
             devKey = GetKey(eventArg[2])
             if devKey != None:
                 database.SetDeviceItem(devKey,"eui64",eventArg[1])
-        elif eventArg[0] == "ActEpDesc":
+        elif eventArg[0] == "ActEpDesc" and len(eventArg) >= 3:
             if "00" == eventArg[2]:
                 devKey = GetKey(eventArg[1])
                 if devKey != None:
                     database.SetDeviceItem(devKey, "endPoints", eventArg[3]) # Note first endpoint
-        elif eventArg[0] == "SimpleDesc":
+        elif eventArg[0] == "SimpleDesc" and len(eventArg) >= 3:
             if "00" == eventArg[2]:
                 globalDevKey = GetKey(eventArg[1]) # Is multi-line response, so expect rest of response and use this global index until it's all finished
             elif "82" == eventArg[2]:   # 82 == Invalid endpoint
                 devKey = GetKey(eventArg[1])
                 events.Issue(events.ids.RXERROR, int(eventArg[2],16)) # Tell system that we're aborting this command
-        elif eventArg[0] == "InCluster":
+        elif eventArg[0] == "InCluster" and len(eventArg) >= 2:
             if globalDevKey != None:
                 database.SetDeviceItem(globalDevKey, "inClusters", str(eventArg[1:])) # Store whole list from arg[1] to arg[n]
-        elif eventArg[0] == "OutCluster":
+        elif eventArg[0] == "OutCluster" and len(eventArg) >= 2:
             if globalDevKey != None:
-                NoteMsgDetails(globalDevKey, eventArg)
+                #NoteMsgDetails(globalDevKey, eventArg)
                 database.SetDeviceItem(globalDevKey, "outClusters", str(eventArg[1:])) # Store whole list from arg[1] to arg[n]
             globalDevKey = None # We've finished with this global for now
-        elif eventArg[0] == "RESPATTR":
+        elif eventArg[0] == "RESPATTR" and len(eventArg) >= 7:
             devKey = GetKey(eventArg[1])
             if devKey != None:
                 NoteMsgDetails(devKey, eventArg)
@@ -118,7 +121,7 @@ def EventHandler(eventId, eventArg):
                     SetAttrVal(devKey, clusterId, attrId, attrVal)
                 else:
                     SetAttrVal(devKey, clusterId, attrId, "Failed (error "+eventArg[5]+")") # So that we don't keep asking
-        elif eventArg[0] == "RESPMATTR":
+        elif eventArg[0] == "RESPMATTR" and len(eventArg) >= 8:
             devKey = GetKey(eventArg[1])
             if devKey != None:
                 NoteMsgDetails(devKey, eventArg)
@@ -129,7 +132,7 @@ def EventHandler(eventId, eventArg):
                 if "00" == eventArg[6]:
                     attrVal = eventArg[7]
                     SetAttrVal(devKey, clusterId, attrId, attrVal)
-        elif eventArg[0] == "REPORTATTR":
+        elif eventArg[0] == "REPORTATTR" and len(eventArg) >= 7:
             devKey = GetKey(eventArg[1])
             if devKey != None:
                 ep = eventArg[2]
@@ -142,30 +145,30 @@ def EventHandler(eventId, eventArg):
                 NoteReporting(devKey, clusterId, attrId)
             else: # Unknown device, so assume it's been deleted from our database
                 telegesis.Leave(eventArg[1])    # Tell device to leave the network, since we don't know anything about it
-        elif eventArg[0] == "Bind":    # Binding Response from device
+        elif eventArg[0] == "Bind" and len(eventArg) >= 2:    # Binding Response from device
             devKey = GetKey(eventArg[1])
             if devKey != None:
                 if pendingBinding != None:
-                    binding = eval(database.GetDeviceItem(devKey, "binding"))
+                    binding = eval(database.GetDeviceItem(devKey, "binding", "[]"))
                     if pendingBinding not in binding:   # Only put it in once, even if we get multiple responses
                         binding.append(pendingBinding)
                         database.SetDeviceItem(devKey, "binding", str(binding))
                     pendingBinding = None
-        elif eventArg[0] == "CFGRPTRSP":   # Configure Report Response from device
+        elif eventArg[0] == "CFGRPTRSP" and len(eventArg) >= 5:   # Configure Report Response from device
             devKey = GetKey(eventArg[1])
             status = eventArg[4]
             if devKey != None and status == "00":
                 clusterId = eventArg[3]
                 attrId = pendingRptAttrId # Need to remember this, since it doesn't appear in CFGRPTRSP
                 NoteReporting(devKey, clusterId, attrId)
-        else:   # Unrecognised message, but we still want to extract OOB info
-            if len(eventArg) >= 2:
-                devKey = GetKey(eventArg[1])    # Assume this is sensible
-                if devKey != None:
-                    NoteMsgDetails(devKey, eventArg)
-    if eventId == events.ids.BUTTON:
-        devKey = GetKey(eventArg[1]) # Lookup device from network address in eventArg[1]
-        NoteMsgDetails(devKey, eventArg)
+        #else:   # Unrecognised message, but we still want to extract OOB info
+        #    if len(eventArg) >= 2:
+        #        devKey = GetKey(eventArg[1])    # Assume this is sensible
+        #        if devKey != None:
+        #            NoteMsgDetails(devKey, eventArg)
+    #if eventId == events.ids.BUTTON:
+    #    devKey = GetKey(eventArg[1]) # Lookup device from network address in eventArg[1]
+    #    NoteMsgDetails(devKey, eventArg)
     if eventId == events.ids.RXERROR:
         globalDevKey = None # We've finished with this global if we get an error
     if eventId == events.ids.SECONDS:
@@ -215,12 +218,8 @@ def NoteReporting(devKey, clusterId, attrId):
     EnsureInBinding(devKey, clusterId)   # Assume reportable items must be in binding for us to receive them, so make sure this is up-to-date
 
 def EnsureInBinding(devKey, clusterId):  # Put clusterId in binding if not there already
-    entry = database.GetDeviceItem(devKey, "binding")
-    if entry == None or '[' not in entry:
-        binding = []
-    else:
-        #log.debug("Binding in database is "+entry)
-        binding = eval(entry)
+    entry = database.GetDeviceItem(devKey, "binding", "[]")
+    binding = eval(entry)
     #log.debug("Binding is "+str(binding))
     if clusterId not in binding:
         binding.append(clusterId)
@@ -338,7 +337,7 @@ def NoteMsgDetails(devKey, arg):
                     deltaSignal = signal - oldSignal
                     deltaTime = datetime.now() - oldTimestamp
                     if abs(deltaSignal) > 5:
-                        if deltaTime.minutes > 10:  # Only note signal level that's different enough and at least 10 minutes since last one
+                        if deltaTime.seconds > 600:  # Only note signal level that's different enough and at least 10 minutes since last one
                             database.LogItem(devKey, "SignalPercentage", signal)
                     else:   # signal is sufficiently similar to last one, so update timestamp
                         database.RefreshLoggedItem(devKey, "SignalPercentage")  # Update timestamp to avoid too many >10 minutes!
@@ -353,7 +352,7 @@ def isnumeric(item, base=10):
         return False
 
 def Check(devKey):
-    global pendingBinding, pendingRptAttrId, msp_ota
+    global pendingBinding, msp_ota
     if devKey == 0:
         return  # We don't need anything from the hub
     nwkId = database.GetDeviceItem(devKey, "nwkId")
@@ -370,12 +369,8 @@ def Check(devKey):
     if None == inClstr or None == outClstr:
         database.SetDeviceItem(devKey, "outClusters", "[]") # Some devices have no outclusters...
         return ("AT+SIMPLEDESC:"+nwkId+","+nwkId+","+ep, "OutCluster")
-    binding = database.GetDeviceItem(devKey, "binding")
-    rprtg = database.GetDeviceItem(devKey, "reporting")
+    binding = database.GetDeviceItem(devKey, "binding" "[]")
     if inClstr != None:
-        if binding == None:
-            database.SetDeviceItem(devKey, "binding", "[]")
-            binding = database.GetDeviceItem(devKey, "binding") # Initialise binding if not already done so and continue
         if pendingBinding == None:  # Only try to add one binding at once
             if zcl.Cluster.PollCtrl in inClstr and zcl.Cluster.PollCtrl not in binding:
                 return SetBinding(devKey, zcl.Cluster.PollCtrl, "01") # 01 is our endpoint we want messages to come to
@@ -405,24 +400,25 @@ def Check(devKey):
         if msp_ota != None and msp_ota in outClstr:
             if None == database.GetDeviceItem(devKey, "firmwareVersion"):
                 return ("AT+READMCATR:"+nwkId+","+ep+",0,"+config.Get(mfgId)+","+msp_ota+","+zcl.Attribute.firmwareVersion, "RESPMATTR") # Get OTA's Version number as a string of hex digits
-        if rprtg != None:
-            if zcl.Cluster.Temperature in inClstr:
-                tmpRpt = zcl.Cluster.Temperature+":"+zcl.Attribute.Celsius
-                if zcl.Cluster.Temperature in binding and tmpRpt not in rprtg:
-                    pendingRptAttrId = zcl.Attribute.Celsius
-                    return ("AT+CFGRPT:"+nwkId+","+ep+",0,"+zcl.Cluster.Temperature+",0,"+zcl.Attribute.Celsius+","+zcl.AttributeTypes.Uint16+",012C,0E10,0064", "CFGRPTRSP") # 012C is 300==5 mins, 0E10 is 3600==1 hour, 0064 is 100, being 1.00'C
-            if zcl.Cluster.SimpleMetering in inClstr:
-                if zcl.Cluster.SimpleMetering in binding:
-                    pwrRpt = zcl.Cluster.SimpleMetering+":"+zcl.Attribute.InstantaneousDemand
-                    egyRpt = zcl.Cluster.SimpleMetering+":"+zcl.Attribute.CurrentSummationDelivered
-                    if pwrRpt not in rprtg:
-                        pendingRptAttrId = zcl.Attribute.InstantaneousDemand
-                        return ("AT+CFGRPT:"+nwkId+","+ep+",0,"+zcl.Cluster.SimpleMetering+",0,"+zcl.Attribute.InstantaneousDemand+","+zcl.AttributeTypes.Sint24+",0005,0384,00000A", "CFGRPTRSP") # 5 second minimum, 900 second (==15 minute) maximum, 10 watt change
-                    if egyRpt not in rprtg:
-                        pendingRptAttrId = zcl.Attribute.CurrentSummationDelivered
-                        return ("AT+CFGRPT:"+nwkId+","+ep+",0,"+zcl.Cluster.SimpleMetering+",0,"+zcl.Attribute.CurrentSummationDelivered+","+zcl.AttributeTypes.Uint48+",003C,003C,000000000000", "CFGRPTRSP") # Every 600 (0x258) seconds report accumulated energy
-        else:
-            database.SetDeviceItem(devKey, "reporting", "[]")
+        reporting = database.GetDeviceItem(devKey, "reporting", "[]")
+        if zcl.Cluster.PowerConfig in binding and "SED"== database.GetDeviceItem(devKey, "devType"):
+            atCmd = CheckReporting(devKey, reporting, "batteryReporting", zcl.Cluster.PowerConfig, zcl.Attribute.Batt_Percentage, zcl.AttributeTypes.Uint8, "43200,43200,2")    # Default temperature reporting is "Every 12 hours"
+            if atCmd != None:
+                return atCmd
+        if zcl.Cluster.Temperature in binding:
+            atCmd = CheckReporting(devKey, reporting, "temperatureReporting", zcl.Cluster.Temperature, zcl.Attribute.Celsius, zcl.AttributeTypes.Uint16, "300,3600,100")    # Default temperature reporting is "between 5 mins and 1 hr, or +/- 1.00'C"
+            if atCmd != None:
+                return atCmd
+        if zcl.Cluster.SimpleMetering in binding:
+            atCmd = CheckReporting(devKey, reporting, "powerReporting", zcl.Cluster.SimpleMetering, zcl.Attribute.InstantaneousDemand, zcl.AttributeTypes.Sint24, "5,900,10")    # Default power reporting is "between 5 seconds and 15 minutes, or +/- 10W"
+            if atCmd != None:
+                return atCmd
+            atCmd = CheckReporting(devKey, reporting, "energyConsumedReporting", zcl.Cluster.SimpleMetering, zcl.Attribute.CurrentSummationDelivered, zcl.AttributeTypes.Uint48, "60,900,100")    # Default energy consumed reporting is "between 1 minute and 15 minutes, or +100Wh"
+            if atCmd != None:
+                return atCmd
+            atCmd = CheckReporting(devKey, reporting, "energyGeneratedReporting", zcl.Cluster.SimpleMetering, zcl.Attribute.CurrentSummationReceived, zcl.AttributeTypes.Uint48, "0,-1,0")    # Default energy generated reporting is "never" (-1 as max)
+            if atCmd != None:
+                return atCmd
     if GetTempVal(devKey, "JustSentOnOff"):
         DelTempVal(devKey, "JustSentOnOff")
         return telegesis.ReadAttr(nwkId, ep, zcl.Cluster.OnOff, zcl.Attribute.OnOffState) # Get OnOff state after sending toggle
@@ -456,6 +452,60 @@ def GetKeyFromIndex(idx):
 def GetIndexFromKey(key):
     #log.debug("Looking up index for Key "+str(key))
     return devDict[key]
+
+def CheckReporting(devKey, reporting, field, cluster, attrId, attrType, defVal):
+    global pendingRptAttrId
+    rpt = cluster+":"+attrId
+    if rpt not in reporting:
+        pendingRptAttrId = attrId
+        devRpt = database.GetDeviceItem(devKey, field, defVal)
+        log.debug("Update device reporting for "+database.GetDeviceItem(devKey, "userName")+"'s "+field)
+        log.debug("Reporting was "+reporting+" which didn't include " + rpt)
+        rptList = devRpt.split(",") # Explode the CSV line to a list of min, max, delta
+        if attrType == zcl.AttributeTypes.Uint8:
+            deltaLen = 2   # Need to know number of digits to use in deltaHex
+        elif attrType == zcl.AttributeTypes.Uint16:
+            deltaLen = 4   # Need to know number of digits to use in deltaHex
+        elif attrType == zcl.AttributeTypes.Sint24:
+            deltaLen = 6   # Need to know number of digits to use in deltaHex
+        elif attrType == zcl.AttributeTypes.Uint48:
+            deltaLen = 12   # Need to know number of digits to use in deltaHex
+        else:
+            deltaLen = 0    # Don't know format, so fail
+        if deltaLen != 0:
+            deltaLenFmt = "%0."+str(deltaLen)+"X"   # Work out how many digits to use given the attribute type
+            minHex = "%0.4X" % int(rptList[0]) # Convert each decimal item to a hex string
+            if int(rptList[1]) == -1:
+                maxHex = "FFFF" # To disable this report
+            else:
+                maxHex = "%0.4X" % int(rptList[1])
+            deltaHex = deltaLenFmt % int(rptList[2])    # Use the correct number of leading zeros for delta's hex representation
+            nwkId = database.GetDeviceItem(devKey, "nwkId")
+            ep = database.GetDeviceItem(devKey, "endPoints")
+            return ("AT+CFGRPT:"+nwkId+","+ep+",0,"+cluster+",0,"+attrId+","+attrType+","+minHex+","+maxHex+","+deltaHex, "CFGRPTRSP")
+    return None
+
+def Config(devKey, field):
+    # Read newly changed field from database for device and use this to update actual device ASAP
+    reporting = database.GetDeviceItem(devKey, "reporting") # See if we're expecting this report, and note it in the reporting table
+    if field=="batteryReporting":
+        rptToUpdate = zcl.Cluster.PowerConfig+":"+zcl.Attribute.Batt_Percentage
+    elif field=="temperatureReporting":
+        rptToUpdate = zcl.Cluster.Temperature+":"+zcl.Attribute.Celsius
+    elif field=="powerReporting":
+        rptToUpdate = zcl.Cluster.SimpleMetering+":"+zcl.Attribute.InstantaneousDemand
+    elif field=="energyConsumedReporting":
+        rptToUpdate = zcl.Cluster.SimpleMetering+":"+zcl.Attribute.CurrentSummationDelivered
+    elif field=="energyGeneratedReporting":
+        rptToUpdate = zcl.Cluster.SimpleMetering+":"+zcl.Attribute.CurrentSummationReceived
+    else:
+        rptToUpdate = None
+    if reporting != None and rptToUpdate != None:
+        reportList = eval(reporting)
+        if rptToUpdate in reportList:
+            reportList.remove(rptToUpdate)   # Remove newly changed item from list so that Check() routine will spot this and update the reporting accordingly
+            updatedReporting = str(reportList)
+            database.SetDeviceItem(devKey, "reporting", updatedReporting) # Ready for Check() to send new item
 
 def Add(nwkId, eui64, devType):
     devKey = database.NewDevice(nwkId, eui64, devType)

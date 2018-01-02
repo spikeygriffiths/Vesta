@@ -186,12 +186,16 @@ def GetAllDevKeys():
         keyList.append(row[0])
     return keyList
 
-def GetDeviceItem(devKey, item):
+def GetDeviceItem(devKey, item, defVal = None):
     global curs
     curs.execute("SELECT "+item+" FROM Devices WHERE devKey="+str(devKey))
     rows = curs.fetchone()
     if rows != None:
-        return rows[0]
+        if rows[0] == None and defVal != None:  # If database entry is empty and we have a sensible default...
+            SetDeviceItem(devKey, item, defVal) # ... then update database...
+            return defVal   # ... and return that default
+        else:
+            return rows[0]
     return None
 
 def SetDeviceItem(devKey, item, value):
