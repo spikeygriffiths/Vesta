@@ -194,6 +194,7 @@ def EventHandler(eventId, eventArg):
             offAt = GetTempVal(devKey, "SwitchOff@")
             if offAt:
                 if datetime.now() >= offAt:
+                    DelTempVal(devKey, "SwitchOff@")
                     devcmds.SwitchOff(devKey)
             pirOffAt = GetTempVal(devKey, "PirInactive@")
             if pirOffAt:

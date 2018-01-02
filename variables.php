@@ -9,6 +9,7 @@ echo "</head><body>";
 PageHeader("Variables");
 $varsList = AppCmd("vars", True);
 $varsArray = explode(",", $varsList);
+natcasesort($varsArray);
 for ($index = 0; $index < count($varsArray); $index ++) {
     $varsArray[$index] = str_replace("\n", "", $varsArray[$index]);
     $varsArray[$index] = str_replace("'", "", $varsArray[$index]);

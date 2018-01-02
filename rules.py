@@ -270,6 +270,7 @@ def CommandDev(action, devKey, actList):
         log.fault("Device "+actList[1]+" from rules not found in devices")
         synopsis.problem("rules", "Unknown device "+actList[1]+" in rules")
     else:
+        devices.DelTempVal(devKey, "SwitchOff@")    # Kill any extant timers for this device
         if action == "SwitchOn".lower():
             devcmds.SwitchOn(devKey)
             if len(actList) > 3:

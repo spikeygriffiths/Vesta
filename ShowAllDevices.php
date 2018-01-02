@@ -48,8 +48,14 @@ function ShowDevices()
         echo "<tr><th>Name</th><th>Battery</th><th>Signal</th><th>Presence</th><th width=\"400\">Notes</th></tr>";
         for ($index = 0; $index < $numDevs; $index++) {
             $devKey = GetDevKey($index, $db);
+            $devKeys[] = $devKey;
+            $usernames[] = GetDevItem("userName", $devKey, $db);
+        }
+        array_multisort($usernames, SORT_ASC, SORT_NATURAL | SORT_FLAG_CASE, $devKeys);  # Sort usernames and make sure devKeys follows suit
+        for ($index = 0; $index < sizeof($devKeys); $index++) {
+            $devKey = $devKeys[$index];
+            $username = $usernames[$index];
             echo "<tr>";
-            $username = GetDevItem("userName", $devKey, $db);
             echo "<td><a href=\"/vesta/ShowOneDevice.php/?devKey=",$devKey,"\">",$username,"</a></td>";
 	        ShowDevStatus("BatteryPercentage", $devKey, $db, "%");
 	        ShowDevStatus("SignalPercentage", $devKey, $db, "%");
