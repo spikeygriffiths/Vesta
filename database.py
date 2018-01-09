@@ -133,7 +133,7 @@ def Backup():
     dbCore = sqlite3.connect("core.db")    # This will create a new database if it didn't previously exist
     cursCore = dbCore.cursor()
     InitCore(dbCore, cursCore)
-    # Now copy all the entries in the core tables
+    # Now copy all the entries in the core tables.  See www.snipplr.com/view/18471/
     dbCore.commit() # Flush newly created database to filing system
 
 def TableHasColumn(curs, table, column):

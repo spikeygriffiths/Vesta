@@ -240,13 +240,17 @@ def SetAttrVal(devKey, clstrId, attrId, value):
     if clstrId == zcl.Cluster.PowerConfig and attrId == zcl.Attribute.Batt_Percentage:
         SetTempVal(devKey, "GetNextBatteryAfter", datetime.now()+timedelta(seconds=86400))    # Ask for battery every day
         if value != "FF":
-            varVal = int(int(value, 16) / 2) # Arrives in 0.5% increments, but drop fractional component
-            log.debug("Battery is "+str(varVal)+"%.  Get next reading at "+str(GetTempVal(devKey, "GetNextBatteryAfter")))
-            database.LogItem(devKey, "BatteryPercentage", varVal) # For web page
-            lowBatt = int(config.Get("lowBattery", "5"))
-            if varVal < lowBatt:
-                devName = database.GetDeviceItem(devKey, "userName")
-                synopsis.problem(devName + "_batt", devName + " low battery ("+str(varVal)+"%)")
+            try:
+                varVal = int(int(value, 16) / 2) # Arrives in 0.5% increments, but drop fractional component
+            except ValueError:
+                varVal = None
+            if varVal != None:
+                log.debug("Battery is "+str(varVal)+"%.  Get next reading at "+str(GetTempVal(devKey, "GetNextBatteryAfter")))
+                database.LogItem(devKey, "BatteryPercentage", varVal) # For web page
+                lowBatt = int(config.Get("lowBattery", "5"))
+                if varVal < lowBatt:
+                    devName = database.GetDeviceItem(devKey, "userName")
+                    synopsis.problem(devName + "_batt", devName + " low battery ("+str(varVal)+"%)")
     if clstrId == zcl.Cluster.Temperature and attrId == zcl.Attribute.Celsius:
         if value != "FF9C": # Don't know where this value (of -100) comes from - should be "7FFF" (signed value)
             try:
