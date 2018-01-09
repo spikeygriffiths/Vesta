@@ -32,7 +32,16 @@ def EventHandler(eventId, eventArg):
         Backup()
         FlushOldEvents()    # Flush old events to avoid database getting too big and slow
         FlushOldLoggedItems()
+        GarbageCollect("BatteryPercentage")
+        GarbageCollect("TemperatureCelsius")
+        GarbageCollect("SignalPercentage")
+        GarbageCollect("Presence")
+        GarbageCollect("PowerReadingW")
+        GarbageCollect("EnergyConsumedWh")
+        GarbageCollect("EnergyGeneratedWh")
+        GarbageCollect("Events")
         Defragment()    # Compact the database now that we've flushed the old items
+        flushDB = True
     if eventId == events.ids.SHUTDOWN:
         db.commit() # Flush events to disk prior to shutdown
 # end of EventHandler
@@ -152,6 +161,16 @@ def TableHasColumn(curs, table, column):
     log.debug("Failed to find " + column + " in " + str(cols))
     return False
 
+def GarbageCollect(table):
+    global curs
+    keyList = GetAllDevKeys()
+    eventList = GetAllItemsFromTable("*", table)
+    for event in eventList:
+        devKey = event[2]
+        if devKey not in keyList:
+            debug.log("Found unused devKey of "+str(devKey)+" in "+table)
+            curs.execute("DELETE FROM "+table+" WHERE devKey=" + str(devKey))
+
 # From http://snipplr.com/view/18471/
 type_str = type('str')
 type_datetime = type(datetime.now())
@@ -176,16 +195,13 @@ def copy_table(tab_name, src_cursor, dst_cursor):
     sql = 'select * from %s'%tab_name
     src_cursor.execute(sql)
     res = src_cursor.fetchall()
-    cnt = 0
     for record in res:
         val_str = convert2str(record)
         try:
             sql = 'insert into %s values(%s)'%(tab_name, val_str)
             dst_cursor.execute(sql)
-            cnt += 1
         except:
             log.debug("Couldn't copy table with value: "+val_str)
-    return cnt
 
 # === Miscellaneous ===
 def GetFileSize():
@@ -195,6 +211,14 @@ def Defragment():
     global curs
     curs.execute("VACUUM")  # Rebuild database in order to compress its file size
     flushDB = True # Commit newly-built table 
+
+def GetAllItemsFromTable(item, table):
+    global curs
+    itemList = []
+    curs.execute("SELECT "+item+" FROM " + table)
+    for row in curs:
+        itemList.append(row[0])
+    return itemList
 
 # === Logged items ===
 
