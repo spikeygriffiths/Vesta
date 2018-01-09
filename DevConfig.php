@@ -48,10 +48,10 @@ function ShowDeviceConfig($db, $devKey, $username)
         echo "<table>";
         echo "<tr><th>Reportable item</th><th>Min (Secs)</th><th>Max (Secs)</th><th>Delta</th><th>Update</th><th>Notes</th></tr>";
         if (strpos($val, "0001") !== false) {   # Found PowerConfig
-            ShowItemConfig("Battery", "batteryReporting", "in 100mV units", "43200,43200,1", $devKey, $db);
+            ShowItemConfig("Battery", "batteryReporting", "in 0.5% units", "43200,43200,2", $devKey, $db);
         }
         if (strpos($val, "0402") !== false) {   # Found Temperature
-            ShowItemConfig("Temperature", "temperatureReporting", "in 0.01'C units", "600,3600,50", $devKey, $db);
+            ShowItemConfig("Temperature", "temperatureReporting", "in 0.01'C units", "300,3600,100", $devKey, $db);
         }
         if (strpos($val, "0702") !== false) {   # Found SimpleMetering - need three items here
             ShowItemConfig("Power", "powerReporting", "in Watts", "5,900,10", $devKey, $db);

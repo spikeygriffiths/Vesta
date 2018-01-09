@@ -3,6 +3,7 @@
 import sqlite3
 from datetime import datetime
 import os
+import shutil   # For file copying of database
 # App-specific Python modules
 import events
 import rules    # For isNumber()
@@ -15,8 +16,11 @@ flushDB = False
 def EventHandler(eventId, eventArg):
     global db, curs, flushDB
     if eventId == events.ids.PREINIT:
-        db = sqlite3.connect("vesta.db")
+        db = sqlite3.connect("vesta.db")    # This will create a new database for us if it didn't previously exist
         curs = db.cursor()
+        InitAll(db, curs)
+        Backup()
+        flushDB = True # Batch up the commits
     if eventId == events.ids.SECONDS:
         if flushDB:
             try:
@@ -25,12 +29,180 @@ def EventHandler(eventId, eventArg):
             except:
                 log.fault("Database couldn't commit")
     if eventId == events.ids.NEWDAY:
+        Backup()
         FlushOldEvents()    # Flush old events to avoid database getting too big and slow
         FlushOldLoggedItems()
+        GarbageCollect("BatteryPercentage")
+        GarbageCollect("TemperatureCelsius")
+        GarbageCollect("SignalPercentage")
+        GarbageCollect("Presence")
+        GarbageCollect("PowerReadingW")
+        GarbageCollect("EnergyConsumedWh")
+        GarbageCollect("EnergyGeneratedWh")
+        GarbageCollect("Events")
         Defragment()    # Compact the database now that we've flushed the old items
+        flushDB = True
     if eventId == events.ids.SHUTDOWN:
         db.commit() # Flush events to disk prior to shutdown
 # end of EventHandler
+
+def InitCore(db, curs):
+    curs.execute("""
+    CREATE TABLE IF NOT EXISTS Devices (
+    devKey INTEGER,
+    userName TEXT,
+    modelName TEXT,
+    manufName TEXT,
+    nwkId TEXT,
+    eui64 TEXT,
+    devType TEXT,
+    endPoints TEXT,
+    inClusters TEXT,
+    outClusters TEXT,
+    binding TEXT,
+    reporting TEXT,
+    iasZoneType TEXT,
+    Unused INTEGER,
+    firmwareVersion TEXT,
+    batteryReporting TEXT,
+    temperatureReporting TEXT,
+    powerReporting TEXT,
+    energyConsumedReporting TEXT,
+    energyGeneratedReporting TEXT,
+    checkInFrequency TEXT,
+    pirSensitivity TEXT)""")
+    # Check that we have new entries to Devices above
+    if TableHasColumn(curs, "Devices", "batteryReporting") == False:
+        curs.execute("ALTER TABLE Devices ADD COLUMN batteryReporting TEXT")    # Format of all xxxReporting is <minS>,<maxS>,<delta>
+    if TableHasColumn(curs, "Devices", "temperatureReporting") == False:
+        curs.execute("ALTER TABLE Devices ADD COLUMN temperatureReporting TEXT")
+    if TableHasColumn(curs, "Devices", "powerReporting") == False:
+        curs.execute("ALTER TABLE Devices ADD COLUMN powerReporting TEXT")
+    if TableHasColumn(curs, "Devices", "energyConsumedReporting") == False:
+        curs.execute("ALTER TABLE Devices ADD COLUMN energyConsumedReporting TEXT")
+    if TableHasColumn(curs, "Devices", "energyGeneratedReporting") == False:
+        curs.execute("ALTER TABLE Devices ADD COLUMN energyGeneratedReporting TEXT")
+    if TableHasColumn(curs, "Devices", "checkInFrequency") == False:
+        curs.execute("ALTER TABLE Devices ADD COLUMN checkInFrequency TEXT")
+    if TableHasColumn(curs, "Devices", "pirSensitivity") == False:
+        curs.execute("ALTER TABLE Devices ADD COLUMN pirSensitivity TEXT")
+    curs.execute("""
+    CREATE TABLE IF NOT EXISTS Groups (
+    userName TEXT,
+    devKeyList TEXT)""")
+    curs.execute("CREATE TABLE IF NOT EXISTS Rules (rule TEXT)")
+    curs.execute("""
+    CREATE TABLE IF NOT EXISTS Users (
+    id INTEGER PRIMARY KEY,
+    name varchar(64),
+    passwordHash varchar(255),
+    email varchar(64))""")
+    curs.execute("CREATE UNIQUE INDEX IF NOT EXISTS name_UNIQUE ON users (name ASC)")
+    curs.execute("CREATE UNIQUE INDEX IF NOT EXISTS email_UNIQUE ON users (email ASC)")
+
+def InitAll(db, curs):
+    InitCore(db, curs)  # Central tables of database
+    # Now create all the logs of past actions, values and events
+    curs.execute("""
+    CREATE TABLE IF NOT EXISTS BatteryPercentage (
+    timestamp DATETIME, value INTEGER, devKey INTEGER,
+    FOREIGN KEY(devKey) REFERENCES Devices(devKey))""")
+    curs.execute("""
+    CREATE TABLE IF NOT EXISTS TemperatureCelsius (
+    timestamp DATETIME, value INTEGER, devKey INTEGER,
+    FOREIGN KEY(devKey) REFERENCES Devices(devKey))""")
+    curs.execute("""
+    CREATE TABLE IF NOT EXISTS SignalPercentage (
+    timestamp DATETIME, value INTEGER, devKey INTEGER,
+    FOREIGN KEY(devKey) REFERENCES Devices(devKey))""")
+    curs.execute("""
+    CREATE TABLE IF NOT EXISTS Presence (
+    timestamp DATETIME, value TEXT, devKey INTEGER,
+    FOREIGN KEY(devKey) REFERENCES Devices(devKey))""")
+    curs.execute("""
+    CREATE TABLE IF NOT EXISTS PowerReadingW (
+    timestamp DATETIME, value INTEGER, devKey INTEGER,
+    FOREIGN KEY(devKey) REFERENCES Devices(devKey))""")
+    curs.execute("""
+    CREATE TABLE IF NOT EXISTS EnergyConsumedWh (
+    timestamp DATETIME, value INTEGER, devKey INTEGER,
+    FOREIGN KEY(devKey) REFERENCES Devices(devKey))""")
+    curs.execute("""
+    CREATE TABLE IF NOT EXISTS EnergyGeneratedWh (
+    timestamp DATETIME, value INTEGER, devKey INTEGER,
+    FOREIGN KEY(devKey) REFERENCES Devices(devKey))""")
+    curs.execute("""
+    CREATE TABLE IF NOT EXISTS Events (
+    timestamp DATETIME, event TEXT, devKey INTEGER,
+    FOREIGN KEY(devKey) REFERENCES Devices(devKey))""")
+    curs.execute("CREATE TABLE IF NOT EXISTS AppState (Name TEXT PRIMARY KEY, Value TEXT)")
+
+def Backup():
+    global curs # Main db
+    shutil.copyfile("vesta.db", "backup.db")    # Firstly, backup whole database using filing system (from shutil module)
+    os.unlink("core.db")    # Remove old copy while we build the new one
+    dbCore = sqlite3.connect("core.db")    # This will create a new database if it didn't previously exist
+    cursCore = dbCore.cursor()
+    InitCore(dbCore, cursCore)
+    # Now copy all the entries in the core tables.  See www.snipplr.com/view/18471/
+    copy_table("Devices", curs, cursCore)
+    copy_table("Groups", curs, cursCore)
+    copy_table("Rules", curs, cursCore)
+    copy_table("Users", curs, cursCore)
+    dbCore.commit() # Flush newly created database to filing system
+
+def TableHasColumn(curs, table, column):
+    curs.execute("PRAGMA table_info("+table+")")
+    cols = curs.fetchall()
+    for col in cols:
+        #log.debug("col.name = " + str(col[1]))
+        if col[1] == column:    # name is second item, after column number
+            return True
+    log.debug("Failed to find " + column + " in " + str(cols))
+    return False
+
+def GarbageCollect(table):
+    global curs
+    keyList = GetAllDevKeys()
+    itemList = GetAllItemsFromTable("*", table)
+    for item in itemList:
+        devKey = item[2]
+        if devKey not in keyList:
+            debug.log("Found unused devKey of "+str(devKey)+" in "+table)
+            curs.execute("DELETE FROM "+table+" WHERE devKey=" + str(devKey))
+            keyList.append(devKey)  # To avoid deleting it for all the other entries
+
+# From http://snipplr.com/view/18471/
+type_str = type('str')
+type_datetime = type(datetime.now())
+type_int = type(1)
+type_float = type(1.0)
+type_None = type(None)
+ 
+def convert2str(record):
+    res = []
+    for item in record:
+        if type(item)==type_None:
+            res.append('NULL')
+        elif type(item)==type_str:
+            res.append('"'+item+'"')
+        elif type(item)==type_datetime:
+            res.append('"'+str(item)+'"')
+        else:  # for numeric values
+            res.append(str(item))
+    return ','.join(res)
+ 
+def copy_table(tab_name, src_cursor, dst_cursor):
+    sql = 'select * from %s'%tab_name
+    src_cursor.execute(sql)
+    res = src_cursor.fetchall()
+    for record in res:
+        val_str = convert2str(record)
+        try:
+            sql = 'insert into %s values(%s)'%(tab_name, val_str)
+            dst_cursor.execute(sql)
+        except:
+            log.debug("Couldn't copy table with value: "+val_str)
 
 # === Miscellaneous ===
 def GetFileSize():
@@ -40,6 +212,17 @@ def Defragment():
     global curs
     curs.execute("VACUUM")  # Rebuild database in order to compress its file size
     flushDB = True # Commit newly-built table 
+
+def GetAllItemsFromTable(item, table, condition = None):
+    global curs
+    itemList = []
+    if condition == None:
+        curs.execute("SELECT "+item+" FROM "+table)
+    else:
+        curs.execute("SELECT "+item+" FROM "+table+" WHERE "+condition)
+    for row in curs:
+        itemList.append(row[0])
+    return itemList
 
 # === Logged items ===
 
@@ -59,6 +242,13 @@ def LogItem(devKey, item, value):
             dbCmd = "INSERT INTO "+item+" VALUES (datetime('now', 'localtime'),\""+str(value)+"\","+str(devKey)+")"
     else:  # Value unchanged, so update timestamp of the latest entry
         dbCmd = "UPDATE "+item+" SET timestamp=datetime('now', 'localtime') WHERE devKey="+str(devKey)+" ORDER BY timestamp DESC LIMIT 1"
+    log.debug(dbCmd)
+    curs.execute(dbCmd)
+    flushDB = True # Batch up the commits.  Commit table for web access
+
+def UpdateLoggedItem(devKey, item, value):
+    global curs, flushDB
+    dbCmd = "UPDATE "+item+" SET timestamp=datetime('now', 'localtime'), value="+str(value)+" WHERE devKey="+str(devKey)
     log.debug(dbCmd)
     curs.execute(dbCmd)
     flushDB = True # Batch up the commits.  Commit table for web access
@@ -186,12 +376,16 @@ def GetAllDevKeys():
         keyList.append(row[0])
     return keyList
 
-def GetDeviceItem(devKey, item):
+def GetDeviceItem(devKey, item, defVal = None):
     global curs
     curs.execute("SELECT "+item+" FROM Devices WHERE devKey="+str(devKey))
     rows = curs.fetchone()
     if rows != None:
-        return rows[0]
+        if rows[0] == None and defVal != None:  # If database entry is empty and we have a sensible default...
+            SetDeviceItem(devKey, item, defVal) # ... then update database...
+            return defVal   # ... and return that default
+        else:
+            return rows[0]
     return None
 
 def SetDeviceItem(devKey, item, value):

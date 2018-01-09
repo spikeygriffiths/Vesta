@@ -97,10 +97,10 @@ def Run(trigger): # Run through the rules looking to see if we have a match for 
             doIndex = FindItemInList("do", ruleList) # Safely look for "do"
             if doIndex != None:
                 if ParseCondition(ruleList[1:doIndex], trigger) == True: # Parse condition from element 1 (ie immediately after "if") to "do" 
-                    Action(ruleList[doIndex+1:]) # Do action
+                    Action(ruleList[doIndex+1:], rule) # Do action
             # else skip rest of line
         elif ruleList[0] == "do":
-            Action(ruleList[1:])
+            Action(ruleList[1:], rule)
         # else assume the line is a comment and skip it
     # end of rules
     variables.Del(triggerType) # Make sure we don't re-run the same trigger
@@ -189,7 +189,7 @@ def GetConditionResult(test, condition):
     else:
         return False # If we couldn't find the item requested, assume the condition fails(?)
 
-def Action(actList):
+def Action(actList, ruleTxt):
     log.debug("Action with: "+str(actList))
     action = actList[0].lower()
     if action == "Log".lower():
@@ -260,16 +260,19 @@ def Action(actList):
             if database.IsGroupName(name): # Check if name is a groupName
                 devKeyList = GetGroupDevs(name)
                 for devKey in devKeyList:
-                    CommandDev(action, devKey, actList) # Command each device in list
+                    CommandDev(action, devKey, actList, ruleTxt) # Command each device in list
             else:
                 devKey = database.GetDevKey("userName", name)
-                CommandDev(action, devKey, actList) # Command one device
+                CommandDev(action, devKey, actList, ruleTxt) # Command one device
 
-def CommandDev(action, devKey, actList):
+def CommandDev(action, devKey, actList, ruleTxt):
     if devKey == None:
         log.fault("Device "+actList[1]+" from rules not found in devices")
         synopsis.problem("rules", "Unknown device "+actList[1]+" in rules")
     else:
+        devices.DelTempVal(devKey, "SwitchOff@")    # Kill any extant timers for this device
+        eventTxt = "Using rule: '"+ruleTxt+"'"
+        database.NewEvent(devKey, eventTxt)
         if action == "SwitchOn".lower():
             devcmds.SwitchOn(devKey)
             if len(actList) > 3:

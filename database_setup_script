@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS Devices (
   binding TEXT,
   reporting TEXT,
   iasZoneType TEXT,
+  Unused INTEGER,
   firmwareVersion TEXT);
 
 # Add new entries to Devices above;
