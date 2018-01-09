@@ -164,12 +164,13 @@ def TableHasColumn(curs, table, column):
 def GarbageCollect(table):
     global curs
     keyList = GetAllDevKeys()
-    eventList = GetAllItemsFromTable("*", table)
-    for event in eventList:
-        devKey = event[2]
+    itemList = GetAllItemsFromTable("*", table)
+    for item in itemList:
+        devKey = item[2]
         if devKey not in keyList:
             debug.log("Found unused devKey of "+str(devKey)+" in "+table)
             curs.execute("DELETE FROM "+table+" WHERE devKey=" + str(devKey))
+            keyList.append(devKey)  # To avoid deleting it for all the other entries
 
 # From http://snipplr.com/view/18471/
 type_str = type('str')
@@ -212,10 +213,13 @@ def Defragment():
     curs.execute("VACUUM")  # Rebuild database in order to compress its file size
     flushDB = True # Commit newly-built table 
 
-def GetAllItemsFromTable(item, table):
+def GetAllItemsFromTable(item, table, condition = None):
     global curs
     itemList = []
-    curs.execute("SELECT "+item+" FROM " + table)
+    if condition == None:
+        curs.execute("SELECT "+item+" FROM "+table)
+    else:
+        curs.execute("SELECT "+item+" FROM "+table+" WHERE "+condition)
     for row in curs:
         itemList.append(row[0])
     return itemList
@@ -238,6 +242,13 @@ def LogItem(devKey, item, value):
             dbCmd = "INSERT INTO "+item+" VALUES (datetime('now', 'localtime'),\""+str(value)+"\","+str(devKey)+")"
     else:  # Value unchanged, so update timestamp of the latest entry
         dbCmd = "UPDATE "+item+" SET timestamp=datetime('now', 'localtime') WHERE devKey="+str(devKey)+" ORDER BY timestamp DESC LIMIT 1"
+    log.debug(dbCmd)
+    curs.execute(dbCmd)
+    flushDB = True # Batch up the commits.  Commit table for web access
+
+def UpdateLoggedItem(devKey, item, value):
+    global curs, flushDB
+    dbCmd = "UPDATE "+item+" SET timestamp=datetime('now', 'localtime'), value="+str(value)+" WHERE devKey="+str(devKey)
     log.debug(dbCmd)
     curs.execute(dbCmd)
     flushDB = True # Batch up the commits.  Commit table for web access

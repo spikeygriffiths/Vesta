@@ -271,7 +271,7 @@ def SetAttrVal(devKey, clstrId, attrId, value):
     if clstrId == zcl.Cluster.SimpleMetering and attrId == zcl.Attribute.InstantaneousDemand:
         if isnumeric(value, 16):
             varVal = int(value, 16) # Arrives in Watts, so store it in the same way
-            database.LogItem(devKey, "PowerReadingW", varVal)
+            database.UpdateLoggedItem(devKey, "PowerReadingW", varVal)  # Just store latest reading
     if clstrId == zcl.Cluster.SimpleMetering and attrId == zcl.Attribute.CurrentSummationDelivered:
         if isnumeric(value, 16):
             varVal = int(value, 16) # Arrives in accumulated WattHours, so store it in the same way
