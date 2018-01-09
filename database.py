@@ -53,6 +53,7 @@ def InitCore(db, curs):
     binding TEXT,
     reporting TEXT,
     iasZoneType TEXT,
+    Unused INTEGER,
     firmwareVersion TEXT,
     batteryReporting TEXT,
     temperatureReporting TEXT,
@@ -130,10 +131,15 @@ def InitAll(db, curs):
 def Backup():
     global curs # Main db
     shutil.copyfile("vesta.db", "backup.db")    # Firstly, backup whole database using filing system (from shutil module)
+    os.unlink("core.db")    # Remove old copy while we build the new one
     dbCore = sqlite3.connect("core.db")    # This will create a new database if it didn't previously exist
     cursCore = dbCore.cursor()
     InitCore(dbCore, cursCore)
     # Now copy all the entries in the core tables.  See www.snipplr.com/view/18471/
+    copy_table("Devices", curs, cursCore)
+    copy_table("Groups", curs, cursCore)
+    copy_table("Rules", curs, cursCore)
+    copy_table("Users", curs, cursCore)
     dbCore.commit() # Flush newly created database to filing system
 
 def TableHasColumn(curs, table, column):
@@ -145,6 +151,41 @@ def TableHasColumn(curs, table, column):
             return True
     log.debug("Failed to find " + column + " in " + str(cols))
     return False
+
+# From http://snipplr.com/view/18471/
+type_str = type('str')
+type_datetime = type(datetime.now())
+type_int = type(1)
+type_float = type(1.0)
+type_None = type(None)
+ 
+def convert2str(record):
+    res = []
+    for item in record:
+        if type(item)==type_None:
+            res.append('NULL')
+        elif type(item)==type_str:
+            res.append('"'+item+'"')
+        elif type(item)==type_datetime:
+            res.append('"'+str(item)+'"')
+        else:  # for numeric values
+            res.append(str(item))
+    return ','.join(res)
+ 
+def copy_table(tab_name, src_cursor, dst_cursor):
+    sql = 'select * from %s'%tab_name
+    src_cursor.execute(sql)
+    res = src_cursor.fetchall()
+    cnt = 0
+    for record in res:
+        val_str = convert2str(record)
+        try:
+            sql = 'insert into %s values(%s)'%(tab_name, val_str)
+            dst_cursor.execute(sql)
+            cnt += 1
+        except:
+            log.debug("Couldn't copy table with value: "+val_str)
+    return cnt
 
 # === Miscellaneous ===
 def GetFileSize():
