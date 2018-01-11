@@ -108,6 +108,7 @@ function ShowEvent($devKey, $db)
     $fetch = $result->fetch();
     $val = $fetch['event'];
     $time = $fetch['timestamp'];
+    $reason = $fetch['reason']; # This may refer to a rule's Rowid (if it's not empty and starts with "Rule:"), so we could then make the $val a link to the rule that caused it..?
     $time = ElapsedTime($time);
     if ($val != "") {
         echo "<tr><td>Event</td>";

@@ -3,6 +3,7 @@
 import sqlite3
 from datetime import datetime
 import os
+import os.path
 import shutil   # For file copying of database
 # App-specific Python modules
 import events
@@ -18,7 +19,7 @@ def EventHandler(eventId, eventArg):
     if eventId == events.ids.PREINIT:
         db = sqlite3.connect("vesta.db")    # This will create a new database for us if it didn't previously exist
         curs = db.cursor()
-        InitAll(db, curs)
+        InitAll(db, curs)   # Add any new entries to database here
         Backup()
         flushDB = True # Batch up the commits
     if eventId == events.ids.SECONDS:
@@ -133,14 +134,17 @@ def InitAll(db, curs):
     FOREIGN KEY(devKey) REFERENCES Devices(devKey))""")
     curs.execute("""
     CREATE TABLE IF NOT EXISTS Events (
-    timestamp DATETIME, event TEXT, devKey INTEGER,
+    timestamp DATETIME, event TEXT, reason TEXT, devKey INTEGER,
     FOREIGN KEY(devKey) REFERENCES Devices(devKey))""")
     curs.execute("CREATE TABLE IF NOT EXISTS AppState (Name TEXT PRIMARY KEY, Value TEXT)")
+    if TableHasColumn(curs, "Events", "reason") == False:
+        curs.execute("ALTER TABLE Events ADD COLUMN reason TEXT")
 
 def Backup():
     global curs # Main db
     shutil.copyfile("vesta.db", "backup.db")    # Firstly, backup whole database using filing system (from shutil module)
-    os.unlink("core.db")    # Remove old copy while we build the new one
+    if os.path.isfile("core.db"):
+        os.unlink("core.db")    # Remove old copy while we build the new one, since we're INSERTing entries in copy_table()
     dbCore = sqlite3.connect("core.db")    # This will create a new database if it didn't previously exist
     cursCore = dbCore.cursor()
     InitCore(dbCore, cursCore)
@@ -301,9 +305,9 @@ def FlushOldLoggedItems():
     flushDB = True # Batch up the commits
 
 # === Events ===
-def NewEvent(devKey, event):
+def NewEvent(devKey, event, reason=None):
     global curs, flushDB
-    curs.execute("INSERT INTO Events VALUES(datetime('now', 'localtime'),(?), (?))", (event, devKey))  # Insert event with local timestamp
+    curs.execute("INSERT INTO Events VALUES(datetime('now', 'localtime'),(?), (?), (?))", (event, reason, devKey))  # Insert event with local timestamp
     flushDB = True # Batch up the commits
 
 def GetLatestEvent(devKey):
@@ -422,7 +426,7 @@ def RemoveDevice(devKey):
     global curs, db
     #curs.execute("DELETE FROM Groups WHERE devKey="+str(devKey)) # This has to remove devKey from within each group's devKeyList
     userName = GetDeviceItem(devKey, "userName")
-    curs.execute("DELETE FROM Rules WHERE rule LIKE '%"+userName+"%'")  # Remove all rules associated with device
+    curs.execute("DELETE FROM Rules WHERE rule LIKE '%"+userName+"%'")  # Remove all rules associated with device - Assumes names don't contain other names! (eg "TopLandingPir" contains "LandingPir")
     curs.execute("DELETE FROM BatteryPercentage WHERE devKey="+str(devKey))
     curs.execute("DELETE FROM SignalPercentage WHERE devKey="+str(devKey))
     curs.execute("DELETE FROM TemperatureCelsius WHERE devKey="+str(devKey))
@@ -432,15 +436,17 @@ def RemoveDevice(devKey):
     curs.execute("DELETE FROM EnergyGeneratedWh WHERE devKey="+str(devKey))
     curs.execute("DELETE FROM Events WHERE devKey="+str(devKey))
     curs.execute("DELETE FROM Devices WHERE devKey="+str(devKey))
+    Defragment()    # Compact the database now that we've removed everything
     db.commit() # Flush db to disk immediately
 
 # === Rules ===
 def GetRules(item):
     global curs
     ruleList = []
-    curs.execute("SELECT * FROM Rules WHERE rule LIKE '%"+item+"%'") # NB LIKE is already case-insensitive, so no need for COLLATE NOCASE
-    for row in curs:
-        ruleList.append(row[0]) # Build a list of all rules that mention item
+    curs.execute("SELECT Rowid,* FROM Rules WHERE rule LIKE '%"+item+"%'") # NB LIKE is already case-insensitive, so no need for COLLATE NOCASE
+    ruleList = curs.fetchall()
+    #for row in curs:
+    #    ruleList.append(row[0]) # Build a list of all rules that mention item
     return ruleList
 
 # === AppState ===
