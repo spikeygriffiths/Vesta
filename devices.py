@@ -106,32 +106,34 @@ def EventHandler(eventId, eventArg):
                 database.SetDeviceItem(globalDevKey, "inClusters", str(eventArg[1:])) # Store whole list from arg[1] to arg[n]
         elif eventArg[0] == "OutCluster" and len(eventArg) >= 2:
             if globalDevKey != None:
-                #NoteMsgDetails(globalDevKey, eventArg)
+                NoteMsgDetails(globalDevKey, eventArg)  # Must do this so that we can remove RSSI and LQI if they're there, to avoid these values being interpreted as clusters
                 database.SetDeviceItem(globalDevKey, "outClusters", str(eventArg[1:])) # Store whole list from arg[1] to arg[n]
             globalDevKey = None # We've finished with this global for now
         elif eventArg[0] == "RESPATTR" and len(eventArg) >= 7:
             devKey = GetKey(eventArg[1])
             if devKey != None:
                 NoteMsgDetails(devKey, eventArg)
-                ep = eventArg[2]
-                clusterId = eventArg[3]
-                attrId = eventArg[4]
-                if "00" == eventArg[5]:
-                    attrVal = eventArg[6]
-                    SetAttrVal(devKey, clusterId, attrId, attrVal)
-                else:
-                    SetAttrVal(devKey, clusterId, attrId, "Failed (error "+eventArg[5]+")") # So that we don't keep asking
+                if len(eventArg) >= 7:  # Check for number of args after possibly removing RSSI and LQI
+                    ep = eventArg[2]
+                    clusterId = eventArg[3]
+                    attrId = eventArg[4]
+                    if "00" == eventArg[5]:
+                        attrVal = eventArg[6]
+                        SetAttrVal(devKey, clusterId, attrId, attrVal)
+                    else:
+                        SetAttrVal(devKey, clusterId, attrId, "Failed (error "+eventArg[5]+")") # So that we don't keep asking
         elif eventArg[0] == "RESPMATTR" and len(eventArg) >= 8:
             devKey = GetKey(eventArg[1])
             if devKey != None:
                 NoteMsgDetails(devKey, eventArg)
-                ep = eventArg[2]
-                mfgId = eventArg[3]
-                clusterId = eventArg[4]
-                attrId = eventArg[5]
-                if "00" == eventArg[6]:
-                    attrVal = eventArg[7]
-                    SetAttrVal(devKey, clusterId, attrId, attrVal)
+                if len(eventArg) >= 8:  # Check for number of args after possibly removing RSSI and LQI
+                    ep = eventArg[2]
+                    mfgId = eventArg[3]
+                    clusterId = eventArg[4]
+                    attrId = eventArg[5]
+                    if "00" == eventArg[6]:
+                        attrVal = eventArg[7]
+                        SetAttrVal(devKey, clusterId, attrId, attrVal)
         elif eventArg[0] == "REPORTATTR" and len(eventArg) >= 7:
             devKey = GetKey(eventArg[1])
             if devKey != None:

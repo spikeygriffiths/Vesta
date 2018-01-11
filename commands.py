@@ -108,8 +108,9 @@ class Commands(cmd.Cmd):
         Show all variables, or just variables that contain item"""
         if item == "":
             vars = variables.varList
-            vars.sort() # Alphabetic by name, to make it easier to search by eye
-            pprint (vars)
+            sortedVars = sorted(vars, key=lambda str: str[0].lower())  # Case-insensitive sorting
+            #vars.sort() # Alphabetic by name, to make it easier to search by eye
+            pprint (sortedVars)
         else:
             itemisedList = []
             for v in variables.varList:

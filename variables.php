@@ -7,9 +7,8 @@ echo "td, th {border: 2px solid #dddddd;text-align: left;padding: 3px; padding-l
 echo "tr:nth-child(even) { background-color: #dddddd; }</style>";
 echo "</head><body>";
 PageHeader("Variables");
-$varsList = AppCmd("vars", True);
+$varsList = AppCmd("vars", True);   # NB Already alphabetically sorted from Python app
 $varsArray = explode(",", $varsList);
-natcasesort($varsArray);
 for ($index = 0; $index < count($varsArray); $index ++) {
     $varsArray[$index] = str_replace("\n", "", $varsArray[$index]);
     $varsArray[$index] = str_replace("'", "", $varsArray[$index]);

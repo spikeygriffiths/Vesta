@@ -73,10 +73,13 @@ def Parse(atLine):
         database.SetDeviceItem(0, "eui64", atList[0])
         expectOurEui = False
     elif atList[0] == "ERROR":
+        errNo = None
         if len(atList) > 1:
-            events.Issue(events.ids.RXERROR, int(atList[1],16)) # See if anyone cares about the error
-        else:
-            events.Issue(events.ids.RXERROR, -1) # No number specified, so give -1
+            try:
+                errNo = int(atList[1],16)   # Might be junk - have seen all sorts of nonsense from Telegesis stick here
+            except ValueError:
+                pass    # Just use default value of errNo
+        events.Issue(events.ids.RXERROR, errNo) # See if anyone cares about the error
     elif atList[0] == "SED" or atList[0] == "FFD" or atList[0] == "ZED":
         events.Issue(events.ids.DEVICE_ANNOUNCE, atList) # Tell system that device has (re-)joined        
     elif atList[0] == 'CHECKIN':

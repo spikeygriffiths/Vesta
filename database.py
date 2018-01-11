@@ -3,6 +3,7 @@
 import sqlite3
 from datetime import datetime
 import os
+import os.path
 import shutil   # For file copying of database
 # App-specific Python modules
 import events
@@ -140,7 +141,8 @@ def InitAll(db, curs):
 def Backup():
     global curs # Main db
     shutil.copyfile("vesta.db", "backup.db")    # Firstly, backup whole database using filing system (from shutil module)
-    os.unlink("core.db")    # Remove old copy while we build the new one
+    if os.path.isfile("core.db"):
+        os.unlink("core.db")    # Remove old copy while we build the new one, since we're INSERTing entries in copy_table()
     dbCore = sqlite3.connect("core.db")    # This will create a new database if it didn't previously exist
     cursCore = dbCore.cursor()
     InitCore(dbCore, cursCore)
@@ -168,7 +170,7 @@ def GarbageCollect(table):
     for item in itemList:
         devKey = item[2]
         if devKey not in keyList:
-            debug.log("Found unused devKey of "+str(devKey)+" in "+table)
+            log.debug("Found unused devKey of "+str(devKey)+" in "+table)
             curs.execute("DELETE FROM "+table+" WHERE devKey=" + str(devKey))
             keyList.append(devKey)  # To avoid deleting it for all the other entries
 
@@ -422,7 +424,7 @@ def RemoveDevice(devKey):
     global curs, db
     #curs.execute("DELETE FROM Groups WHERE devKey="+str(devKey)) # This has to remove devKey from within each group's devKeyList
     userName = GetDeviceItem(devKey, "userName")
-    curs.execute("DELETE FROM Rules WHERE rule LIKE '%"+userName+"%'")  # Remove all rules associated with device
+    curs.execute("DELETE FROM Rules WHERE rule LIKE '%"+userName+"%'")  # Remove all rules associated with device - Assumes names don't contain other names! (eg "TopLandingPir" contains "LandingPir")
     curs.execute("DELETE FROM BatteryPercentage WHERE devKey="+str(devKey))
     curs.execute("DELETE FROM SignalPercentage WHERE devKey="+str(devKey))
     curs.execute("DELETE FROM TemperatureCelsius WHERE devKey="+str(devKey))
@@ -432,6 +434,7 @@ def RemoveDevice(devKey):
     curs.execute("DELETE FROM EnergyGeneratedWh WHERE devKey="+str(devKey))
     curs.execute("DELETE FROM Events WHERE devKey="+str(devKey))
     curs.execute("DELETE FROM Devices WHERE devKey="+str(devKey))
+    Defragment()    # Compact the database now that we've removed everything
     db.commit() # Flush db to disk immediately
 
 # === Rules ===
