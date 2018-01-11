@@ -168,7 +168,7 @@ def GarbageCollect(table):
     for item in itemList:
         devKey = item[2]
         if devKey not in keyList:
-            debug.log("Found unused devKey of "+str(devKey)+" in "+table)
+            log.debug("Found unused devKey of "+str(devKey)+" in "+table)
             curs.execute("DELETE FROM "+table+" WHERE devKey=" + str(devKey))
             keyList.append(devKey)  # To avoid deleting it for all the other entries
 
