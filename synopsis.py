@@ -69,7 +69,6 @@ def problem(key, value):
     issues[key] = value   # Add new, or update old, dictionary entry
     log.fault(key + ":" + value)
 
-
 def clearProblems():    # Called at midnight each day
     issues.clear()  # Clear the list, now that we've gone through it
 

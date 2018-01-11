@@ -109,7 +109,6 @@ class Commands(cmd.Cmd):
         if item == "":
             vars = variables.varList
             sortedVars = sorted(vars, key=lambda str: str[0].lower())  # Case-insensitive sorting
-            #vars.sort() # Alphabetic by name, to make it easier to search by eye
             pprint (sortedVars)
         else:
             itemisedList = []
