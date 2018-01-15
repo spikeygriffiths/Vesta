@@ -154,6 +154,7 @@ class Commands(cmd.Cmd):
         Sends toggle on/off command to named device"""
         devKey = devices.FindDev(devId)
         if devKey != None:
+            database.NewEvent(devKey, "Toggle", "UICmd")
             devcmds.Toggle(devKey)
 
     def do_dim(self, line):
@@ -164,6 +165,7 @@ class Commands(cmd.Cmd):
             percentage = int(argList[1])
             devKey = devices.FindDev(argList[0])
             if devKey != None:
+                database.NewEvent(devKey, "Dim", "UICmd")
                 devcmds.Dim(devKey, percentage)
         else:
             log.fault("Insufficient Args")
@@ -176,6 +178,7 @@ class Commands(cmd.Cmd):
             hue = int(argList[1])
             devKey = devices.FindDev(argList[0])
             if devKey != None:
+                database.NewEvent(devKey, "Hue", "UICmd")
                 devcmds.Hue(devKey, hue)
         else:
             log.fault("Insufficient Args")
@@ -188,6 +191,7 @@ class Commands(cmd.Cmd):
             sat = int(argList[1])
             devKey = devices.FindDev(argList[0])
             if devKey != None:
+                database.NewEvent(devKey, action, "UICmd")
                 devcmds.Sat(devKey, sat)
         else:
             log.fault("Insufficient Args")

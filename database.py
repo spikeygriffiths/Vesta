@@ -134,7 +134,7 @@ def InitAll(db, curs):
     FOREIGN KEY(devKey) REFERENCES Devices(devKey))""")
     curs.execute("""
     CREATE TABLE IF NOT EXISTS Events (
-    timestamp DATETIME, event TEXT, reason TEXT, devKey INTEGER,
+    timestamp DATETIME, event TEXT, devKey INTEGER, reason TEXT,
     FOREIGN KEY(devKey) REFERENCES Devices(devKey))""")
     curs.execute("CREATE TABLE IF NOT EXISTS AppState (Name TEXT PRIMARY KEY, Value TEXT)")
     if TableHasColumn(curs, "Events", "reason") == False:
@@ -279,6 +279,12 @@ def GetLatestLoggedValue(devKey, item):
         return entry[0] # Just the value
     return None
 
+def GetLatestLoggedTime(devKey, item):
+    entry = GetLatestLoggedItem(devKey, item)
+    if entry != None:
+        return entry[1] # Just the timestamp
+    return None
+
 def GetLatestLoggedItem(devKey, item):
     return GetLastNLoggedItems(devKey, item, 1)
 
@@ -307,7 +313,7 @@ def FlushOldLoggedItems():
 # === Events ===
 def NewEvent(devKey, event, reason=None):
     global curs, flushDB
-    curs.execute("INSERT INTO Events VALUES(datetime('now', 'localtime'),(?), (?), (?))", (event, reason, devKey))  # Insert event with local timestamp
+    curs.execute("INSERT INTO Events VALUES(datetime('now', 'localtime'),(?), (?), (?))", (event, devKey, reason))  # Insert event with local timestamp
     flushDB = True # Batch up the commits
 
 def GetLatestEvent(devKey):

@@ -143,6 +143,7 @@ def EventHandler(eventId, eventArg):
                 attrType = eventArg[5]
                 attrVal = eventArg[6]
                 NoteMsgDetails(devKey, eventArg)
+                EnsureReporting(devKey, clusterId, attrId, attrVal) # Make sure reports are happening at the correct frequency and update device if not
                 SetAttrVal(devKey, clusterId, attrId, attrVal)
                 NoteReporting(devKey, clusterId, attrId)
             else: # Unknown device, so assume it's been deleted from our database
@@ -206,6 +207,39 @@ def EventHandler(eventId, eventArg):
                     database.NewEvent(devKey, newState)
                     Rule(devKey, newState)
     # End event handler
+
+def EnsureReporting(devKey, clstrId, attrId, attrVal): # Check when this attr last reported and update device's reporting if necessary
+    if isnumeric(attrVal, 16):
+        newVal = int(attrVal, 16) # Assume value arrives in hex
+    else:
+        return
+    if clstrId == zcl.Cluster.SimpleMetering and attrId == zcl.Attribute.InstantaneousDemand:
+        prevItem = database.GetLatestLoggedItem(devKey, "PowerReadingW")  # Check when we got last reading
+        field = "powerReporting"
+    elif clstrId == zcl.Cluster.SimpleMetering and attrId == zcl.Attribute.CurrentSummationDelivered:
+        prevItem = database.GetLatestLoggedItem(devKey, "EnergyConsumedWh")
+        field = "energyConsumedReporting"
+    elif clstrId == zcl.Cluster.SimpleMetering and attrId == zcl.Attribute.CurrentSummationReceived:
+        prevItem = database.GetLatestLoggedItem(devKey, "EnergyGeneratedWh")
+        field = "energyGeneratedReporting"
+    else: # Don't know how often it should report.  Could add temperature and battery
+        return
+    if prevItem != None:
+        prevTime = prevItem[1]
+        prevVal = prevItem[0]
+        minMaxDelta = database.GetDeviceItem(devKey, field) # Look up min and max for this item
+        if minMaxDelta != None:
+            confList = minMaxDelta.split(",")
+            min = int(confList[0])
+            max = int(confList[1])
+            delta = int(confList[2])
+            change = abs(newVal - int(prevVal))
+            secsSinceLastReport = (datetime.now() - datetime.strptime(prevTime, "%Y-%m-%d %H:%M:%S")).seconds  # Work out time between now and prevTime in seconds
+            log.debug("Prev report "+str(secsSinceLastReport)+" s ago, min="+str(min)+" for devKey "+str(devKey)+" with old val="+str(prevVal)+" vs new val of "+str(newVal))
+            if max == -1 or secsSinceLastReport < min or secsSinceLastReport > max: # Check whether min>secsSincelastReport>max or max==-1
+                Config(devKey, field) # Re-configure device
+            elif secsSinceLastReport < max-(max/10) and change<delta: # Check delta if not too close to max
+                Config(devKey, field) # Re-configure device
 
 def NoteReporting(devKey, clusterId, attrId):
     reporting = database.GetDeviceItem(devKey, "reporting") # See if we're expecting this report, and note it in the reporting table
@@ -494,6 +528,7 @@ def CheckReporting(devKey, reporting, field, cluster, attrId, attrType, defVal):
 
 def Config(devKey, field):
     # Read newly changed field from database for device and use this to update actual device ASAP
+    log.debug("Updating reporting for "+field)
     reporting = database.GetDeviceItem(devKey, "reporting") # See if we're expecting this report, and note it in the reporting table
     if field=="batteryReporting":
         rptToUpdate = zcl.Cluster.PowerConfig+":"+zcl.Attribute.Batt_Percentage
