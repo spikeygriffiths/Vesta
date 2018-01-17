@@ -1,8 +1,10 @@
-<?php 
+<?php
 include "functions.php";
 include "database.php";
 include "header.php";   # Has other includes as well as log-out detection, and favicon.  NB Has "<html><head>" for favicon link!
 echo "</head><body>";
+$user = $_SESSION['user_name'];
+echo "<title>Vesta - ",$user,"</title>";
 echo "<center>";
 $title = "<img src='vestaTitle.png' title=\"Vesta was the Roman goddess of hearth and home\" width=128 height=128>";
 $rightBtn = "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/logout.php'\">Log Out</button><br><br>";

@@ -4,6 +4,7 @@ include "AppCmd.php";   # Not allowed to include same file more than once, so if
 
 function PageHeader($title, $right = Null)
 {
+    echo "<title>Vesta - ",$title,"</title>"; # For browser tab
     echo "<center>";
     echo "<div class=\"pageHead\">";
     echo "<div class=\"pageButton\"><a href=\"/vesta/index.php\"><img src=\"/vesta/vestaLogo.png\" width=32 height=32 title=\"Home\"></a></div>";

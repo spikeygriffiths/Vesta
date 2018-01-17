@@ -12,12 +12,11 @@ echo "</head><body>";
 $db = DatabaseInit();
 $username = GetDevItem("userName", $devKey,$db);
 echo "<center>";
-$title = "<button class=\"buttonHeader\" type=\"button\" onclick=\"window.location.href='/vesta/ChangeDevName.php/?devKey=".$devKey."'\">".$username."</button>";
 if (0 != $devKey) {
     $rightBtn = "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/DelDevice.php/?devId=".$username."'\">Remove</button>";
-    PageHeader($title, $rightBtn);
+    PageHeader($username, $rightBtn);
 } else {
-    PageHeader($title);
+    PageHeader($username);
 }
 ShowDeviceInfo($db, $devKey, $username);
 echo "<br><br><button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/ShowAllDevices.php'\">All Devices</button><br><br>";
@@ -108,7 +107,7 @@ function ShowEvent($devKey, $db)
     $fetch = $result->fetch();
     $val = $fetch['event'];
     $time = $fetch['timestamp'];
-    $reason = $fetch['reason']; # This may refer to a rule's Rowid (if it's not empty and starts with "Rule:"), so we could then make the $val a link to the rule that caused it..?
+    $reason = $fetch['reason']; # ToDo: This may refer to a rule's Rowid (if it's not empty and starts with "Rule:"), so we could then make the $val a link to the rule that caused it..?
     $time = ElapsedTime($time);
     if ($val != "") {
         echo "<tr><td>Event</td>";
@@ -120,9 +119,7 @@ function ShowEvent($devKey, $db)
 function ShowDeviceInfo($db, $devKey, $username)
 {
     $nwkId = GetDevItem("nwkId", $devkey, $db);
-    //echo "<center><form action=\"/vesta/UpdateDeviceName.php/?devKey=",$devKey,"\" method=\"post\">";
     echo "<table>";
-    //echo "<tr><td>Name</td><td><input type=\"text\" name=\"UserName\" value=\"", $username, "\"></td>";
     ShowDevStatus("Presence", "Presence", "", true, $devKey, $db);
     ShowDevStatus("SignalPercentage", "Radio Signal", "%", false, $devKey, $db);
     ShowDevStatus("BatteryPercentage", "Battery", "%", true, $devKey, $db);
@@ -138,7 +135,7 @@ function ShowDeviceInfo($db, $devKey, $username)
     ShowDevItem("devType", "Device Type", $devKey, $db);
     ShowDevItem("endPoints", "Endpoints", $devKey, $db);
     ShowDevItem("firmwareVersion", "Firmware Version", $devKey, $db);
-    if ("0000" != $nwkId) {
+    if (devKey != 0) { # 0 is always Vesta co-ordinator, so don't show clusters and binding for that
         ShowClusters("inClusters", "In Clusters", $devKey, $db);
         ShowClusters("outClusters", "Out Clusters", $devKey, $db);
         ShowClusters("binding", "Binding", $devKey, $db);
@@ -160,7 +157,8 @@ function ShowDeviceInfo($db, $devKey, $username)
             echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/DevConfig.php/?devKey=",$devKey,"'\">Configure device</button>&nbsp&nbsp&nbsp";
         }
     }
-    echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/rules.php/?item=",$username,"&type=dev&devKey=",$devKey,"'\">Rules</button>&nbsp&nbsp&nbsp";
+    echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/ChangeDevName.php/?devKey=".$devKey."'\">Change Name</button>&nbsp&nbsp&nbsp";
+    echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/rules.php/?item=",$username,"&type=dev&devKey=",$devKey,"'\">Rules</button><br><br>";
     echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/activity.php/?devKey=",$devKey,"'\">Activity Log</button>&nbsp&nbsp&nbsp";
     if ("0000" != $nwkId) {
         echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=identify ",$username," 30'\">Identify for 30s</button>&nbsp&nbsp&nbsp";
