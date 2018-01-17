@@ -252,7 +252,15 @@ def LogItem(devKey, item, value):
 
 def UpdateLoggedItem(devKey, item, value):
     global curs, flushDB
-    dbCmd = "UPDATE "+item+" SET timestamp=datetime('now', 'localtime'), value="+str(value)+" WHERE devKey="+str(devKey)
+    previousValue = GetLatestLoggedValue(devKey, item)
+    if previousValue == None: # Ensure we have a value for later updating
+        log.debug("Setting "+item+" with "+str(value)+" for "+str(devKey)+" (changed from "+str(previousValue))
+        if rules.isNumber(value):
+            dbCmd = "INSERT INTO "+item+" VALUES (datetime('now', 'localtime'),"+str(value)+","+str(devKey)+")"
+        else: # Assume string
+            dbCmd = "INSERT INTO "+item+" VALUES (datetime('now', 'localtime'),\""+str(value)+"\","+str(devKey)+")"
+    else:
+        dbCmd = "UPDATE "+item+" SET timestamp=datetime('now', 'localtime'), value="+str(value)+" WHERE devKey="+str(devKey)
     log.debug(dbCmd)
     curs.execute(dbCmd)
     flushDB = True # Batch up the commits.  Commit table for web access
@@ -391,12 +399,12 @@ def GetDeviceItem(devKey, item, defVal = None):
     curs.execute("SELECT "+item+" FROM Devices WHERE devKey="+str(devKey))
     rows = curs.fetchone()
     if rows != None:
-        if rows[0] == None and defVal != None:  # If database entry is empty and we have a sensible default...
-            SetDeviceItem(devKey, item, defVal) # ... then update database...
-            return defVal   # ... and return that default
-        else:
+        if rows[0] != None:
             return rows[0]
-    return None
+        if defVal != None:
+            SetDeviceItem(devKey, item, defVal) # If no entry, then update database...
+            return defVal   # ... and return that default
+    return None # Means no device entry found for this devKey, or no default supplied
 
 def SetDeviceItem(devKey, item, value):
     global curs, flushDB
@@ -423,8 +431,9 @@ def NewDevice(nwkId, eui64, devType):
     curs.execute("UPDATE Devices SET devKey="+str(devKey)+" WHERE rowId="+str(rowId))   # Define device key first, since that's used everywhere!
     SetDeviceItem(devKey, "nwkId", nwkId)
     SetDeviceItem(devKey, "Username", "(New) "+nwkId)   # Default username of network ID, since that's unique
-    SetDeviceItem(devKey,"devType",devType)    # SED, FFD or ZED
-    SetDeviceItem(devKey,"eui64",eui64)
+    SetDeviceItem(devKey, "devType",devType)    # SED, FFD or ZED
+    SetDeviceItem(devKey, "eui64",eui64)
+    SetDeviceItem(devKey, "binding", "[]")
     db.commit() # Flush db to disk immediately
     return devKey    # Return new devKey for newly added device
 

@@ -31,7 +31,7 @@ function ShowItemConfig($name, $field, $notes, $default, $devKey, $db)
     $delta = $reportingList[2];
     echo "<tr><td>",$name,"</td>";
     echo "<form action=\"/vesta/configChange.php/?devKey=", $devKey, "&field=", $field, "\" method=\"post\">";
-    echo "<td><input type=\"number\" min=\"1\" max=\"65534\" name=\"min\" value=\"", $min, "\"></td>";
+    echo "<td><input type=\"number\" min=\"-1\" max=\"65534\" name=\"min\" value=\"", $min, "\"></td>";
     echo "<td><input type=\"number\" min=\"-1\" max=\"65534\" name=\"max\" value=\"", $max, "\"></td>";
     echo "<td><input type=\"number\" min=\"0\" name=\"delta\" value=\"", $delta, "\"></td>";
     echo "<td><input type=\"submit\" value=\"Update\"></td>";
@@ -54,9 +54,9 @@ function ShowDeviceConfig($db, $devKey, $username)
             ShowItemConfig("Temperature", "temperatureReporting", "in 0.01'C units", "300,3600,100", $devKey, $db);
         }
         if (strpos($val, "0702") !== false) {   # Found SimpleMetering - need three items here
-            ShowItemConfig("Power", "powerReporting", "in Watts", "5,900,10", $devKey, $db);
-            ShowItemConfig("EnergyConsumed", "energyConsumedReporting", "in WattHours", "60,900,100", $devKey, $db);
-            ShowItemConfig("EnergyGenerated", "energyGeneratedReporting", "in WattHours", "60,900,100", $devKey,$db);
+            ShowItemConfig("Power", "powerReporting", "in Watts", "-1,-1,10", $devKey, $db);
+            ShowItemConfig("EnergyConsumed", "energyConsumedReporting", "in WattHours", "-1,-1,100", $devKey, $db);
+            ShowItemConfig("EnergyGenerated", "energyGeneratedReporting", "in WattHours", "-1,-1,100", $devKey,$db);
         }
         echo "</table>";
         if (strpos($val, "0020") != false) {   # Found PollCtrl

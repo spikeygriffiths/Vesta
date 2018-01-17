@@ -1,4 +1,4 @@
-#!devices.py
+#devices.py
 
 from datetime import datetime
 from datetime import timedelta
@@ -411,6 +411,9 @@ def Check(devKey):
         database.SetDeviceItem(devKey, "outClusters", "[]") # Some devices have no outclusters...
         return ("AT+SIMPLEDESC:"+nwkId+","+nwkId+","+ep, "OutCluster")
     binding = database.GetDeviceItem(devKey, "binding" "[]")
+    if binding == None:
+        log.debug("No binding for devKey "+str(devKey))
+        return None
     if inClstr != None:
         if pendingBinding == None:  # Only try to add one binding at once
             if zcl.Cluster.PollCtrl in inClstr and zcl.Cluster.PollCtrl not in binding:
@@ -451,13 +454,13 @@ def Check(devKey):
             if atCmd != None:
                 return atCmd
         if zcl.Cluster.SimpleMetering in binding:
-            atCmd = CheckReporting(devKey, reporting, "powerReporting", zcl.Cluster.SimpleMetering, zcl.Attribute.InstantaneousDemand, zcl.AttributeTypes.Sint24, "5,900,10")    # Default power reporting is "between 5 seconds and 15 minutes, or +/- 10W"
+            atCmd = CheckReporting(devKey, reporting, "powerReporting", zcl.Cluster.SimpleMetering, zcl.Attribute.InstantaneousDemand, zcl.AttributeTypes.Sint24, "-1,-1,10")    # Default power reporting is "between 5 seconds and 15 minutes, or +/- 10W"
             if atCmd != None:
                 return atCmd
-            atCmd = CheckReporting(devKey, reporting, "energyConsumedReporting", zcl.Cluster.SimpleMetering, zcl.Attribute.CurrentSummationDelivered, zcl.AttributeTypes.Uint48, "60,900,100")    # Default energy consumed reporting is "between 1 minute and 15 minutes, or +100Wh"
+            atCmd = CheckReporting(devKey, reporting, "energyConsumedReporting", zcl.Cluster.SimpleMetering, zcl.Attribute.CurrentSummationDelivered, zcl.AttributeTypes.Uint48, "-1,-1,100")    # Default energy consumed reporting is "between 1 minute and 15 minutes, or +100Wh"
             if atCmd != None:
                 return atCmd
-            atCmd = CheckReporting(devKey, reporting, "energyGeneratedReporting", zcl.Cluster.SimpleMetering, zcl.Attribute.CurrentSummationReceived, zcl.AttributeTypes.Uint48, "0,-1,0")    # Default energy generated reporting is "never" (-1 as max)
+            atCmd = CheckReporting(devKey, reporting, "energyGeneratedReporting", zcl.Cluster.SimpleMetering, zcl.Attribute.CurrentSummationReceived, zcl.AttributeTypes.Uint48, "-1,-1,0")    # Default energy generated reporting is "never" (-1 as max)
             if atCmd != None:
                 return atCmd
     if GetTempVal(devKey, "JustSentOnOff"):
@@ -500,9 +503,11 @@ def CheckReporting(devKey, reporting, field, cluster, attrId, attrType, defVal):
     if rpt not in reporting:
         pendingRptAttrId = attrId
         devRpt = database.GetDeviceItem(devKey, field, defVal)
+        rptList = devRpt.split(",") # Explode the CSV line to a list of min, max, delta
+        if "-1" == rptList[0]:
+            return  # Don't configure this attribute for reporting if min==-1 
         log.debug("Update device reporting for "+database.GetDeviceItem(devKey, "userName")+"'s "+field)
         log.debug("Reporting was "+reporting+" which didn't include " + rpt)
-        rptList = devRpt.split(",") # Explode the CSV line to a list of min, max, delta
         if attrType == zcl.AttributeTypes.Uint8:
             deltaLen = 2   # Need to know number of digits to use in deltaHex
         elif attrType == zcl.AttributeTypes.Uint16:
