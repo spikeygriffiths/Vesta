@@ -135,7 +135,7 @@ function ShowDeviceInfo($db, $devKey, $username)
     ShowDevItem("devType", "Device Type", $devKey, $db);
     ShowDevItem("endPoints", "Endpoints", $devKey, $db);
     ShowDevItem("firmwareVersion", "Firmware Version", $devKey, $db);
-    if (devKey != 0) { # 0 is always Vesta co-ordinator, so don't show clusters and binding for that
+    if ($devKey != 0) { # 0 is always Vesta co-ordinator, so don't show clusters and binding for that
         ShowClusters("inClusters", "In Clusters", $devKey, $db);
         ShowClusters("outClusters", "Out Clusters", $devKey, $db);
         ShowClusters("binding", "Binding", $devKey, $db);
