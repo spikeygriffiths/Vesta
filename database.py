@@ -238,12 +238,13 @@ def LogItem(devKey, item, value):
             previousValue = value + 1    # Force values to be different
         else:
             previousvalue = "Not"+value  # Force values to be different
+    if rules.isNumber(value):
+        strVal = str(value)
+    else:   # Assume string
+        strVal = "\""+str(value)+"\""
     if previousValue != value:  # Only log the item if it has changed since last time.  Not a good idea for presence!
         log.debug("Setting "+item+" with "+str(value)+" for "+str(devKey)+" (changed from "+str(previousValue))
-        if rules.isNumber(value):
-            dbCmd = "INSERT INTO "+item+" VALUES (datetime('now', 'localtime'),"+str(value)+","+str(devKey)+")"
-        else: # Assume string
-            dbCmd = "INSERT INTO "+item+" VALUES (datetime('now', 'localtime'),\""+str(value)+"\","+str(devKey)+")"
+        dbCmd = "INSERT INTO "+item+" VALUES (datetime('now', 'localtime'),"+strVal+","+str(devKey)+")"
     else:  # Value unchanged, so update timestamp of the latest entry
         dbCmd = "UPDATE "+item+" SET timestamp=datetime('now', 'localtime') WHERE devKey="+str(devKey)+" ORDER BY timestamp DESC LIMIT 1"
     log.debug(dbCmd)
@@ -253,14 +254,15 @@ def LogItem(devKey, item, value):
 def UpdateLoggedItem(devKey, item, value):
     global curs, flushDB
     previousValue = GetLatestLoggedValue(devKey, item)
+    if rules.isNumber(value):
+        strVal = str(value)
+    else:   # Assume string
+        strVal = "\""+str(value)+"\""
     if previousValue == None: # Ensure we have a value for later updating
-        log.debug("Setting "+item+" with "+str(value)+" for "+str(devKey)+" (changed from "+str(previousValue))
-        if rules.isNumber(value):
-            dbCmd = "INSERT INTO "+item+" VALUES (datetime('now', 'localtime'),"+str(value)+","+str(devKey)+")"
-        else: # Assume string
-            dbCmd = "INSERT INTO "+item+" VALUES (datetime('now', 'localtime'),\""+str(value)+"\","+str(devKey)+")"
+        log.debug("Initialising "+item+" with "+str(value)+" for "+str(devKey))
+        dbCmd = "INSERT INTO "+item+" VALUES (datetime('now', 'localtime'),"+strVal+","+str(devKey)+")"
     else:
-        dbCmd = "UPDATE "+item+" SET timestamp=datetime('now', 'localtime'), value="+str(value)+" WHERE devKey="+str(devKey)
+        dbCmd = "UPDATE "+item+" SET timestamp=datetime('now', 'localtime'), value="+strVal+" WHERE devKey="+str(devKey)
     log.debug(dbCmd)
     curs.execute(dbCmd)
     flushDB = True # Batch up the commits.  Commit table for web access

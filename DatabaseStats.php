@@ -18,19 +18,18 @@ function ShowAllStats($db)
 {
     $dbSize = GetDbFileSize();
     $numDevs = GetDevCount($db);
+    $tablesquery = $db->prepare("SELECT name FROM sqlite_master WHERE type='table';");
+    $tablesquery->execute();
+    $dbTableInfo = array();
+    while ($table =  $tablesquery->fetch()) {
+        $name = $table['name'];
+        $dbTableInfo[] = $name; //array(["name"] => $name, ["entries"] => GetCount($db, $name));
+    }
     echo "<table>";
     echo "<tr><th>Table</th><th>Entries</th></tr>";
-    ShowStat($db, "Devices");
-    ShowStat($db, "Groups");
-    ShowStat($db, "Rules");
-    ShowStat($db, "Events");
-    ShowStat($db, "Presence");
-    ShowStat($db, "SignalPercentage");
-    ShowStat($db, "TemperatureCelsius");
-    ShowStat($db, "BatteryPercentage");
-    ShowStat($db, "PowerReadingW");
-    ShowStat($db, "EnergyConsumedWh");
-    ShowStat($db, "EnergyGeneratedWh");
+    foreach ($dbTableInfo as $name) {
+        ShowStat($db, $name);
+    }
     echo "</table>";
     echo "<br>(Database file: ",number_format($dbSize / (1024*1024), 2, '.', ''),"MB for ",$numDevs," devices=",number_format(($dbSize/($numDevs*1024)), 0, '.', ''),"KB per device)<br>";
 }
