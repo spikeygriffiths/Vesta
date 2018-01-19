@@ -105,13 +105,18 @@ function ShowEvent($devKey, $db)
     $result = $db->query("SELECT * FROM Events WHERE devKey=".$devKey." ORDER BY TIMESTAMP DESC LIMIT 1");
     $result->setFetchMode(PDO::FETCH_ASSOC);
     $fetch = $result->fetch();
-    $val = $fetch['event'];
+    $event = $fetch['event'];
     $time = $fetch['timestamp'];
-    $reason = $fetch['reason']; # ToDo: This may refer to a rule's Rowid (if it's not empty and starts with "Rule:"), so we could then make the $val a link to the rule that caused it..?
+    $reason = $fetch['reason'];
     $time = ElapsedTime($time);
-    if ($val != "") {
-        echo "<tr><td>Event</td>";
-        echo "<td>",$val,"<div style=\"float:right;width:50%;\">(",$time, " ago)</div></td>";
+    if ($event != "") {
+        echo "<tr><td>Event</td><td>";
+        if ($reason) {
+            echo "<a href=\"/vesta/ShowReason.php/?event=",$event,"&reason=",$reason,"\">",$event,"</a>";
+        } else {
+            echo $event;    // No reason given
+        }
+        echo "<div style=\"float:right;width:50%;\">(",$time, " ago)</div></td>";
         echo "</tr>";
     }
 }
