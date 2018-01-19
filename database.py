@@ -170,11 +170,12 @@ def GarbageCollect(table):
     keyList = GetAllDevKeys()
     itemList = GetAllItemsFromTable("*", table)
     for item in itemList:
-        devKey = item[2]
-        if devKey not in keyList:
-            log.debug("Found unused devKey of "+str(devKey)+" in "+table)
-            curs.execute("DELETE FROM "+table+" WHERE devKey=" + str(devKey))
-            keyList.append(devKey)  # To avoid deleting it for all the other entries
+        if item != None and len(item) > 2:
+            devKey = item[2]
+            if devKey not in keyList:
+                log.debug("Found unused devKey of "+str(devKey)+" in "+table)
+                curs.execute("DELETE FROM "+table+" WHERE devKey=" + str(devKey))
+                keyList.append(devKey)  # To avoid deleting it for all the other entries
 
 # From http://snipplr.com/view/18471/
 type_str = type('str')

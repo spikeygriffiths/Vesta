@@ -20,12 +20,19 @@ function ShowTableStats($db, $table)
 {
     $numDevs = GetDevCount($db);
     if ($numDevs > 0) {
-        echo "<table>";
-        echo "<tr><th>Device</th><th>Last 24 hours</th><th>Last 7 days</th><th>Total</th></tr>";
+        $dbTableInfo = array();
         for ($index = 0; $index < $numDevs; $index++) {
             $devKey = GetDevKey($index, $db);
-            $username = GetDevItem("userName", $devKey, $db);
             $entries = GetCount($db, $table, "devKey=".$devKey);
+            $dbTableInfo[] = array($devKey, $entries);
+        }
+        usort($dbTableInfo, "BySize");  # Sort by size (element 1 of each array)
+        echo "<table>";
+        echo "<tr><th>Device</th><th>Last 24 hours</th><th>Last 7 days</th><th>Total</th></tr>";
+        foreach ($dbTableInfo as $info) {
+            $devKey = $info[0];
+            $username = GetDevItem("userName", $devKey, $db);
+            $entries = $info[1];
             if ($entries > 100) {
                 echo "<tr>";
                 echo "<td><a href=\"/vesta/ShowOneDevice.php/?devKey=",$devKey,"\">",$username,"</a></td>";
@@ -43,6 +50,10 @@ function ShowTableStats($db, $table)
         echo "</tr>";
         echo "</table>";
     }
+}
+
+function BySize($a, $b) {   # Sort by size (element 1 of each array)
+    return ($a[1] < $b[1]);
 }
 
 function ShowStat($db, $table, $cond)
