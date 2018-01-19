@@ -51,7 +51,14 @@ function ShowActivity($db, $dbTime, $titleTime, $devKey)
     while ($row =  $sth->fetch()) {
         $userName = GetDevItem("userName", $row['devKey'],$db);        // Use $row['devKey'] as key into Devices table to get $userName
         $reason = $row['reason']; # This may refer to a rule's Rowid (if it's not empty and starts with "Rule:"), so we could then make the $val a link to the rule that caused it..?
-        echo"<tr><td> ".$row['timestamp']." </td><td>".$userName." </td><td> ".$row['event']." </td></tr>";
+        $event = $row['event'];
+        echo"<tr><td> ".$row['timestamp']." </td><td>".$userName." </td><td>";
+        if ($reason) {
+            echo "<a href=\"/vesta/ShowReason.php/?event=",$event,"&reason=",$reason,"\">",$event,"</a>";
+        } else {
+            echo $event;    // No reason given
+        }
+        echo "</td></tr>";
     }
     echo "</table>";
 }
