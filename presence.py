@@ -28,11 +28,10 @@ def Check():  # Expected to be called infrequently - ie once/minute
     for devKey in keyList:  # Element 0 is hub, rest are devices
         if database.GetDeviceItem(devKey, "nwkId") != "0000":  # Ignore hub
             lastSeen, presence = Get(devKey)
-            if presence != states.absent:
-                if datetime.now() > lastSeen+timedelta(seconds=900) and "SED"!= database.GetDeviceItem(devKey, "devType"): # More than 15 minutes since we last heard from device, and it's listening
-                    notHeardFromList.append(devKey)    # Make a list of devices to query
-                if datetime.now() > lastSeen+timedelta(seconds=1800): # More than 30 minutes since we last heard from device
-                    Set(devKey, states.absent)
+            if datetime.now() > lastSeen+timedelta(seconds=900) and "SED" != database.GetDeviceItem(devKey, "devType"): # More than 15 minutes since we last heard from device, and it's listening
+                notHeardFromList.append(devKey)    # Make a list of devices to query
+            if presence != states.absent and datetime.now() > lastSeen+timedelta(seconds=1800): # More than 30 minutes since we last heard from device
+                Set(devKey, states.absent)
     if notHeardFromList != []:
         numDevs = len(notHeardFromList)
         if numDevs > 3:

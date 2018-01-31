@@ -191,7 +191,7 @@ class Commands(cmd.Cmd):
             sat = int(argList[1])
             devKey = devices.FindDev(argList[0])
             if devKey != None:
-                database.NewEvent(devKey, action, "UICmd")
+                database.NewEvent(devKey, "Sat", "UICmd")
                 devcmds.Sat(devKey, sat)
         else:
             log.fault("Insufficient Args")

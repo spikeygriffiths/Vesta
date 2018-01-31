@@ -23,16 +23,17 @@ echo "<br><br><button class=\"button\" type=\"button\" onclick=\"window.location
 PageFooter();
 echo "</body></html>";
 
-function ShowDevStatus($item, $name, $units, $withTime, $devKey, $db)
+function ShowDevStatus($item, $name, $units, $minAge, $devKey, $db)
 {
     $row = GetLatestLoggedItem($item, $devKey,$db);
     if ($row != null) {
         $val = $row['value'];
-        if ($withTime==true) {
-            $time = $row['timestamp'];
-            $time = ElapsedTime($time);   # Convert timestamp to elapsed time
-            echo "<tr><td>",$name,"</td><td>",$val,$units,"<div style=\"float:right;width:50%;\">(",$time, " ago)</div></td></tr>";
-        } else {    # Don't show time
+        $time = $row['timestamp'];
+        $age = ElapsedSecs($time);  # Get age in seconds
+        $ageStr = ElapsedTime($time);   # Convert timestamp to elapsed time as a string
+        if ($age > $minAge) { # Check how recent reading is and show age if old enough
+            echo "<tr><td>",$name,"</td><td>",$val,$units,"<div style=\"float:right;width:50%;\">(",$ageStr, " ago)</div></td></tr>";
+        } else {    # Don't show age of reading
             echo "<tr><td>",$name,"</td><td>",$val,$units,"</td></tr>";
         }
     }
@@ -125,11 +126,11 @@ function ShowDeviceInfo($db, $devKey, $username)
 {
     $nwkId = GetDevItem("nwkId", $devkey, $db);
     echo "<table>";
-    ShowDevStatus("Presence", "Presence", "", true, $devKey, $db);
-    ShowDevStatus("SignalPercentage", "Radio Signal", "%", false, $devKey, $db);
-    ShowDevStatus("BatteryPercentage", "Battery", "%", true, $devKey, $db);
-    ShowDevStatus("TemperatureCelsius", "Temperature", "C", true, $devKey, $db);
-    ShowDevStatus("PowerReadingW", "Power", "W", false, $devKey, $db);
+    ShowDevStatus("Presence", "Presence", "", 300, $devKey, $db);
+    ShowDevStatus("SignalPercentage", "Radio Signal", "%", 300, $devKey, $db);
+    ShowDevStatus("BatteryPercentage", "Battery", "%", 0, $devKey, $db);
+    ShowDevStatus("TemperatureCelsius", "Temperature", "C", 600, $devKey, $db);
+    ShowDevStatus("PowerReadingW", "Power", "W", 60, $devKey, $db);
     ShowDevEnergy("EnergyConsumedWh", "Energy consumed", "Wh", $devKey, $db);
     ShowDevEnergy("EnergyGeneratedWh", "Energy generated", "Wh", $devKey, $db);
     ShowEvent($devKey, $db);

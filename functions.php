@@ -23,6 +23,12 @@ function PageFooter()
     //echo "<button class=\"buttonHome\" type=\"button\" onclick=\"window.location.href='/vesta/index.php'\">Home</button><br><br>";
 }
 
+function ElapsedSecs($timeStamp)    // Returns count of seconds elapsed
+{
+    $now = date('Y-m-d H:i:s');
+    return abs(strtotime($now) - strtotime($timeStamp));
+}
+
 function ElapsedTime($timeStamp)    // Creates a string describing age of $timeStamp
 {
     $now = date('Y-m-d H:i:s');
