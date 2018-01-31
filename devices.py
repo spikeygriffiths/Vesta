@@ -288,7 +288,7 @@ def SetAttrVal(devKey, clstrId, attrId, value):
                     devName = database.GetDeviceItem(devKey, "userName")
                     synopsis.problem(devName + "_batt", devName + " low battery ("+str(varVal)+"%)")
     if clstrId == zcl.Cluster.Temperature and attrId == zcl.Attribute.Celsius:
-        if value != "FF9C": # Don't know where this value (of -100) comes from - should be "7FFF" (signed value)
+        if value != "FF9C" and value != "8000": # Don't know where this value (of -100) comes from, but seems to mean "Illegal temp", although it should be -1'C
             try:
                 varVal = int(value, 16) / 100 # Arrives in 0.01'C increments 
                 database.LogItem(devKey, "TemperatureCelsius", varVal) # For web page
@@ -298,9 +298,9 @@ def SetAttrVal(devKey, clstrId, attrId, value):
         if isnumeric(value, 16):
             oldState = database.GetLatestEvent(devKey)
             if int(value, 16) == 0:
-                newState = "SwitchedOff"
+                newState = "switchoff"
             else:
-                newState = "SwitchedOn"
+                newState = "switchon"
             if oldState != newState:
                 database.NewEvent(devKey, newState)
                 Rule(devKey, newState)

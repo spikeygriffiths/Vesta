@@ -43,6 +43,8 @@ def EventHandler(eventId, eventArg):
         serSpeed = config.Get("baud", '19200')
         ser = serial.Serial(serPort, int(serSpeed), timeout=0)
         ser.flushInput()
+        if database.GetDevicesCount()==0: # If we have no devices yet, then...
+            devices.Add("0000", "N/A", "COO") # ...make sure we add this device as the first item before we try to use it!
         queue.EnqueueCmd(0, ["ATS63=0007", "OK"]) # Request RSSI & LQI on every received message, also disable automatic checkIn responses
         if database.GetDeviceItem(0, "modelName") == None:
             queue.EnqueueCmd(0, ["ATI", "OK"]) # Request our EUI, as well as our Telegesis version
@@ -98,6 +100,12 @@ def Parse(atLine):
         ourPowLvl = atList[2]
         ourPan = atList[3]
         ourExtPan = atList[4]
+    elif atList[0] == "+N=NoPAN": # No PAN means we need to set up the network and add ourselves
+        queue.EnqueueCmd(0, ["AT+EN", "OK"]) # Start new network
+    elif atList[0] == "JPAN":  # After Establish Network (AT+EN) has finished
+        ourChannel = atList[1]
+        ourPan = atList[2]
+        ourExtPan = atList[3]
     else:
         events.Issue(events.ids.RXMSG, atList)
     # end Parse
