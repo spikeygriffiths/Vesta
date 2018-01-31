@@ -298,12 +298,21 @@ def SetAttrVal(devKey, clstrId, attrId, value):
         if isnumeric(value, 16):
             oldState = database.GetLatestEvent(devKey)
             if int(value, 16) == 0:
-                newState = "switchoff"
+                newState = "SwitchOff"
             else:
-                newState = "switchon"
+                newState = "SwitchOn"
             if oldState != newState:
                 database.NewEvent(devKey, newState)
                 Rule(devKey, newState)
+            expectedState = GetTempVal(devKey, "ExpectOnOff")
+            if expectedState != None:
+                if newState != expectedState:
+                    if expectedState == "SwitchOn":
+                        devcmds.SwitchOn(devKey)  # Re-issue command
+                    else: # Assume SwitchOff
+                        devcmds.SwitchOff(devKey)  # Re-issue command
+                else: # We got the expected result
+                    DelTempVal(devKey, "ExpectOnOff")            
     if clstrId == zcl.Cluster.SimpleMetering and attrId == zcl.Attribute.InstantaneousDemand:
         if isnumeric(value, 16):
             varVal = int(value, 16) # Arrives in Watts, so store it in the same way

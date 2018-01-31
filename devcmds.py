@@ -28,6 +28,7 @@ def SwitchOn(devKey):
     ep = database.GetDeviceItem(devKey, "endPoints")
     if nwkId and ep:
         devices.SetTempVal(devKey, "JustSentOnOff", "True")
+        devices.SetTempVal(devKey, "ExpectOnOff", "SwitchOn")
         queue.EnqueueCmd(devKey, ["AT+RONOFF:"+nwkId+","+ep+",0,1", "OK"]) # Assume FFD if it supports OnOff cluster
         # Only queue up a dimming command if that cluster is available on device
         queue.EnqueueCmd(devKey, ["AT+LCMVTOLEV:"+nwkId+","+ep+",0,0,FE,0001", "OK"]) # Ensure fully bright ready to be turned on later
@@ -38,6 +39,7 @@ def SwitchOff(devKey):
     if nwkId and ep:
         devices.DelTempVal(devKey,"SwitchOff@") # Remove any pending "Off" events if we're turning the device off directly
         devices.SetTempVal(devKey, "JustSentOnOff", "True")
+        devices.SetTempVal(devKey, "ExpectOnOff", "SwitchOff")
         queue.EnqueueCmd(devKey, ["AT+RONOFF:"+nwkId+","+ep+",0,0", "OK"]) # Assume FFD if it supports OnOff cluster
 
 def Toggle(devKey):
