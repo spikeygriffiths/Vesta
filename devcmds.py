@@ -43,12 +43,18 @@ def SwitchOff(devKey):
         queue.EnqueueCmd(devKey, ["AT+RONOFF:"+nwkId+","+ep+",0,0", "OK"]) # Assume FFD if it supports OnOff cluster
 
 def Toggle(devKey):
-    nwkId = database.GetDeviceItem(devKey, "nwkId")
-    ep = database.GetDeviceItem(devKey, "endPoints")
-    if nwkId and ep:
-        devices.DelTempVal(devKey,"SwitchOff@") # Remove any pending "Off" events if we're handling the device directly
-        devices.SetTempVal(devKey, "JustSentOnOff", "True")
-        queue.EnqueueCmd(devKey, ["AT+RONOFF:"+nwkId+","+ep+",0", "OK"]) # Assume FFD if it supports OnOff cluster
+    state = database.GetLatestEvent(devKey)
+    log.debug("Asked to toggle, and old state is "+state)
+    if state == "SwitchOn":
+        SwitchOff(devKey)
+    else:
+        SwitchOn(devKey)
+    #nwkId = database.GetDeviceItem(devKey, "nwkId")
+    #ep = database.GetDeviceItem(devKey, "endPoints")
+    #if nwkId and ep:
+    #    devices.DelTempVal(devKey,"SwitchOff@") # Remove any pending "Off" events if we're handling the device directly
+    #    devices.SetTempVal(devKey, "JustSentOnOff", "True")
+    #    queue.EnqueueCmd(devKey, ["AT+RONOFF:"+nwkId+","+ep+",0", "OK"]) # Assume FFD if it supports OnOff cluster
 
 def Dim(devKey, level):
     nwkId = database.GetDeviceItem(devKey, "nwkId")

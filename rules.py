@@ -270,22 +270,26 @@ def CommandDev(action, devKey, actList, ruleId):
         synopsis.problem("rules", "Unknown device "+actList[1]+" in rules")
     else:
         devices.DelTempVal(devKey, "SwitchOff@")    # Kill any extant timers for this device
-        database.NewEvent(devKey, action, "Rule:"+str(ruleId))
         if action == "SwitchOn".lower():
+            database.NewEvent(devKey, "SwitchOn", "Rule:"+str(ruleId))
             devcmds.SwitchOn(devKey)
             if len(actList) > 3:
                 if actList[2] == "for":
                     SetOnDuration(devKey, int(actList[3],10))
         elif action == "SwitchOff".lower():
+            database.NewEvent(devKey, "SwitchOff", "Rule:"+str(ruleId))
             devcmds.SwitchOff(devKey)
         elif action == "Toggle".lower():
+            #database.NewEvent(devKey, "Toggle", "Rule:"+str(ruleId)) # Removed, otherwise Toggle function can't work out old state!
             devcmds.Toggle(devKey)
         elif action == "Dim".lower() and actList[2] == "to":
+            database.NewEvent(devKey, "Dim", "Rule:"+str(ruleId))
             devcmds.Dim(devKey,float(actList[3]))
             if len(actList) > 5:
                 if actList[4] == "for":
                     SetOnDuration(devKey, int(actList[5],10))
         elif action == "HueSat".lower():    # Syntax is "do HueSat <Hue in degrees>,<fractional saturation>
+            database.NewEvent(devKey, "HueSat", "Rule:"+str(ruleId))
             devcmds.Colour(devKey, int(actList[3],10), float(actList[4]))
         else:
             log.debug("Unknown action: "+action +" for device: "+actList[1])
