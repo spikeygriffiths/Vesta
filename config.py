@@ -1,10 +1,9 @@
 #config.py
 
+#from pathlib import Path
 # App-specific modules
 import database
 import log
-
-configFilename = "config.txt"
 
 def Get(item, default=None):
     value = database.GetConfig(item)
