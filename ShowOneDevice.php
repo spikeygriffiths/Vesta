@@ -171,6 +171,8 @@ function ShowDeviceInfo($db, $devKey, $username)
         $inClusters = GetDevItem("inClusters", $devKey, $db);
         if (strpos($inClusters, "0006") !== false) { // Is switchable, eg smartplug, bulb, etc.
             echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=toggle ",$username,"'\">Toggle</button>&nbsp&nbsp&nbsp";
+            echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=on ",$username,"'\">On</button>&nbsp&nbsp&nbsp";
+            echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=off ",$username,"'\">Off</button>&nbsp&nbsp&nbsp";
         }
         if (strpos($inClusters, "0008") !== false) { // Is dimmable, eg lamp, bulb
             echo "Brightness: <a href=\"/vesta/ImageMap.php/?devId=",$username,"&cmd=dim&map=\"><img src=\"/vesta/UpRamp.png\" width=100 height=20 alt=\"Level\" ismap=\"ismap\"></a><br><br>";  // Php page will GET x,y,

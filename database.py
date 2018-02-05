@@ -100,6 +100,10 @@ def InitCore(db, curs):
     email varchar(64))""")
     curs.execute("CREATE UNIQUE INDEX IF NOT EXISTS name_UNIQUE ON users (name ASC)")
     curs.execute("CREATE UNIQUE INDEX IF NOT EXISTS email_UNIQUE ON users (email ASC)")
+    curs.execute("""
+    CREATE TABLE IF NOT EXISTS Config (
+    item TEXT,
+    value TEXT)""")
 
 def InitAll(db, curs):
     InitCore(db, curs)  # Central tables of database
@@ -466,6 +470,15 @@ def GetRules(item):
     #for row in curs:
     #    ruleList.append(row[0]) # Build a list of all rules that mention item
     return ruleList
+
+# === Config ===
+def GetConfig(item):
+    global curs
+    curs.execute("SELECT Value FROM Config WHERE item=\""+item+"\" COLLATE NOCASE")
+    rows = curs.fetchone()
+    if rows != None:
+        return rows[0]
+    return None
 
 # === AppState ===
 def GetAppState(item):

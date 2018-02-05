@@ -157,6 +157,22 @@ class Commands(cmd.Cmd):
             database.NewEvent(devKey, "Toggle", "UICmd")
             devcmds.Toggle(devKey)
 
+    def do_on(self, devId):
+        """on name
+        Sends on command to named device"""
+        devKey = devices.FindDev(devId)
+        if devKey != None:
+            database.NewEvent(devKey, "SwitchOn", "UICmd")
+            devcmds.SwitchOn(devKey)
+
+    def do_off(self, devId):
+        """off name
+        Sends off command to named device"""
+        devKey = devices.FindDev(devId)
+        if devKey != None:
+            database.NewEvent(devKey, "SwitchOff", "UICmd")
+            devcmds.SwitchOff(devKey)
+
     def do_dim(self, line):
         """dim name percentage
         Sends level command to named device"""
