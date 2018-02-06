@@ -32,7 +32,7 @@ def Set(name, value, force=False):
     global varList
     if force==True or Get(name) != value:  # Only update value if it has changed, unless forced
         Del(name) # Remove old tuple if necessary
-        log.debug("Variable \""+name+"\" gets "+value+" @ "+"{0:%Y-%m-%d %H:%M:%S}".format(datetime.now()))
+        log.debug("Variable \""+name+"\" gets "+value)
         varList.append((name, value, "{0:%Y-%m-%d %H:%M:%S}".format(datetime.now()))) # Add new one regardless
 
 def Del(name):

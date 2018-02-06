@@ -233,6 +233,7 @@ def Action(actList, ruleId):
             if isNumber(varVal):
                 newVal = str(eval(varVal+"-1"))
                 variables.Set(varName, newVal)
+                Run(varName+"=="+varVal) # Recurse! to see if any rules need running now that we've set a variable
             else:
                 log.fault(varName+" not a number at "+expression)
         elif "++" in expression:
@@ -242,6 +243,7 @@ def Action(actList, ruleId):
             if isNumber(varVal):
                 newVal = str(eval(varVal+"+1"))
                 variables.Set(varName, newVal)
+                Run(varName+"=="+varVal) # Recurse! to see if any rules need running now that we've set a variable
             else:
                 log.fault(varName+" not a number at "+expression)
         elif "=" in expression:
@@ -249,6 +251,7 @@ def Action(actList, ruleId):
             varName = expression[:sep]
             varVal = expression[sep+1:]
             variables.Set(varName, varVal)
+            Run(varName+"=="+varVal) # Recurse! to see if any rules need running now that we've set a variable
         else:
             log.fault("Badly formatted rule at "+expression)
     elif action == "unset":   # Remove a named variable
