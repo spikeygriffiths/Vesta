@@ -1,6 +1,5 @@
 #config.py
 
-#from pathlib import Path
 # App-specific modules
 import database
 import log
@@ -10,8 +9,8 @@ def Get(item, default=None):
     if value != None:
         return value
     if default != None:
-        log.debug("Missing variable from " + configFilename + " : " + item + "  Using default of " + default)
+        log.debug("Missing config item : " + item + "  Using default of " + default)
     else:
-        log.debug("Missing variable from " + configFilename + " : " + item + "  No default")
+        log.debug("Missing config item : " + item + "  No default")
     return default  # If we get all through the config file without finding a match, use default value
  
