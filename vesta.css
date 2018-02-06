@@ -26,12 +26,20 @@
 .pageTitle {
     font-size: 32px;
     font-weight: bold;
-    /*background-color: DodgerBlue; /* For debugging */
-    /*margin: 20px;*/
     width: 700px;
 }
 .pageEmpty {
     width: 64px;
     margin: 10;
+}
+.configForm {
+    display: flex;
+    justify-content: center;
+    width: 600px;
+    clear: both;
+}
+.configForm form {
+    width: 100%;
+    clear: both;
 }
 
