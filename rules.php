@@ -18,7 +18,7 @@ if ($item != "All") {
         $devKey = $_GET['devKey'];
         echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/ShowOneDevice.php/?devKey=",$devKey,"'\">",$item,"</button><br><br>";
     } else if ($type == "vars") {
-        echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/variables.php'\">Variables</button><br><br>";
+        echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Variables.php'\">Variables</button><br><br>";
     }
 }
 PageFooter();

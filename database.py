@@ -140,6 +140,9 @@ def InitAll(db, curs):
     CREATE TABLE IF NOT EXISTS Events (
     timestamp DATETIME, event TEXT, devKey INTEGER, reason TEXT,
     FOREIGN KEY(devKey) REFERENCES Devices(devKey))""")
+    curs.execute("""
+    CREATE TABLE IF NOT EXISTS Variables (
+    name TEXT, value TEXT, timestamp DATETIME)""")
     curs.execute("CREATE TABLE IF NOT EXISTS AppState (Name TEXT PRIMARY KEY, Value TEXT)")
     if TableHasColumn(curs, "Events", "reason") == False:
         curs.execute("ALTER TABLE Events ADD COLUMN reason TEXT")
@@ -499,3 +502,40 @@ def DelAppState(item):
     curs.execute("DELETE FROM AppState WHERE Name=\""+item+"\" COLLATE NOCASE")
     flushDB = True # Batch up the commits
 
+# === Variables ===
+def GetVarVal(name):
+    global curs
+    curs.execute("SELECT value FROM Variables WHERE name=\""+name+"\" COLLATE NOCASE")
+    rows = curs.fetchone()
+    if rows != None:
+        return rows[0]
+    return None
+
+def GetVarTime(name):
+    global curs
+    curs.execute("SELECT timestamp FROM Variables WHERE name=\""+name+"\" COLLATE NOCASE")
+    rows = curs.fetchone()
+    if rows != None:
+        return rows[0]
+    return None
+
+def SetVar(name, val):
+    global curs, flushDB
+    if GetVarVal(name) == None:
+        log.debug("New variable "+name+" set to "+val)
+        curs.execute("INSERT INTO Variables VALUES(\""+name+"\", \""+val+"\", datetime('now', 'localtime'))") # Create new
+        newVal = GetVarVal(name)
+        if newVal != None:
+            log.debug(name+" from database holds "+val)
+        else:
+            log.debug(name+" wasn't set in database!")
+    else:
+        log.debug("Existing variable "+name+" set to "+val)
+        curs.execute("UPDATE Variables SET value=\""+val+"\", timestamp=datetime('now', 'localtime') WHERE name=\""+name+"\" COLLATE NOCASE") # Update existing
+    flushDB = True # Batch up the commits
+
+def DelVar(name):
+    global curs, flushDB
+    log.debug("Removing "+name+" from database")
+    curs.execute("DELETE FROM Variables WHERE name=\""+name+"\" COLLATE NOCASE")
+    flushDB = True # Batch up the commits

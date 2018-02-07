@@ -85,11 +85,15 @@ def DeviceRun(devKey, restOfRule): # Run rule for specified device
 def Run(trigger): # Run through the rules looking to see if we have a match for the trigger
     rules = database.GetRules(trigger)  # Get a list of all rules that mention trigger
     log.debug("Running rule: "+ trigger)
+    delVar = False
     if "==" in trigger:
         sep = trigger.index("==")
         triggerType = trigger[:sep]
         triggerVal = trigger[sep+2:]
-        variables.Set(triggerType, triggerVal)
+        oldVal = variables.Get(triggerType)
+        if oldVal == None: # Check to see if this variable already exists and leave it alone if so
+            variables.Set(triggerType, triggerVal)
+            delVar = True
     for line in rules:
         ruleId = line[0]
         rule = ' '.join(line[1].split()) # Compact multiple spaces into single ones and make each line into a rule
@@ -102,7 +106,8 @@ def Run(trigger): # Run through the rules looking to see if we have a match for 
             # else skip rest of line
         # else assume the line is a comment and skip it
     # end of rules
-    variables.Del(triggerType) # Make sure we don't re-run the same trigger
+    if delVar:
+        variables.Del(triggerType) # Make sure we don't re-run the same trigger
 
 def FindItemInList(item, listToCheck):
     try:
@@ -233,7 +238,7 @@ def Action(actList, ruleId):
             if isNumber(varVal):
                 newVal = str(eval(varVal+"-1"))
                 variables.Set(varName, newVal)
-                Run(varName+"=="+varVal) # Recurse! to see if any rules need running now that we've set a variable
+                Run(varName+"=="+newVal) # Recurse! to see if any rules need running now that we've set a variable
             else:
                 log.fault(varName+" not a number at "+expression)
         elif "++" in expression:
@@ -243,7 +248,7 @@ def Action(actList, ruleId):
             if isNumber(varVal):
                 newVal = str(eval(varVal+"+1"))
                 variables.Set(varName, newVal)
-                Run(varName+"=="+varVal) # Recurse! to see if any rules need running now that we've set a variable
+                Run(varName+"=="+newVal) # Recurse! to see if any rules need running now that we've set a variable
             else:
                 log.fault(varName+" not a number at "+expression)
         elif "=" in expression:
