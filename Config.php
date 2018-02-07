@@ -11,20 +11,32 @@ echo "</body></html>";
 
 function ShowConfig($db)
 {
-    $sth = $db->prepare("SELECT * FROM Config");
+    $sth = $db->prepare("SELECT item FROM Config");
     $sth->execute();
-    echo "<div class=\"configForm\">";
+    echo "<table>";
+    $itemCount = 0;
     while ($row =  $sth->fetch()) {
-        $item = $row['item'];
+        $items[$itemCount++] = $row['item']; # Build array ready for sorting
+    }
+    sort($items, SORT_NATURAL | SORT_FLAG_CASE);  # Sort items
+    for ($index = 0; $index < $itemCount; $index++) {
+        $item = $items[$index];
+        $sth = $db->prepare("SELECT value FROM Config where item=\"".$item."\"");
+        $sth->execute();
+        $row = $sth->fetch();
         $value = $row['value'];
         //echo "<form align=\"right\" action=\"/vesta/save_config.php/?item=", $item, "\" method=\"post\">",$item,": "; // I can't get form to be right-aligned inside <div> element
-        echo "<form action=\"/vesta/save_config.php/?item=", $item, "\" method=\"post\">",$item,": ";
+        echo "<tr><td>",$item,"</td><td>";
+        echo "<form action=\"/vesta/save_config.php/?item=", $item, "\" method=\"post\">";
         echo "<input type=\"text\" size=\"50\" name=\"valueTxt\" value=\"", $value, "\">";
         echo "<input type=\"submit\" value=\"Update\"></form>";
+        echo "</td></tr>";
     }
-    echo "<form action=\"/vesta/save_config.php/?item=NewItem\" method=\"post\">New item: ";
+    echo "<tr><td>New Item</td><td>";
+    echo "<form action=\"/vesta/save_config.php/?item=NewItem\" method=\"post\">";
     echo "<input type=\"text\" size=\"20\" name=\"valueTxt\" value=\"\"\>";
     echo "<input type=\"submit\" value=\"Update\"></form>";
-    echo "</div>";
+    echo "</td></tr>";
+    echo "</table>";
 }
 ?>
