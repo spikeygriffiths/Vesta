@@ -13,9 +13,9 @@ def email(subject, text, html):
     smtpUser = config.Get("smtpUser")
     smtpPass = config.Get("smtpPass")
     addrTo = config.Get("emailAddress")
+    appTitle = config.Get("appTitle", "Vesta")
     if smtpServer != None and smtpUser != None and smtpPass != None and addrTo != None:
-        #addrFrom = smtpUser
-        addrFrom = "Vesta<" + smtpUser + ">"
+        addrFrom = appTitle + "<" + smtpUser + ">"
         if html != None:
             msg = MIMEMultipart('alternative')
             # Record the MIME types of both parts - text/plain and text/html

@@ -218,7 +218,7 @@ def Action(actList, ruleId):
             html = ''.join(emailHtml)
             sendmail.email("Vesta Status", text, html)
         else:
-            synopsis.problem("NoEmail", "No emailAddress entry in config.txt file, needed to send status mail")
+            synopsis.problem("NoEmail", "No emailAddress entry in config, needed to send email")
     elif action == "email": # All args are body of the text.  Fixed subject and email address
         emailAddress = config.Get("emailAddress")
         if emailAddress != None:
@@ -228,7 +228,7 @@ def Action(actList, ruleId):
             plainText = " ".join(emailBody)
             sendmail.email("Vesta Alert!", plainText, None)
         else:
-            synopsis.problem("NoEmail", "No emailAddress entry in config.txt file")
+            synopsis.problem("NoEmail", "No emailAddress entry in config")
     elif action == "set":   # Set a named variable to a value
         expression = "".join(actList[1:])   # First recombine actList[1] onwards, with no spaces.  Now expression should be of the form "<var>=<val>"
         if "--" in expression:

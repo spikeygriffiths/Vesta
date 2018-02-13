@@ -11,21 +11,17 @@ echo "</body></html>";
 
 function ShowConfig($db)
 {
-    $sth = $db->prepare("SELECT item FROM Config");
+    $sth = $db->prepare("SELECT item FROM Config"); # Get all items
     $sth->execute();
-    echo "<table>";
     $itemCount = 0;
     while ($row =  $sth->fetch()) {
         $items[$itemCount++] = $row['item']; # Build array ready for sorting
     }
     sort($items, SORT_NATURAL | SORT_FLAG_CASE);  # Sort items
+    echo "<table>";
     for ($index = 0; $index < $itemCount; $index++) {
         $item = $items[$index];
-        $sth = $db->prepare("SELECT value FROM Config where item=\"".$item."\"");
-        $sth->execute();
-        $row = $sth->fetch();
-        $value = $row['value'];
-        //echo "<form align=\"right\" action=\"/vesta/save_config.php/?item=", $item, "\" method=\"post\">",$item,": "; // I can't get form to be right-aligned inside <div> element
+        $value = GetConfig($item, "", $db);
         echo "<tr><td>",$item,"</td><td>";
         echo "<form action=\"/vesta/save_config.php/?item=", $item, "\" method=\"post\">";
         echo "<input type=\"text\" size=\"50\" name=\"valueTxt\" value=\"", $value, "\">";

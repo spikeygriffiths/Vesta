@@ -1,10 +1,13 @@
 <?php
 // functions.php
+//include "database.php";
 include "AppCmd.php";   # Not allowed to include same file more than once, so if including this "functions.php", must remove any previous include "AppCmd.php"
 
 function PageHeader($title, $right = Null)
 {
-    echo "<title>Vesta - ",$title,"</title>"; # For browser tab
+    $db = DatabaseInit();
+    $appTitle = GetConfig("appTitle", "Vesta", $db);    // Assumes database.php has been included
+    echo "<title>",$appTitle," - ",$title,"</title>"; # For browser tab
     echo "<center>";
     echo "<div class=\"pageHead\">";
     echo "<div class=\"pageButton\"><a href=\"/vesta/index.php\"><img src=\"/vesta/vestaLogo.png\" width=32 height=32 title=\"Home\"></a></div>";

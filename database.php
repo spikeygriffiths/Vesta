@@ -20,7 +20,7 @@ function GetCount($db, $table, $qualifier = "")
     if ($qualifier == "") {
         $result = $db->query("SELECT COUNT(*) FROM ".$table);
     } else {
-        $result = $db->query("SELECT count(*) FROM ".$table." WHERE ".$qualifier);  # $qualifier may be "devKey= 21" or "timestamp<('now','-2 days')", etc.
+        $result = $db->query("SELECT COUNT(*) FROM ".$table." WHERE ".$qualifier);  # $qualifier may be "devKey= 21" or "timestamp<('now','-2 days')", etc.
     }
     if ($result != null) {
         return $result->fetchColumn();
@@ -168,6 +168,21 @@ function GetAppState($item, $db)
 function SetAppState($item, $val, $db)
 {
     $db->exec("REPLACE INTO AppState VALUES(\"".$item."\", \"".$val."\")"); # Run the update
+}
+
+function GetConfig($item, $default, $db)
+{
+    $result = $db->query("SELECT value FROM Config WHERE item=\"".$item."\"");
+    if ($result != null) {
+        $result->setFetchMode(PDO::FETCH_ASSOC);
+        $fetch = $result->fetch();
+        if ($fetch != null) {
+            return $fetch["value"];
+        }
+    }
+    //if (!$default) $default = ""; # Ensure we have something as a default so we can set the value
+    $db->exec("INSERT OR REPLACE INTO Config VALUES(\"".$item."\",\"".$default."\")");
+    return $default;
 }
 
 ?>

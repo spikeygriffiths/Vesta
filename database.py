@@ -483,6 +483,11 @@ def GetConfig(item):
         return rows[0]
     return None
 
+def SetConfig(item, value):
+    global curs, flushDB
+    curs.execute("INSERT OR REPLACE INTO Config VALUES(\""+item+"\",\""+value+"\"")
+    flushDB = True # Batch up the commits
+
 # === AppState ===
 def GetAppState(item):
     global curs
