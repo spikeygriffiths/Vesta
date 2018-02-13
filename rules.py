@@ -295,7 +295,7 @@ def CommandDev(action, devKey, actList, ruleId):
             devcmds.Dim(devKey,float(actList[3]))
             if len(actList) > 5:
                 if actList[4] == "for":
-                    SetOnDuration(devKey, int(actList[5],10))
+                    SetDimDuration(devKey, int(actList[5],10))
         elif action == "HueSat".lower():    # Syntax is "do HueSat <Hue in degrees>,<fractional saturation>
             database.NewEvent(devKey, "HueSat", "Rule:"+str(ruleId))
             devcmds.Colour(devKey, int(actList[3],10), float(actList[4]))
@@ -306,4 +306,9 @@ def SetOnDuration(devKey, durationS):
     if durationS>0: # Duration of 0 means "Stay on forever"
         log.debug("Switching off after "+str(durationS))
         devices.SetTempVal(devKey, "SwitchOff@", datetime.now()+timedelta(seconds=durationS))
+
+def SetDimDuration(devKey, durationS):
+    if durationS>0: # Duration of 0 means "Stay on forever"
+        log.debug("Fading to off after "+str(durationS))
+        devices.SetTempVal(devKey, "FadeDown@", datetime.now()+timedelta(seconds=durationS))
 

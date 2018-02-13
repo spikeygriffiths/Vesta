@@ -199,6 +199,11 @@ def EventHandler(eventId, eventArg):
                 if datetime.now() >= offAt:
                     DelTempVal(devKey, "SwitchOff@")
                     devcmds.SwitchOff(devKey)
+            fadeDownAt = GetTempVal(devKey, "FadeDown@")
+            if fadeDownAt:
+                if datetime.now() >= fadeDownAt:
+                    DelTempVal(devKey, "FadeDown@")
+                    devcmds.Dim(devKey, 0)
             pirOffAt = GetTempVal(devKey, "PirInactive@")
             if pirOffAt:
                 if datetime.now() >= pirOffAt:
