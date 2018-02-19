@@ -42,6 +42,7 @@ def EventHandler(eventId, eventArg):
             events.Issue(events.ids.HOURS)
             oldHours = now.hour # Ready for next time
         variables.Set("time", str(now.strftime("%H:%M")))
+        rules.Run("time=="+ str(now.strftime("%H:%M"))) # Run timed rules once per minute
         rules.Run("trigger==time") # Run timed rules once per minute
         if variables.Get("sunrise") != None:
             CheckTimedRule("dawn", now) # Sky getting light before sunrise
@@ -80,6 +81,12 @@ def GetDark():
         extraTime = 0   # No weather, so assume cloudless and dry
     morning = sunrise + timedelta(minutes=extraTime)    # The more cloud, the later it gets light in the morning
     evening = sunset - timedelta(minutes=extraTime) # The more cloud, the earlier it gets dark in the evening
+    oldMorning = variables.Get("morning")  # if time is between variables.Get("morning") and newly calculated morning, then rules.Run("time==morning")
+    oldEvening = variables.Get("evening")  # if time is between variables.Get("evening") and newly calculated evening, then rules.Run("time==evening")
+    if IsTimeBetween(morning, now, oldMorning):
+        rules.Run("time==morning")
+    if IsTimeBetween(evening, now, oldEvening):
+        rules.Run("time==evening")
     variables.Set("morning", morning.strftime("%H:%M"), True)
     variables.Set("evening", evening.strftime("%H:%M"), True)   # Set up variables accordingly
     return not(IsTimeBetween(morning, now, evening)) # True if dark, False if light
@@ -117,10 +124,10 @@ def CheckTimedRule(name, now):
         rules.Run("time=="+name) # Special rule for sunrise, sunset, etc.
 
 def IsTimeBetween(startTime, nowTime, endTime):
-    if startTime <= nowTime <= endTime:
-       return True
-    else:
-       return False
+    if startTime < endTime: # Make sure start is earlier than end
+       return startTime <= nowTime <= endTime
+    else: # allow for end being earlier than start
+       return endTime <= nowTime <= startTime
 
 def Sanitise(val):  # Assume val is a string containing a hour:minute time
     if ":" in val:  # Check for colon before sanitising time stamp

@@ -1,5 +1,6 @@
 <?php 
 include "header.php";   # Has other includes as well as log-out detection, and favicon.  NB Has "<html><head>" for favicon link!
+include "database.php";
 include "functions.php";
 echo "</head><body>";
 PageHeader("Recent error logs");
