@@ -123,19 +123,32 @@ def CheckTimedRule(name, now):
     if variables.Get(name) == now.strftime("%H:%M"):
         rules.Run("time=="+name) # Special rule for sunrise, sunset, etc.
 
+def MakeTime(timeOfDay): # Accepts string or timestamp and returns timestamp as time of day or Null if there's a problem
+    if isinstance(timeOfDay, str) == False:
+        try: # Assume it's a timestamp
+            timeOfDay = timeOfDay.strftime("%H:%M")
+        except:
+            return None # Couldn't convert to time string, so wasn't time after all
+    try: # Ought to be a string holding a time now, so try and convert it to a timestamp 
+        return datetime.strptime(timeOfDay, "%H:%M") # Convert to time
+    except:
+        return None # Couldn't convert to time
+
 def IsTimeBetween(startTime, nowTime, endTime):
-    if startTime < endTime: # Make sure start is earlier than end
-       return startTime <= nowTime <= endTime
-    else: # allow for end being earlier than start
-       return endTime <= nowTime <= startTime
+    startTime = MakeTime(startTime)
+    nowTime = MakeTime(nowTime)
+    endTime = MakeTime(endTime)
+    if startTime != None and nowTime != None and endTime != None:
+        if startTime < endTime: # Make sure start is earlier than end
+           return startTime <= nowTime <= endTime
+        else: # allow for end being earlier than start
+           return endTime <= nowTime <= startTime
+    else:
+        return False # Bad timestamps always fail
 
 def Sanitise(val):  # Assume val is a string containing a hour:minute time
-    if ":" in val:  # Check for colon before sanitising time stamp
-        try:
-            timeOfDay = datetime.strptime(val, "%H:%M") # Convert to time
-        except:
-            synopsis.problem("TimedRule", "Bad time in Rule containing '" + val)
-            return "BadTime"    # Must return something
-        return "\""+timeOfDay.strftime("%H:%M")+"\"" # Normalise timestamp (cope with leading zeros)
-    else:
-        return val  # Return original string if no colon
+    timeOfDay = MakeTime(val)
+    if timeOfDay == Null:
+        synopsis.problem("TimedRule", "Bad time in Rule containing '" + val)
+        return Null    # Must return something
+    return "\""+timeOfDay.strftime("%H:%M")+"\"" # Normalise timestamp (cope with leading zeros)

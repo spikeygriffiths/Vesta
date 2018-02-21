@@ -179,6 +179,7 @@ def GetConditionResult(test, condition):
         elif ":" in tstVal:
             varVal = iottime.Sanitise(varVal)   # Ensure timestamps are consistently formatted before comparing (to avoid "0:15" != "00:15")
             tstVal = iottime.Sanitise(tstVal)
+            log.debug("Time test checks "+varVal+" against "+tstVal)
         else:
             varVal = "'"+varVal.lower() + "'"
             tstVal = "'"+tstVal.lower() + "'"   # Surround strings with quotes to make string comparisons work (Tuesday==Tuesday fails, although 'Tuesday'=='Tuesday' works)
