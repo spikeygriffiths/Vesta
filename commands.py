@@ -27,6 +27,7 @@ import log
 import iottime
 import database
 import synopsis
+import heating
 
 sck = ""
 cliSck = ""
@@ -226,6 +227,13 @@ class Commands(cmd.Cmd):
             devKey = devices.FindDev(argList[0])
             if devKey != None:
                 queue.EnqueueCmd(devKey, ["AT"+cmd, "OK"])
+
+    def do_getSchedule(self, devId):
+        """getSchedule id
+        Gets heating schedule for Sunday for a test"""
+        devKey = devices.FindDev(devId)
+        if devKey != None:
+            heating.GetSchedule(devKey)
 
     def do_removeDevice(self, devId):
         """removeDevice id

@@ -6,9 +6,11 @@ class Cluster():
     Identify = "0003"
     OnOff = "0006"
     LevelCtrl = "0008"
+    Time = "000A"
     OTA = "0019"
     PollCtrl = "0020"
     ColourCtrl = "0300"
+    Thermostat = "0201"
     Illuminance = "0400"
     Temperature = "0402"
     Occupancy = "0406"
@@ -16,16 +18,32 @@ class Cluster():
     SimpleMetering = "0702"
 
 class Attribute():
+    # Basic
     Manuf_Name = "0004" # Basic cluster, string (Read Only)
     Model_Name = "0005" # Basic cluster, string (Read Only)
+    # PowerConfig
     Batt_Voltage = "0020" # Power_Config cluster, 8 bit in 0.1V steps (Read Only)
     Batt_Percentage = "0021" # Power_Config cluster, 8-bit in 0.5% steps (Read Only)
+    # OnOff
     OnOffState = "0000" # OnOff cluster, 8 bit bool
-    firmwareVersion = "0002" # OTA version number
+    # Time
+    Time = "0000" # Time cluster, UTC as U32 in seconds since midnight 1/1/2000
+    DstStart ="0003" # Time cluster, this year's Summer Time start, U32 as for Time
+    DstEnd = "00004" # As above, but end
+    DstShift = "0005" # Time cluster, S32 in seconds (-86400 -> +86400)
+    # OTA
+    firmwareVersion = "0002" # U32 version number, stack in bottom 16, app in top 16.  4 bits each for major.minor.release.build
+    # ColorCtrl
     Hue = "0000" # For ColorCtrl (Read Only)
-    Saturation = "0001"# For ColorCtrl (Read Only)
+    Saturation = "0001" # For ColorCtrl (Read Only)
+    # Thermostat
+    LocalTemp = "0000" # Inside temp in 0.01'C Read Only
+    OccupiedHeatingSetPoint = "0012" # Target temp in 0.01'C
+    # Illuminance
     Log_Lux = "0000" # Illuminance cluster, 16-bit as 10000 x log(10)Lux + 1 (Read Only)
+    # Temperature
     Celsius = "0000" # Temperature cluster, 16-bit in 0.01'C steps (Read Only)
+    # IAS_Zone
     Zone_Type = "0001" # IAS Zone cluster, enum list - see below (Read Only)
     # Simple Metering cluster
     CurrentSummationDelivered = "0000" # Value in Wh (Read Only, unsigned 48-bit int).  Energy consumed
@@ -36,6 +54,13 @@ class Attribute():
     Multiplier = "0301" # Uint24
     Divisor = "0302" # Uint24
     InstantaneousDemand =  "0400"  # Value in W (Read Only, signed 24-bit int). +ve is consumed, -ve is generated
+
+class Commands():
+    AdjustSetpoint = "00" # Client->server
+    GetScheduleRsp = "00" # Server->client
+    SetSchedule = "01"
+    GetSchedule = "02"
+    ClrSchedule = "03"
 
 class AttributeTypes():
     Boolean = "10"

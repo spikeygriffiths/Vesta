@@ -71,10 +71,16 @@ function ShowClusters($item, $name, $devKey, $db)
      "Basic" => "0000",
      "PowerConfig" => "0001",
      "Identify" => "0003",
+     "Groups" => "0004",
+     "Scenes" => "0005",
      "OnOff" => "0006",
      "LevelCtrl" => "0008",
+     "Alarms" => "0009",
+     "Time" => "000A",
      "OTA" => "0019",
      "PollCtrl" => "0020",
+     "Thermostat" => "0201",
+     "ThermostatUI" => "0204",
      "ColourCtrl" => "0300",
      "Illuminance" => "0400",
      "Temperature" => "0402",
@@ -180,6 +186,10 @@ function ShowDeviceInfo($db, $devKey, $username)
         if (strpos($inClusters, "0300") !== false) { // ColorCtrl cluster, eg lamp, RGB bulbs
             echo "Hue: <a href=\"/vesta/ImageMap.php/?devId=",$username,"&cmd=hue&map=\"><img src=\"/vesta/Hue.png\" width=360 height=20 alt=\"Hue\" ismap=\"ismap\"></a><br><br>";  // Php page will GET x,y, according to stackoverflow.com/questions/358387
             echo "Saturation: <a href=\"/vesta/ImageMap.php/?devId=",$username,"&cmd=sat&map=\"><img src=\"/vesta/Sat.png\" width=100 height=20 alt=\"Saturation\" ismap=\"ismap\"></a><br><br>";
+        }
+        if (strpos($inClusters, "0201") !== false) { // Thermostat cluster
+            echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=getSchedule ",$username,"'\">Get Schedule</button>&nbsp&nbsp&nbsp";
+
         }
     }
 }

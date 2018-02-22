@@ -18,6 +18,7 @@ import config
 import devcmds
 import queue
 import synopsis
+import heating
 
 globalDevKey = None
 pendingBinding = None # Needed because the BIND response doesn't include the cluster
@@ -164,6 +165,8 @@ def EventHandler(eventId, eventArg):
                 clusterId = eventArg[3]
                 attrId = pendingRptAttrId # Need to remember this, since it doesn't appear in CFGRPTRSP
                 NoteReporting(devKey, clusterId, attrId)
+        elif eventArg[0] == "CWSCHEDULE":
+            heating.ParseCWShedule(eventArg)
         #else:   # Unrecognised message, but we still want to extract OOB info
         #    if len(eventArg) >= 2:
         #        devKey = GetKey(eventArg[1])    # Assume this is sensible

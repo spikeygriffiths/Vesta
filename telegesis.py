@@ -46,6 +46,7 @@ def EventHandler(eventId, eventArg):
         if database.GetDevicesCount()==0: # If we have no devices yet, then...
             devices.Add("0000", "N/A", "COO") # ...make sure we add this device as the first item before we try to use it!
         queue.EnqueueCmd(0, ["ATS63=0007", "OK"]) # Request RSSI & LQI on every received message, also disable automatic checkIn responses
+        queue.EnqueueCmd(0, ["ATS0F=0400", "OK"]) # Use 0600 to set bit 9 (bit 10 already set) to get rawzcl responses so we can see schedule responses from thermostat
         if database.GetDeviceItem(0, "modelName") == None:
             queue.EnqueueCmd(0, ["ATI", "OK"]) # Request our EUI, as well as our Telegesis version
         queue.EnqueueCmd(0, ["AT+N", "OK"]) # Get network information, to see whether to start new network or use existing one
