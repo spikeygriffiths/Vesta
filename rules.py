@@ -227,6 +227,7 @@ def Action(actList, ruleId):
             for item in actList[1:]:
                 emailBody.append(item)
             plainText = " ".join(emailBody)
+            log.debug("Sending email with '"+plainText+"'")
             sendmail.email("Vesta Alert!", plainText, None)
         else:
             synopsis.problem("NoEmail", "No emailAddress entry in config")
