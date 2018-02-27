@@ -104,6 +104,11 @@ def InitCore(db, curs):
     CREATE TABLE IF NOT EXISTS Config (
     item TEXT,
     value TEXT)""")
+    curs.execute("""
+    CREATE TABLE IF NOT EXISTS Schedules (
+    type TEXT,
+    day TEXT,
+    dailySchedule TEXT)""")
 
 def InitAll(db, curs):
     InitCore(db, curs)  # Central tables of database
@@ -543,4 +548,23 @@ def DelVar(name):
     global curs, flushDB
     log.debug("Removing "+name+" from database")
     curs.execute("DELETE FROM Variables WHERE name=\""+name+"\" COLLATE NOCASE")
+    flushDB = True # Batch up the commits
+
+# === Schedules ===
+def GetSchedule(type, dow):
+    global curs
+    curs.execute("SELECT dailySchedule FROM Schedules WHERE type=\""+type+"\" and day=\""+dow+"\" COLLATE NOCASE")
+    rows = curs.fetchone()
+    if rows != None:
+        return rows[0]
+    return None
+
+def SetSchedule(type, dow, schedule):
+    global curs, flushDB
+    if GetSchedule(type, dow) == None:
+        log.debug("New schedule "+type+" "+dow+" set to "+schedule)
+        curs.execute("INSERT INTO Schedules VALUES(\""+type+"\", \""+dow+"\", \""+schedule+"\")") # Create new schedule
+    else:
+        log.debug("Existing schedule "+type+" "+dow+" set to "+schedule)
+        curs.execute("UPDATE Schedules SET dailySchedule=\""+schedule+"\" WHERE type=\""+type+"\" and day=\""+dow+"\" COLLATE NOCASE") # Update$
     flushDB = True # Batch up the commits

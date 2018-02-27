@@ -233,7 +233,7 @@ class Commands(cmd.Cmd):
         Gets heating schedule for Sunday for a test"""
         devKey = devices.FindDev(devId)
         if devKey != None:
-            heating.GetSchedule(devKey)
+            heating.GetSchedule(devKey, "Sun")
 
     def do_removeDevice(self, devId):
         """removeDevice id

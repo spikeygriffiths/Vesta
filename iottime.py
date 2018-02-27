@@ -16,6 +16,7 @@ import database
 import config
 import synopsis
 
+calendar.setfirstweekday(calendar.SUNDAY)
 appStartTime = datetime.now()
 oldMins = -1
 oldHours = -1   # Force the first reading of time to change hour
@@ -123,7 +124,7 @@ def CheckTimedRule(name, now):
     if variables.Get(name) == now.strftime("%H:%M"):
         rules.Run("time=="+name) # Special rule for sunrise, sunset, etc.
 
-def MakeTime(timeOfDay): # Accepts string or timestamp and returns timestamp as time of day or Null if there's a problem
+def MakeTime(timeOfDay): # Accepts string or timestamp and returns timestamp as time of day or None if there's a problem
     if isinstance(timeOfDay, str) == False:
         try: # Assume it's a timestamp
             timeOfDay = timeOfDay.strftime("%H:%M")
@@ -152,4 +153,14 @@ def Sanitise(val):  # Assume val is a string containing a hour:minute time
         synopsis.problem("TimedRule", "Bad time in Rule containing '" + val)
         return None    # Must return something
     return "\""+timeOfDay.strftime("%H:%M")+"\"" # Normalise timestamp (cope with leading zeros)
+
+def GetDowIndex(dayOfWeek): # Get int from string, where "Sun"=>0, "Mon"=>1, etc.
+    days = dict(zip(calendar.day_abbr, range(7)))
+    return days[dayOfWeek]
+
+def GetDow(dowIndex): # Get string from int, where 0=>"Sun", 1=>"Mon", etc.
+   return calendar.day_abbr[dowIndex%7]
+
+def GetDaysOfWeek():
+    return dict(zip(calendar.day_abbr, range(7)))
 
