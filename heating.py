@@ -62,7 +62,7 @@ def GetSchedule(devKey, dayOfWeek="Sun"):  # Ask Thermostat/Boiler device for it
     cmdRsp = ("AT+RAWZCL:"+nwkId+","+ep+","+numSetpoints+","+"{:02x}".format(dayBit)+",01,"+ "CWSCHEDULE") #  Get heating(01) schedule
     queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
 
-def SetSchedule(devKey, scheduleType="Winter"):
+def SetSchedule(devKey, scheduleType="Winter"): # Tell Thermostat/boiler device about this schedule
     global thermoDevKey
     thermoDevKey = devKey
     days = heating.GetDaysOfWeek()  # Get list of days of the week

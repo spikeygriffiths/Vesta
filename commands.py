@@ -230,10 +230,20 @@ class Commands(cmd.Cmd):
 
     def do_getSchedule(self, devId):
         """getSchedule id
-        Gets heating schedule for Sunday for a test"""
+        Gets heating schedule from device into database"""
         devKey = devices.FindDev(devId)
         if devKey != None:
-            heating.GetSchedule(devKey, "Sun")
+            heating.GetSchedule(devKey)
+
+    def do_setSchedule(self, line):
+        """setSchedule id type
+        Sets heating schedule on device from database using type (eg Winter, etc.)"""
+        argList = line.split()
+        if len(argList) >= 2:
+            scheduleType = argList[1]
+            devKey = devices.FindDev(argList[0])
+            if devKey != None:
+                heating.SetSchedule(devKey, scheduleType)
 
     def do_removeDevice(self, devId):
         """removeDevice id
