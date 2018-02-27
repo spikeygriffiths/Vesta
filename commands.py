@@ -245,6 +245,13 @@ class Commands(cmd.Cmd):
             if devKey != None:
                 heating.SetSchedule(devKey, scheduleType)
 
+    def do_setTime(self, devId):
+        """setTime id
+        Sets the time on the device using the time cluster"""
+        devKey = devices.FindDev(devId)
+        if devKey != None:
+            iottime.SetTime(devKey)
+
     def do_removeDevice(self, devId):
         """removeDevice id
         Tells device to leave the network and remove it from the database"""

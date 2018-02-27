@@ -191,6 +191,7 @@ function ShowDeviceInfo($db, $devKey, $username)
             echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=getSchedule ",$username,"'\">Get Schedule</button>&nbsp&nbsp&nbsp";
             $type = "Winter"; # ToDo: Should be variables.Get("CurrentScheduleType");
             echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Schedule.php/?type=",$type,"&username=",$username,"'\">Show Schedule</button>&nbsp&nbsp&nbsp";
+            echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=setTime'\">Set time</button>&nbsp&nbsp&nbsp";
         }
     }
 }
