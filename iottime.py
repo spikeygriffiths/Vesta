@@ -148,7 +148,8 @@ def IsTimeBetween(startTime, nowTime, endTime):
 
 def Sanitise(val):  # Assume val is a string containing a hour:minute time
     timeOfDay = MakeTime(val)
-    if timeOfDay == Null:
+    if timeOfDay == None:
         synopsis.problem("TimedRule", "Bad time in Rule containing '" + val)
-        return Null    # Must return something
+        return None    # Must return something
     return "\""+timeOfDay.strftime("%H:%M")+"\"" # Normalise timestamp (cope with leading zeros)
+
