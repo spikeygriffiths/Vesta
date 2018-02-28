@@ -45,10 +45,15 @@ def ParseCWShedule(eventArg):
         scheduleType = "Winter"	# For now - ToDo could calculate season and use that
         variables.Set("currentScheduleType", scheduleType)
     database.SetSchedule(scheduleType, dayOfWeek, str(newSchedule)) # Update the database from the Thermostat/boiler device
-    if dayOfWeek != "Sat":
-        GetSchedule(thermoDevKey, iottime.GetDow(dayOfWeekIndex+1)) # Get next day's schedule
 
-def GetSchedule(devKey, dayOfWeek="Sun"):  # Ask Thermostat/Boiler device for its schedule
+def GetSchedule(devKey):  # Ask Thermostat/Boiler device for its schedule
+    global thermoDevKey
+    thermoDevKey = devKey
+    days = iottime.GetDaysOfWeek()  # Get list of days of the week
+    for day in days:
+        GetDaySchedule(devKey, day) # Get each day's schedule
+
+def GetDaySchedule(devKey, dayOfWeek="Sun"):  # Ask Thermostat/Boiler device for its schedule
     global thermoDevKey
     nwkId = CheckThermostat(devKey)
     if nwkId == None:
@@ -59,13 +64,13 @@ def GetSchedule(devKey, dayOfWeek="Sun"):  # Ask Thermostat/Boiler device for it
     seqId="00"
     dayOfWeekIndex = iottime.GetDowIndex(dayOfWeek)
     dayBit = 2 ** dayOfWeekIndex # ** is "raise to the power".  Assumes dayOfWeek is a int where 0=Sunday, 1=Monday, etc.
-    cmdRsp = ("AT+RAWZCL:"+nwkId+","+ep+","+numSetpoints+","+"{:02x}".format(dayBit)+",01,"+ "CWSCHEDULE") #  Get heating(01) schedule
+    cmdRsp = ("AT+RAWZCL:"+nwkId+","+ep+","+zcl.Cluster.Thermostat+","+frameCtl+seqId+zcl.Commands.GetSchedule+"{:02x}".format(dayBit)+"01", "CWSCHEDULE") #  Get heating(01) schedule
     queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
 
 def SetSchedule(devKey, scheduleType="Winter"): # Tell Thermostat/boiler device about this schedule
     global thermoDevKey
     thermoDevKey = devKey
-    days = heating.GetDaysOfWeek()  # Get list of days of the week
+    days = iottime.GetDaysOfWeek()  # Get list of days of the week
     for day in days:
        SetDaySchedule(devKey, scheduleType, day)
 
@@ -73,6 +78,9 @@ def SetDaySchedule(devKey, scheduleType="Winter", dayOfWeek="Sun"):
     nwkId = CheckThermostat(devKey)
     if nwkId == None:
         return # Make sure it's a real thermostat device before continuing
+    ep = database.GetDeviceItem(devKey, "endPoints")
+    frameCtl="11"
+    seqId="00"
     dayOfWeekIndex = iottime.GetDowIndex(dayOfWeek)
     dayBit = 2 ** dayOfWeekIndex # ** is "raise to the power".  Assumes dayOfWeek is a int where 0=Sunday, 1=Monday, etc.
     scheduleStr = database.GetSchedule(scheduleType, dayOfWeek)
@@ -88,10 +96,17 @@ def SetDaySchedule(devKey, scheduleType="Winter", dayOfWeek="Sun"):
         tempStr = timeTemp[1]
         time = datetime.strptime(timeStr, "%H:%M")
         minsSinceMidnight = (time.hour*60)+time.minute
-        scheduleStr = scheduleStr + ",{:04x}".format(minsSinceMidnight)   # Note leading comma to enable this to be bolted on the end of the command
-        scheduleStr = scheduleStr + ",{:04x}".format(val(tempStr)*100)
-    cmdRsp = ("AT+CWSCHEDULE:"+nwkId+","+ep+","+"{:02x}".format(numSetPoints)+","+"{:02x}".format(dayBit)+",01"+scheduleStr, "OK") # NB scheduleStr starts with a comma
+        htonMins = ByteSwap(minsSinceMidnight)
+        htonTemp = ByteSwap(int(float(tempStr)*100))
+        scheduleStr = scheduleStr + "{:04x}".format(htonMins)
+        scheduleStr = scheduleStr + "{:04x}".format(htonTemp)
+    cmdRsp = ("AT+RAWZCL:"+nwkId+","+ep+","+zcl.Cluster.Thermostat+","+frameCtl+seqId+zcl.Commands.SetSchedule+"{:02x}".format(numSetpoints)+"{:02x}".format(dayBit)+"01"+scheduleStr, "CWSCHEDULE") #  Set heating(01) schedule
     queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
+
+def ByteSwap(val): # Assumes val is 16-bit int for now
+    loVal = val & 0xff
+    hiVal = val >> 8
+    return hiVal + (256 * loVal) 
 
 def CheckThermostat(devKey):
     nwkId = database.GetDeviceItem(devKey, "nwkId")

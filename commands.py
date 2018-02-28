@@ -240,8 +240,8 @@ class Commands(cmd.Cmd):
         Sets heating schedule on device from database using type (eg Winter, etc.)"""
         argList = line.split()
         if len(argList) >= 2:
-            scheduleType = argList[1]
             devKey = devices.FindDev(argList[0])
+            scheduleType = argList[1]
             if devKey != None:
                 heating.SetSchedule(devKey, scheduleType)
 
