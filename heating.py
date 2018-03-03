@@ -12,6 +12,7 @@ import events
 import log
 import iottime
 import variables
+import config
 
 thermoDevKey = None
 
@@ -40,10 +41,7 @@ def ParseCWShedule(eventArg):
         scheduleTemp = int(targetTemp, 16)/100
         newSchedule.append((timeOfDay, scheduleTemp))
     log.debug("Schedule for "+dayOfWeek+" is "+str(newSchedule))
-    scheduleType = variables.Get("currentScheduleType")
-    if scheduleType == None:
-        scheduleType = "Winter"	# For now - ToDo could calculate season and use that
-        variables.Set("currentScheduleType", scheduleType)
+    scheduleType = config.Get("HeatingSchedule", "Winter")
     database.SetSchedule(scheduleType, dayOfWeek, str(newSchedule)) # Update the database from the Thermostat/boiler device
 
 def GetSchedule(devKey):  # Ask Thermostat/Boiler device for its schedule
@@ -117,4 +115,29 @@ def CheckThermostat(devKey):
         return None # Not a thermostat
     return nwkId
 
+def SetCurrentTemp(devKey, temp):
+    nwkId = database.GetDeviceItem(devKey, "nwkId")
+    if nwkId == None:
+        return  # Make sure it's a real device before continuing (it may have just been deleted)
+    ep = database.GetDeviceItem(devKey, "endPoints")
+    centiTemp = int(float(temp)*100)
+    cmdRsp = ("AT+WRITECATR:"+nwkId+","+ep+",0,"+zcl.Cluster.Temperature+","+zcl.Attribute.Celsius+","+zcl.AttributeTypes.Int16+","+"{:04x}".format(centiTemp), "OK") #  Set Thermostat's LocalTemp
+    queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
 
+def GetCurrentTemp(devKey):
+    nwkId = database.GetDeviceItem(devKey, "nwkId")
+    if nwkId == None:
+        return  # Make sure it's a real device before continuing (it may have just been deleted)
+    ep = database.GetDeviceItem(devKey, "endPoints")
+    centiTemp = int(float(temp)*100)
+    cmdRsp = ("AT+READATR:"+nwkId+","+ep+",0,"+zcl.Cluster.Thermostat+","+zcl.Attribute.LocalTemp, "RESPATTR") #  Get Thermostat's current temperature
+    queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
+
+def SetTargetTemp(devKey, temp):
+    nwkId = database.GetDeviceItem(devKey, "nwkId")
+    if nwkId == None:
+        return  # Make sure it's a real device before continuing (it may have just been deleted)
+    ep = database.GetDeviceItem(devKey, "endPoints")
+    centiTemp = int(float(temp)*100)
+    cmdRsp = ("AT+WRITEATR:"+nwkId+","+ep+",0,"+zcl.Cluster.Thermostat+","+zcl.Attribute.OccupiedHeatingSetPoint+","+zcl.AttributeTypes.Int16+","+"{:04x}".format(centiTemp)) #  Set Thermostat's target temp
+    queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py

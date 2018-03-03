@@ -11,7 +11,10 @@ echo "</head><body>";
 PageHeader("Schedule for ".$type);
 $db = DatabaseInit();
 ShowSchedule($db, $type);
-echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=setSchedule ",$username," ",$type,"'\">Set Schedule</button><br><br>"; // Button here to push new schedule to device
+echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/ChangeScheduleName.php/?username=",$username,"&type=",$type,"'\">Change Schedule Name</button>&nbsp&nbsp&nbsp";
+echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/newSchedule.php'\">New Schedule</button><br><br>"; // Button here to create new schedule in database
+echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=getSchedule ",$username,"'\">Get Schedule<br/>From ",$username,"</button>&nbsp&nbsp&nbsp";
+echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=setSchedule ",$username," ",$type,"'\">Set Schedule<br>On ",$username,"</button><br><br>"; // Button here to push new schedule to device
 PageFooter();
 echo "</body></html>";
 

@@ -16,6 +16,7 @@ import database
 import config
 import synopsis
 import queue
+import zcl
 
 calendar.setfirstweekday(calendar.SUNDAY)
 appStartTime = datetime.now()
@@ -166,8 +167,12 @@ def GetDaysOfWeek():
     return dict(zip(calendar.day_abbr, range(7)))
 
 def SetTime(devKey):
-    localTime = time.time()   # Get local time
+    nwkId = database.GetDeviceItem(devKey, "nwkId")
+    if nwkId == None:
+        return  # Make sure it's a real device before continuing (it may have just been deleted)
+    ep = database.GetDeviceItem(devKey, "endPoints")
+    localTime = time.time()   # Get local time in Unix epock (1/Jan/1970)
     zigBeeTime = localTime - 946684800  # Convert to seconds since 1/Jan/2000
-    cmdRsp = ("AT+WRITEATR:"+nwkId+","+ep+","+"<sendmode>,<clusterId>,<attrId>,<datatype>,"+"{:08?x}".format(zigBeeTime)) #  Set time attribute in time cluster
+    cmdRsp = ("AT+WRITEATR:"+nwkId+","+ep+",0,"+zcl.Cluster.Time+","+zcl.Attribute.Time+","+zcl.AttributeTypes.UtcTime+","+"{:08x}".format(int(zigBeeTime))) #  Set time attribute in time cluster
     queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
 

@@ -245,6 +245,16 @@ class Commands(cmd.Cmd):
             if devKey != None:
                 heating.SetSchedule(devKey, scheduleType)
 
+    def do_setTargetTemp(self,line):
+        """setTargetTemp id temp
+        Sets the target temperature on the thermostat device"""
+        argList = line.split()
+        if len(argList) >= 2:
+            devKey = devices.FindDev(argList[0])
+            temp = argList[1]
+            if devKey != None:
+                heating.SetTargetTemp(devKey, temp)
+
     def do_setTime(self, devId):
         """setTime id
         Sets the time on the device using the time cluster"""

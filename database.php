@@ -185,4 +185,22 @@ function GetConfig($item, $default, $db)
     return $default;
 }
 
+function GetVariable($name, $default, $db)
+{
+    $sth = $db->prepare("SELECT value FROM Variables where name=\"".$name."\"");
+    $sth->execute();
+    $row = $sth->fetch();
+    if ($row != null) {
+        return $row['value'];
+    }
+    SetVariable($name, $default, $db);
+    return $default;
+}
+
+function SetVariable($name, $val, $db)
+{
+    $now = date('Y-m-d H:i:s');
+    $db->exec("INSERT OR REPLACE INTO Variables VALUES(\"".$name."\",\"".$val."\",\"".$now."\")");
+}
+
 ?>

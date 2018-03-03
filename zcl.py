@@ -79,6 +79,7 @@ class AttributeTypes():
     OctStr = "41"
     ChrStr = "42"
     LChrStr = "43"
+    UtcTime = "E2"  # Seconds since midnight, 1/1/2000
 
 class Zone_Type():
     PIR = "000D"
