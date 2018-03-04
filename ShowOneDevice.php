@@ -188,10 +188,10 @@ function ShowDeviceInfo($db, $devKey, $username)
             echo "Saturation: <a href=\"/vesta/ImageMap.php/?devId=",$username,"&cmd=sat&map=\"><img src=\"/vesta/Sat.png\" width=100 height=20 alt=\"Saturation\" ismap=\"ismap\"></a><br><br>";
         }
         if (strpos($inClusters, "0201") !== false) { // Thermostat cluster
-            $type = GetConfig("HeatingSchedule", "Winter", $db);
+            $type = GetConfig("HeatingSchedule", "Heating", $db);
             $boostDegC = GetConfig("BoostDegC", "21", $db);
             $frostDegC = GetConfig("FrostDegC", "7", $db);
-            echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Schedule.php/?type=",$type,"&username=",$username,"'\">Schedule</button>&nbsp&nbsp&nbsp";
+            echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Schedule.php/?type=",$type,"&devKey=",$devKey,"'\">Schedule</button>&nbsp&nbsp&nbsp";
             echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=setTargetTemp ",$devKey," ",$boostDegC,"'\">Boost</button>&nbsp&nbsp&nbsp"; 
             echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=setTargetTemp ",$devKey," ",$frostDegC,"'\">Frost</button>&nbsp&nbsp&nbsp"; 
             echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=setTime ",$username,"'\">Set time</button>&nbsp&nbsp&nbsp";

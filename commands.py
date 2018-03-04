@@ -228,22 +228,32 @@ class Commands(cmd.Cmd):
             if devKey != None:
                 queue.EnqueueCmd(devKey, ["AT"+cmd, "OK"])
 
+    def do_newSchedule(self, name):
+        """newSchedule name
+        Creates new schedule"""
+        heating.NewSchedule(name)
+
+    def do_delSchedule(self, name):
+        """delSchedule name
+        Deletes named schedule"""
+        heating.DelSchedule(name)
+
     def do_getSchedule(self, devId):
         """getSchedule id
-        Gets heating schedule from device into database"""
+        Gets heating schedule from device"""
         devKey = devices.FindDev(devId)
         if devKey != None:
             heating.GetSchedule(devKey)
 
     def do_setSchedule(self, line):
-        """setSchedule id type
-        Sets heating schedule on device from database using type (eg Winter, etc.)"""
+        """setSchedule id name
+        Sets schedule on device using name (eg Heating, etc.)"""
         argList = line.split()
         if len(argList) >= 2:
             devKey = devices.FindDev(argList[0])
-            scheduleType = argList[1]
+            scheduleName = argList[1]
             if devKey != None:
-                heating.SetSchedule(devKey, scheduleType)
+                heating.SetSchedule(devKey, scheduleName)
 
     def do_setTargetTemp(self,line):
         """setTargetTemp id temp

@@ -551,7 +551,7 @@ def DelVar(name):
     flushDB = True # Batch up the commits
 
 # === Schedules ===
-def GetSchedule(type, dow):
+def GetSchedule(type, dow="Sun"):
     global curs
     curs.execute("SELECT dailySchedule FROM Schedules WHERE type=\""+type+"\" and day=\""+dow+"\" COLLATE NOCASE")
     rows = curs.fetchone()
@@ -568,3 +568,12 @@ def SetSchedule(type, dow, schedule):
         log.debug("Existing schedule "+type+" "+dow+" set to "+schedule)
         curs.execute("UPDATE Schedules SET dailySchedule=\""+schedule+"\" WHERE type=\""+type+"\" and day=\""+dow+"\" COLLATE NOCASE") # Update$
     flushDB = True # Batch up the commits
+
+def DelSchedule(type):
+    global curs, flushDB
+    if GetSchedule(type) == None:
+        log.debug("Deleting schedule "+type)
+        curs.execute("DELETE FROM Schedules WHERE type=\""+type+"\"") # Delete old schedule
+    else:
+        log.debug("Schedule "+schedule+" not found for deletion")
+

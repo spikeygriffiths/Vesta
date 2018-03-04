@@ -16,6 +16,15 @@ import config
 
 thermoDevKey = None
 
+def NewSchedule(name):
+    days = iottime.GetDaysOfWeek()  # Get list of days of the week
+    newSchedStr = "[('06:30', 20.0), ('08:30', 16.0), ('17:30', 20.0), ('20:00', 1.0)]"
+    for day in days:
+        database.SetSchedule(name, day, newSchedStr) # Create new schedule in database
+
+def DelSchedule(name):
+    database.DelSchedule(name)
+
 def ParseCWShedule(eventArg):
     global thermoDevKey
     if eventArg[0] != "CWSCHEDULE" or len(eventArg) < 5:
@@ -41,7 +50,7 @@ def ParseCWShedule(eventArg):
         scheduleTemp = int(targetTemp, 16)/100
         newSchedule.append((timeOfDay, scheduleTemp))
     log.debug("Schedule for "+dayOfWeek+" is "+str(newSchedule))
-    scheduleType = config.Get("HeatingSchedule", "Winter")
+    scheduleType = config.Get("HeatingSchedule", "Heating")
     database.SetSchedule(scheduleType, dayOfWeek, str(newSchedule)) # Update the database from the Thermostat/boiler device
 
 def GetSchedule(devKey):  # Ask Thermostat/Boiler device for its schedule
@@ -65,14 +74,14 @@ def GetDaySchedule(devKey, dayOfWeek="Sun"):  # Ask Thermostat/Boiler device for
     cmdRsp = ("AT+RAWZCL:"+nwkId+","+ep+","+zcl.Cluster.Thermostat+","+frameCtl+seqId+zcl.Commands.GetSchedule+"{:02x}".format(dayBit)+"01", "CWSCHEDULE") #  Get heating(01) schedule
     queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
 
-def SetSchedule(devKey, scheduleType="Winter"): # Tell Thermostat/boiler device about this schedule
+def SetSchedule(devKey, scheduleType="Heating"): # Tell Thermostat/boiler device about this schedule
     global thermoDevKey
     thermoDevKey = devKey
     days = iottime.GetDaysOfWeek()  # Get list of days of the week
     for day in days:
        SetDaySchedule(devKey, scheduleType, day)
 
-def SetDaySchedule(devKey, scheduleType="Winter", dayOfWeek="Sun"):
+def SetDaySchedule(devKey, scheduleType="Heating", dayOfWeek="Sun"):
     nwkId = CheckThermostat(devKey)
     if nwkId == None:
         return # Make sure it's a real thermostat device before continuing
