@@ -136,6 +136,8 @@ function ShowDeviceInfo($db, $devKey, $username)
     ShowDevStatus("SignalPercentage", "Radio Signal", "%", 300, $devKey, $db);
     ShowDevStatus("BatteryPercentage", "Battery", "%", 0, $devKey, $db);
     ShowDevStatus("TemperatureCelsius", "Temperature", "C", 600, $devKey, $db);
+    ShowDevStatus("SourceCelsius", "Source Temperature", "C", 900, $devKey, $db);
+    ShowDevStatus("TargetCelsius", "Target Temperature", "C", 900, $devKey, $db);
     ShowDevStatus("PowerReadingW", "Power", "W", 60, $devKey, $db);
     ShowDevEnergy("EnergyConsumedWh", "Energy consumed", "Wh", $devKey, $db);
     ShowDevEnergy("EnergyGeneratedWh", "Energy generated", "Wh", $devKey, $db);
@@ -153,6 +155,7 @@ function ShowDeviceInfo($db, $devKey, $username)
         ShowClusters("binding", "Binding", $devKey, $db);
         #ShowDevItem("reporting", "Reporting", $devKey, $db);
         ShowDevItem("iasZoneType", "IAS Zone Type", $devKey, $db);
+        ShowDevItem("longPollInterval", "Long Poll Interval (S)", $devKey, $db);
     } else {    // Is Vesta coordinator
         $radioStr = AppCmd("radio", True);
         $radioInfo = explode(",", $radioStr);
@@ -199,3 +202,4 @@ function ShowDeviceInfo($db, $devKey, $username)
     }
 }
 ?>
+

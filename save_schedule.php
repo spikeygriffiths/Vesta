@@ -12,7 +12,8 @@ $db = DatabaseInit();
 $username = GetDevItem("userName", $devKey,$db);
 $query = "UPDATE Schedules SET dailySchedule=\"".$scheduleTxt."\" WHERE type=\"".$type."\" AND day=\"".$day."\""; # Update existing daily schedule
 echo "About to send ",$query," to DB<br>";
-$count = $db->exec($query);
+$db->exec($query);
+SetConfig("HeatingSchedule", $type, $db);
 echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta/Schedule.php/?type=",$type,"&devKey=",$devKey,"\"/>"; # Automatically go back to Schedule page
 echo "<p><center><a href=\"/vesta/index.php\">Home</a></center>";
 echo "</body></html>";

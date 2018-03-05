@@ -33,12 +33,20 @@ class Attribute():
     DstShift = "0005" # Time cluster, S32 in seconds (-86400 -> +86400)
     # OTA
     firmwareVersion = "0002" # U32 version number, stack in bottom 16, app in top 16.  4 bits each for major.minor.release.build
+    # PollCtrl
+    CheckInIntervalQs = "0000"  # RW U32
+    LongPollIntervalQs = "0001" # RO U32
+    ShortPollIntervalQs = "0002" # RO U16
+    FastPollTimeoutQs = "0003" # RW U16
+    CheckInIntervalMinQs = "0004" # RO U32
+    LongPollIntervalMinQs = "0005" # RO U32
+    FastPollTimeoutMaxQs = "0006" # RO U16
     # ColorCtrl
     Hue = "0000" # For ColorCtrl (Read Only)
     Saturation = "0001" # For ColorCtrl (Read Only)
     # Thermostat
-    LocalTemp = "0000" # Inside temp in 0.01'C Read Only
-    OccupiedHeatingSetPoint = "0012" # Target temp in 0.01'C
+    LocalTemp = "0000" # RO S16 Source temp in 0.01'C
+    OccupiedHeatingSetPoint = "0012" # RW S16 Target temp in 0.01'C
     # Illuminance
     Log_Lux = "0000" # Illuminance cluster, 16-bit as 10000 x log(10)Lux + 1 (Read Only)
     # Temperature

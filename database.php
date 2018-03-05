@@ -185,6 +185,21 @@ function GetConfig($item, $default, $db)
     return $default;
 }
 
+function SetConfig($item, $value, $db)
+{
+    if ($item != "NewItem") { // If item exists
+        if ($value != "") {
+            $query = "UPDATE Config SET value=\"".$value."\" WHERE item=\"".$item."\""; # Update existing value
+        } else {
+            $query = "DELETE FROM Config WHERE item=\"".$item."\"";  # Remove item if value is empty
+        }
+    } else { // New Item requested
+        $query = "INSERT INTO Config (item) VALUES(\"".$value."\")";  # Add new configuration item (named $value), with empty value
+    }
+    echo "About to send ",$query, " to DB<br>";
+    $db->exec($query);
+}
+
 function GetVariable($name, $default, $db)
 {
     $sth = $db->prepare("SELECT value FROM Variables where name=\"".$name."\"");

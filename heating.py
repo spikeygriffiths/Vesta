@@ -133,15 +133,6 @@ def SetCurrentTemp(devKey, temp):
     cmdRsp = ("AT+WRITECATR:"+nwkId+","+ep+",0,"+zcl.Cluster.Temperature+","+zcl.Attribute.Celsius+","+zcl.AttributeTypes.Int16+","+"{:04x}".format(centiTemp), "OK") #  Set Thermostat's LocalTemp
     queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
 
-def GetCurrentTemp(devKey):
-    nwkId = database.GetDeviceItem(devKey, "nwkId")
-    if nwkId == None:
-        return  # Make sure it's a real device before continuing (it may have just been deleted)
-    ep = database.GetDeviceItem(devKey, "endPoints")
-    centiTemp = int(float(temp)*100)
-    cmdRsp = ("AT+READATR:"+nwkId+","+ep+",0,"+zcl.Cluster.Thermostat+","+zcl.Attribute.LocalTemp, "RESPATTR") #  Get Thermostat's current temperature
-    queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
-
 def SetTargetTemp(devKey, temp):
     nwkId = database.GetDeviceItem(devKey, "nwkId")
     if nwkId == None:
@@ -150,3 +141,4 @@ def SetTargetTemp(devKey, temp):
     centiTemp = int(float(temp)*100)
     cmdRsp = ("AT+WRITEATR:"+nwkId+","+ep+",0,"+zcl.Cluster.Thermostat+","+zcl.Attribute.OccupiedHeatingSetPoint+","+zcl.AttributeTypes.Int16+","+"{:04x}".format(centiTemp)) #  Set Thermostat's target temp
     queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
+

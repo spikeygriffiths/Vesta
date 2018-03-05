@@ -71,7 +71,8 @@ def InitCore(db, curs):
     energyConsumedReporting TEXT,
     energyGeneratedReporting TEXT,
     checkInFrequency TEXT,
-    pirSensitivity TEXT)""")
+    pirSensitivity TEXT,
+    longPollInterval TEXT)""")
     # Check that we have new entries to Devices above
     if TableHasColumn(curs, "Devices", "batteryReporting") == False:
         curs.execute("ALTER TABLE Devices ADD COLUMN batteryReporting TEXT")    # Format of all xxxReporting is <minS>,<maxS>,<delta>
@@ -87,6 +88,8 @@ def InitCore(db, curs):
         curs.execute("ALTER TABLE Devices ADD COLUMN checkInFrequency TEXT")
     if TableHasColumn(curs, "Devices", "pirSensitivity") == False:
         curs.execute("ALTER TABLE Devices ADD COLUMN pirSensitivity TEXT")
+    if TableHasColumn(curs, "Devices", "longPollInterval") == False:
+        curs.execute("ALTER TABLE Devices ADD COLUMN longPollInterval TEXT")
     curs.execute("""
     CREATE TABLE IF NOT EXISTS Groups (
     userName TEXT,
@@ -141,6 +144,14 @@ def InitAll(db, curs):
     CREATE TABLE IF NOT EXISTS EnergyGeneratedWh (
     timestamp DATETIME, value INTEGER, devKey INTEGER,
     FOREIGN KEY(devKey) REFERENCES Devices(devKey))""")
+    curs.execute("""
+    CREATE TABLE IF NOT EXISTS SourceCelsius (
+    timestamp DATETIME, value INTEGER, devKey INTEGER,
+    FOREIGN KEY(devKey) REFERENCES Devices(devKey))""") # For thermostat
+    curs.execute("""
+    CREATE TABLE IF NOT EXISTS TargetCelsius (
+    timestamp DATETIME, value INTEGER, devKey INTEGER,
+    FOREIGN KEY(devKey) REFERENCES Devices(devKey))""") # For thermostat
     curs.execute("""
     CREATE TABLE IF NOT EXISTS Events (
     timestamp DATETIME, event TEXT, devKey INTEGER, reason TEXT,

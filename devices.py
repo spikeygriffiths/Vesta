@@ -339,6 +339,23 @@ def SetAttrVal(devKey, clstrId, attrId, value):
     if clstrId == zcl.Cluster.OTA or clstrId == msp_ota:
         if attrId == zcl.Attribute.firmwareVersion:
             database.SetDeviceItem(devKey, "firmwareVersion", value)
+    if clstrId == zcl.Cluster.PollCtrl:
+        if attrId == zcl.Attribute.LongPollIntervalQs:
+            varVal = str(float(int(value, 16) / 4))    # Value arrives in units of quarter seconds
+            database.SetDeviceItem(devKey, "longPollInterval", varVal) # For web page and also to see whether to wait for CheckIn or just send messages (if <6 secs)
+    if clstrId == zcl.Cluster.Thermostat:
+        if attrId == zcl.Attribute.LocalTemp:
+            try:
+                varVal = int(value, 16) / 100 # Arrives in 0.01'C increments 
+                database.LogItem(devKey, "SourceCelsius", varVal) # For web page
+            except ValueError:
+                log.debug("Bad target temperature of "+ value)
+        if attrId == zcl.Attribute.OccupiedHeatingSetPoint:
+            try:
+                varVal = int(value, 16) / 100 # Arrives in 0.01'C increments 
+                database.LogItem(devKey, "TargetCelsius", varVal) # For web page
+            except ValueError:
+                log.debug("Bad target temperature of "+ value)
 
 def Rule(devKey, state):
     userName = database.GetDeviceItem(devKey, "userName")
@@ -441,6 +458,8 @@ def Check(devKey):
                 return SetBinding(devKey, zcl.Cluster.Temperature, "01") # 01 is our endpoint we want messages to come to
             if zcl.Cluster.SimpleMetering in inClstr and zcl.Cluster.SimpleMetering not in binding:
                 return SetBinding(devKey, zcl.Cluster.SimpleMetering, "01") # 01 is our endpoint we want messages to come to
+            if zcl.Cluster.Thermostat in inClstr and zcl.Cluster.Thermostat not in binding:
+                return SetBinding(devKey, zcl.Cluster.Thermostat, "01") # 01 is our endpoint we want messages to come to
         if zcl.Cluster.IAS_Zone in inClstr:
             if None == database.GetDeviceItem(devKey, "iasZoneType"):
                 return telegesis.ReadAttr(nwkId, ep, zcl.Cluster.IAS_Zone, zcl.Attribute.Zone_Type) # Get IAS device type (PIR or contact, etc.)
@@ -455,6 +474,9 @@ def Check(devKey):
                 if datetime.now() > checkBatt:
                     log.debug("Now = "+str(datetime.now())+" and checkBatt = "+str(checkBatt))
                     return telegesis.ReadAttr(nwkId, ep, zcl.Cluster.PowerConfig, zcl.Attribute.Batt_Percentage) # Get Battery percentage
+        if zcl.Cluster.PollCtrl in inClstr:
+            if None == database.GetDeviceItem(devKey, "longPollInterval"):
+                return telegesis.ReadAttr(nwkId, ep, zcl.Cluster.PollCtrl, zcl.Attribute.LongPollIntervalQs) # Get Poll Control's Long poll interval
         if zcl.Cluster.OTA in outClstr:
             if None == database.GetDeviceItem(devKey, "firmwareVersion"):
                 return ("AT+READCATR:"+nwkId+","+ep+",0,"+zcl.Cluster.OTA+","+zcl.Attribute.firmwareVersion, "RESPATTR") # Get OTA's Version number as a string of hex digits
@@ -480,6 +502,10 @@ def Check(devKey):
             atCmd = CheckReporting(devKey, reporting, "energyGeneratedReporting", zcl.Cluster.SimpleMetering, zcl.Attribute.CurrentSummationReceived, zcl.AttributeTypes.Uint48, "-1,-1,0")    # Default energy generated reporting is "never" (-1 as max)
             if atCmd != None:
                 return atCmd
+        if zcl.Cluster.Thermostat in binding:
+            atCmd = CheckReporting(devKey, reporting, "targetTempReporting", zcl.Cluster.Thermostat, zcl.Attribute.OccupiedHeatingSetPoint, zcl.AttributeTypes.Sint16, "60,900,100")    # Default target temperature reporting is "between 1 minute and 15 minutes, or +/-1.00'C"
+            if atCmd != None:
+                return atCmd
     if GetTempVal(devKey, "JustSentOnOff"):
         DelTempVal(devKey, "JustSentOnOff")
         return telegesis.ReadAttr(nwkId, ep, zcl.Cluster.OnOff, zcl.Attribute.OnOffState) # Get OnOff state after sending toggle
@@ -488,6 +514,10 @@ def Check(devKey):
 def IsListening(devKey):
     type = database.GetDeviceItem(devKey, "devType")
     if type == "SED":
+        pollFreq = database.GetDeviceItem(devKey, "longPollInterval")   # See if the device is a fast poller
+        if pollFreq != None:
+            if float(pollFreq) < 6.0:
+                return True
         pollTime = GetTempVal(devKey, "PollingUntil")
         if pollTime != None:
             if datetime.now() < pollTime:
