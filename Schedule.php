@@ -6,8 +6,11 @@ $type = $_GET['type'];
 $devKey = $_GET['devKey'];
 echo "</head><body>";
 $db = DatabaseInit();
+$numSchedules = GetCount($db, "Schedules", "day=\"Sun\"");    # Get number of schedules
 $username = GetDevItem("userName", $devKey,$db);
-$rightBtn = "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=delSchedule ".$type."'\">Remove</button>";
+if ($numSchedules > 1) {
+    $rightBtn = "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=delSchedule ".$type."'\">Remove</button>";
+} else $rightBtn = "";
 PageHeader("Schedule for ".$type, $rightBtn);
 
 // See if the schedule needs changing
