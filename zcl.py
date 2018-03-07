@@ -47,6 +47,8 @@ class Attribute():
     # Thermostat
     LocalTemp = "0000" # RO S16 Source temp in 0.01'C
     OccupiedHeatingSetPoint = "0012" # RW S16 Target temp in 0.01'C
+    #ThermostatProgrammingOperationMode = "0025" # RW 8-bit bitmap
+    #OccupiedHeatingSetPoint = "0014" # Unoccupied Heating RW S16 Target temp in 0.01'C
     # Illuminance
     Log_Lux = "0000" # Illuminance cluster, 16-bit as 10000 x log(10)Lux + 1 (Read Only)
     # Temperature
@@ -64,7 +66,11 @@ class Attribute():
     InstantaneousDemand =  "0400"  # Value in W (Read Only, signed 24-bit int). +ve is consumed, -ve is generated
 
 class Commands():
-    AdjustSetpoint = "00" # Client->server
+    ReadAttributes = "00" # General commands
+    ReadAttrRsp = "01"
+    WriteAttributes = "02"
+    WriteAttrRsp = "04"
+    AdjustSetpoint = "00" # Thermostat Client->server
     GetScheduleRsp = "00" # Server->client
     SetSchedule = "01"
     GetSchedule = "02"

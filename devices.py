@@ -165,6 +165,7 @@ def EventHandler(eventId, eventArg):
                 clusterId = eventArg[3]
                 attrId = pendingRptAttrId # Need to remember this, since it doesn't appear in CFGRPTRSP
                 NoteReporting(devKey, clusterId, attrId)
+                pendingRptAttrId = None # Ready for the next report
         elif eventArg[0] == "CWSCHEDULE":
             heating.ParseCWShedule(eventArg)
         #else:   # Unrecognised message, but we still want to extract OOB info
@@ -260,6 +261,7 @@ def NoteReporting(devKey, clusterId, attrId):
     else:
         reporting = "['"+newRpt+"']"
     database.SetDeviceItem(devKey, "reporting", reporting) # Ready for next time
+    log.debug("New reporting entry of "+reporting+" with cluster:"+clusterId+" and attrId:"+attrId+" for devKey:"+str(devKey))
     EnsureInBinding(devKey, clusterId)   # Assume reportable items must be in binding for us to receive them, so make sure this is up-to-date
 
 def EnsureInBinding(devKey, clusterId):  # Put clusterId in binding if not there already
@@ -349,7 +351,7 @@ def SetAttrVal(devKey, clstrId, attrId, value):
                 varVal = int(value, 16) / 100 # Arrives in 0.01'C increments 
                 database.LogItem(devKey, "SourceCelsius", varVal) # For web page
             except ValueError:
-                log.debug("Bad target temperature of "+ value)
+                log.debug("Bad local temperature of "+ value)
         if attrId == zcl.Attribute.OccupiedHeatingSetPoint:
             try:
                 varVal = int(value, 16) / 100 # Arrives in 0.01'C increments 
@@ -547,7 +549,7 @@ def GetIndexFromKey(key):
 def CheckReporting(devKey, reporting, field, cluster, attrId, attrType, defVal):
     global pendingRptAttrId
     rpt = cluster+":"+attrId
-    if rpt not in reporting:
+    if pendingRptAttrId == None and rpt not in reporting:
         pendingRptAttrId = attrId
         devRpt = database.GetDeviceItem(devKey, field, defVal)
         rptList = devRpt.split(",") # Explode the CSV line to a list of min, max, delta
@@ -555,12 +557,14 @@ def CheckReporting(devKey, reporting, field, cluster, attrId, attrType, defVal):
             return  # Don't configure this attribute for reporting if min==-1 
         log.debug("Update device reporting for "+database.GetDeviceItem(devKey, "userName")+"'s "+field)
         log.debug("Reporting was "+reporting+" which didn't include " + rpt)
-        if attrType == zcl.AttributeTypes.Uint8:
+        if attrType == zcl.AttributeTypes.Uint8 or attrType == zcl.AttributeTypes.Sint8:
             deltaLen = 2   # Need to know number of digits to use in deltaHex
-        elif attrType == zcl.AttributeTypes.Uint16:
+        elif attrType == zcl.AttributeTypes.Uint16 or attrType == zcl.AttributeTypes.Sint16:
             deltaLen = 4   # Need to know number of digits to use in deltaHex
-        elif attrType == zcl.AttributeTypes.Sint24:
+        elif attrType == zcl.AttributeTypes.Uint24 or attrType == zcl.AttributeTypes.Sint24:
             deltaLen = 6   # Need to know number of digits to use in deltaHex
+        elif attrType == zcl.AttributeTypes.Uint32 or attrType == zcl.AttributeTypes.Sint32:
+            deltaLen = 8   # Need to know number of digits to use in deltaHex
         elif attrType == zcl.AttributeTypes.Uint48:
             deltaLen = 12   # Need to know number of digits to use in deltaHex
         else:

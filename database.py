@@ -72,7 +72,8 @@ def InitCore(db, curs):
     energyGeneratedReporting TEXT,
     checkInFrequency TEXT,
     pirSensitivity TEXT,
-    longPollInterval TEXT)""")
+    longPollInterval TEXT,
+    targetTempReporting TEXT)""")
     # Check that we have new entries to Devices above
     if TableHasColumn(curs, "Devices", "batteryReporting") == False:
         curs.execute("ALTER TABLE Devices ADD COLUMN batteryReporting TEXT")    # Format of all xxxReporting is <minS>,<maxS>,<delta>
@@ -90,6 +91,8 @@ def InitCore(db, curs):
         curs.execute("ALTER TABLE Devices ADD COLUMN pirSensitivity TEXT")
     if TableHasColumn(curs, "Devices", "longPollInterval") == False:
         curs.execute("ALTER TABLE Devices ADD COLUMN longPollInterval TEXT")
+    if TableHasColumn(curs, "Devices", "targetTempReporting") == False:
+        curs.execute("ALTER TABLE Devices ADD COLUMN targetTempReporting TEXT")
     curs.execute("""
     CREATE TABLE IF NOT EXISTS Groups (
     userName TEXT,
@@ -582,9 +585,9 @@ def SetSchedule(type, dow, schedule):
 
 def DelSchedule(type):
     global curs, flushDB
-    if GetSchedule(type) == None:
+    if GetSchedule(type) != None:
         log.debug("Deleting schedule "+type)
         curs.execute("DELETE FROM Schedules WHERE type=\""+type+"\"") # Delete old schedule
     else:
-        log.debug("Schedule "+schedule+" not found for deletion")
+        log.debug("Schedule "+type+" not found for deletion")
 

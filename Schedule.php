@@ -19,8 +19,8 @@ echo "<p>Select Schedule from:<select id='type' name='type'>";
 $sth = $db->prepare("SELECT type FROM Schedules WHERE day=\"Sun\"");
 $sth->execute();
 while ($row = $sth->fetch()) {
-    $type = $row['type'];
-    echo "<option value='",$type,"'>",$type,"</option>";
+    $option = $row['type'];
+    echo "<option value='",$option,"'>",$option,"</option>";
 }
 echo "</select>";
 echo "<input type='submit' name='submit'/>";
@@ -37,12 +37,18 @@ echo "</body></html>";
 
 function ShowSchedule($db, $type)
 {
-    echo "<table>";
+    $dows=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
     $sth = $db->prepare("SELECT * FROM Schedules WHERE type=\"".$type."\"");
     $sth->execute();
     while ($row = $sth->fetch()) {
         $day = $row['day'];
-        $scheduleTxt = $row['dailySchedule'];
+        $dayIndex = array_search($day, $dows);
+        $scheduleTxts[$dayIndex] = $row['dailySchedule']; # Build array in day of week ordering
+    }
+    echo "<table>";
+    for ($index = 0; $index < 7; $index++) { // 7 days in a week
+        $day = $dows[$index];
+        $scheduleTxt = $scheduleTxts[$index];
         echo "<tr><td>",$day,"</td><td>";
         echo "<form action=\"/vesta/save_schedule.php/?type=",$type,"&day=",$day,"&username=",$username,"\"method=\"post\">";
         echo "<input type=\"text\" size=\"50\" name=\"scheduleTxt\" value=\"", $scheduleTxt, "\">";

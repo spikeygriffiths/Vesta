@@ -13,12 +13,13 @@ import log
 import iottime
 import variables
 import config
+import telegesis
 
 thermoDevKey = None
 
 def NewSchedule(name):
     days = iottime.GetDaysOfWeek()  # Get list of days of the week
-    newSchedStr = "[('06:30', 20.0), ('08:30', 16.0), ('17:30', 20.0), ('20:00', 1.0)]"
+    newSchedStr = "[('06:30', 20.0), ('08:30', 16.0), ('17:30', 20.0), ('20:00', 7.0)]"
     for day in days:
         database.SetSchedule(name, day, newSchedStr) # Create new schedule in database
 
@@ -49,8 +50,9 @@ def ParseCWShedule(eventArg):
         timeOfDay = time.strftime("%H:%M", time.gmtime(secs))
         scheduleTemp = int(targetTemp, 16)/100
         newSchedule.append((timeOfDay, scheduleTemp))
-    log.debug("Schedule for "+dayOfWeek+" is "+str(newSchedule))
-    scheduleType = config.Get("HeatingSchedule", "Heating")
+    username = devices.GetDevItem("userName", devKey)
+    log.debug("Schedule from "+username+" for "+dayOfWeek+" is "+str(newSchedule))
+    scheduleType = username  # was config.Get("HeatingSchedule", "Heating")
     database.SetSchedule(scheduleType, dayOfWeek, str(newSchedule)) # Update the database from the Thermostat/boiler device
 
 def GetSchedule(devKey):  # Ask Thermostat/Boiler device for its schedule
@@ -124,21 +126,37 @@ def CheckThermostat(devKey):
         return None # Not a thermostat
     return nwkId
 
-def SetCurrentTemp(devKey, temp):
+def SetSourceTemp(devKey, temp):
     nwkId = database.GetDeviceItem(devKey, "nwkId")
-    if nwkId == None:
-        return  # Make sure it's a real device before continuing (it may have just been deleted)
     ep = database.GetDeviceItem(devKey, "endPoints")
     centiTemp = int(float(temp)*100)
-    cmdRsp = ("AT+WRITECATR:"+nwkId+","+ep+",0,"+zcl.Cluster.Temperature+","+zcl.Attribute.Celsius+","+zcl.AttributeTypes.Int16+","+"{:04x}".format(centiTemp), "OK") #  Set Thermostat's LocalTemp
+    cmdRsp = ("AT+WRITECATR:"+nwkId+","+ep+",0,"+zcl.Cluster.Temperature+","+zcl.Attribute.Celsius+","+zcl.AttributeTypes.Sint16+","+"{:04x}".format(centiTemp), "OK") #  Set Thermostat's LocalTemp
+    queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
+
+def GetSourceTemp(devKey):
+    nwkId = database.GetDeviceItem(devKey, "nwkId")
+    ep = database.GetDeviceItem(devKey, "endPoints")
+    cmdRsp = telegesis.ReadAttr(nwkId, ep, zcl.Cluster.Thermostat, zcl.Attribute.LocalTemp) #  Get Thermostat's source temp
     queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
 
 def SetTargetTemp(devKey, temp):
-    nwkId = database.GetDeviceItem(devKey, "nwkId")
-    if nwkId == None:
-        return  # Make sure it's a real device before continuing (it may have just been deleted)
     ep = database.GetDeviceItem(devKey, "endPoints")
-    centiTemp = int(float(temp)*100)
-    cmdRsp = ("AT+WRITEATR:"+nwkId+","+ep+",0,"+zcl.Cluster.Thermostat+","+zcl.Attribute.OccupiedHeatingSetPoint+","+zcl.AttributeTypes.Int16+","+"{:04x}".format(centiTemp)) #  Set Thermostat's target temp
+    frameCtl="10" # General (clear bit 0), direction is client->server (clear bit 3) and Disable DFTREP (set bit 4)
+    seqId="00"
+    nwkId = database.GetDeviceItem(devKey, "nwkId")
+    ep = database.GetDeviceItem(devKey, "endPoints")
+    centiTemp = format(int(float(temp)*100), 'X').zfill(4)
+    deciTemp = format(int(float(temp)*10), 'X').zfill(2) # Should really be relative
+    #cmdRsp = ("AT+WRITEATR:"+nwkId+","+ep+",0,"+zcl.Cluster.Thermostat+","+zcl.Attribute.OccupiedHeatingSetPoint+","+zcl.AttributeTypes.Uint16+","+centiTemp) #  Set Thermostat's target temp
+    cmdRsp = (["AT+WRITEATR:"+nwkId+","+ep+",0,"+zcl.Cluster.Thermostat+","+zcl.Attribute.OccupiedHeatingSetPoint+","+zcl.AttributeTypes.Sint16+","+centiTemp, "WRITEATTR"]) #  Set Thermostat's target temp
+    #cmdRsp = ("AT+RAWZCL:"+nwkId+","+ep+","+zcl.Cluster.Thermostat+","+frameCtl+seqId+zcl.Commands.AdjustSetpoint+"0019")
+    #cmdRsp = (["AT+RAWZCL:"+nwkId+","+ep+","+zcl.Cluster.Thermostat+","+frameCtl+seqId+zcl.Commands.WriteAttributes+zcl.Attribute.OccupiedHeatingSetPoint+zcl.AttributeTypes.Sint16+centiTemp, "WRITEATTR"]) #  Set Thermostat's target temp
+    #cmdRsp = ("AT+TSTATSET:"+nwkId+","+ep+",0,00,"+deciTemp) # Send AdjustSetpoint Heating as decitemp
+    queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
+
+def GetTargetTemp(devKey):
+    nwkId = database.GetDeviceItem(devKey, "nwkId")
+    ep = database.GetDeviceItem(devKey, "endPoints")
+    cmdRsp = telegesis.ReadAttr(nwkId, ep, zcl.Cluster.Thermostat, zcl.Attribute.OccupiedHeatingSetPoint) #  Get Thermostat's target temp
     queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
 

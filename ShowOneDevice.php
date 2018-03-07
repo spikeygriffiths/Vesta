@@ -135,9 +135,9 @@ function ShowDeviceInfo($db, $devKey, $username)
     ShowDevStatus("Presence", "Presence", "", 300, $devKey, $db);
     ShowDevStatus("SignalPercentage", "Radio Signal", "%", 300, $devKey, $db);
     ShowDevStatus("BatteryPercentage", "Battery", "%", 0, $devKey, $db);
-    ShowDevStatus("TemperatureCelsius", "Temperature", "C", 600, $devKey, $db);
-    ShowDevStatus("SourceCelsius", "Source Temperature", "C", 900, $devKey, $db);
-    ShowDevStatus("TargetCelsius", "Target Temperature", "C", 900, $devKey, $db);
+    ShowDevStatus("TemperatureCelsius", "Temperature", "'C", 600, $devKey, $db);
+    ShowDevStatus("SourceCelsius", "Source Temperature", "'C", 900, $devKey, $db);
+    ShowDevStatus("TargetCelsius", "Target Temperature", "'C", 900, $devKey, $db);
     ShowDevStatus("PowerReadingW", "Power", "W", 60, $devKey, $db);
     ShowDevEnergy("EnergyConsumedWh", "Energy consumed", "Wh", $devKey, $db);
     ShowDevEnergy("EnergyGeneratedWh", "Energy generated", "Wh", $devKey, $db);
@@ -195,8 +195,10 @@ function ShowDeviceInfo($db, $devKey, $username)
             $boostDegC = GetConfig("BoostDegC", "21", $db);
             $frostDegC = GetConfig("FrostDegC", "7", $db);
             echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Schedule.php/?type=",$type,"&devKey=",$devKey,"'\">Schedule</button>&nbsp&nbsp&nbsp";
-            echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=setTargetTemp ",$devKey," ",$boostDegC,"'\">Boost</button>&nbsp&nbsp&nbsp"; 
-            echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=setTargetTemp ",$devKey," ",$frostDegC,"'\">Frost</button>&nbsp&nbsp&nbsp"; 
+            echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=setTargetTemp ",$username," ",$boostDegC,"'\">Boost</button>&nbsp&nbsp&nbsp"; 
+            echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=setTargetTemp ",$username," ",$frostDegC,"'\">Frost</button><br><br>";
+            echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=getTargetTemp ",$username,"'\">GetTargetTemp</button>&nbsp&nbsp&nbsp"; 
+            echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=getSourceTemp ",$username,"'\">GetSourceTemp</button>&nbsp&nbsp&nbsp"; 
             echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=setTime ",$username,"'\">Set time</button>&nbsp&nbsp&nbsp";
         }
     }

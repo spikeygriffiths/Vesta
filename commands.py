@@ -265,6 +265,20 @@ class Commands(cmd.Cmd):
             if devKey != None:
                 heating.SetTargetTemp(devKey, temp)
 
+    def do_getTargetTemp(seld, devId):
+        """getTargetTemp id
+        Gets the target temperature from a thermostat device"""
+        devKey = devices.FindDev(devId)
+        if devKey != None:
+            heating.GetTargetTemp(devKey)
+
+    def do_getSourceTemp(seld, devId):
+        """getSourceTemp id
+        Gets the source temperature from a thermostat device"""
+        devKey = devices.FindDev(devId)
+        if devKey != None:
+            heating.GetSourceTemp(devKey)
+
     def do_setTime(self, devId):
         """setTime id
         Sets the time on the device using the time cluster"""
