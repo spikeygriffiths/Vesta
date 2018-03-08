@@ -255,7 +255,7 @@ class Commands(cmd.Cmd):
             if devKey != None:
                 heating.SetSchedule(devKey, scheduleName)
 
-    def do_setTargetTemp(self,line):
+    def do_setTargetTemp(self, line):
         """setTargetTemp id temp
         Sets the target temperature on the thermostat device"""
         argList = line.split()
@@ -271,6 +271,16 @@ class Commands(cmd.Cmd):
         devKey = devices.FindDev(devId)
         if devKey != None:
             heating.GetTargetTemp(devKey)
+
+    def do_setSourceTemp(self, line):    # Only for testing
+        """setSourceTemp id temp
+        Sets the source temperature on the thermostat device"""
+        argList = line.split()
+        if len(argList) >= 2:
+            devKey = devices.FindDev(argList[0])
+            temp = argList[1]
+            if devKey != None:
+                heating.SetSourceTemp(devKey, temp)
 
     def do_getSourceTemp(seld, devId):
         """getSourceTemp id
