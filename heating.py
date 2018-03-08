@@ -130,7 +130,7 @@ def SetSourceTemp(devKey, temp):
     nwkId = database.GetDeviceItem(devKey, "nwkId")
     ep = database.GetDeviceItem(devKey, "endPoints")
     centiTemp = int(float(temp)*100)
-    cmdRsp = ("AT+WRITECATR:"+nwkId+","+ep+",0,"+zcl.Cluster.Temperature+","+zcl.Attribute.Celsius+","+zcl.AttributeTypes.Sint16+","+"{:04x}".format(centiTemp), "OK") #  Set Thermostat's LocalTemp
+    cmdRsp = (["AT+WRITECATR:"+nwkId+","+ep+",0,"+zcl.Cluster.Temperature+","+zcl.Attribute.Celsius+","+zcl.AttributeTypes.Sint16+","+"{:04x}".format(centiTemp), "WRITEATTR"]) #  Set Thermostat's LocalTemp
     queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
 
 def GetSourceTemp(devKey):
