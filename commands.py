@@ -286,6 +286,13 @@ class Commands(cmd.Cmd):
         if devKey != None:
             iottime.SetTime(devKey)
 
+    def do_getTime(self, devId):
+        """getTime id
+        Gets the time from the device using the time cluster"""
+        devKey = devices.FindDev(devId)
+        if devKey != None:
+            iottime.GetTime(devKey)
+
     def do_removeDevice(self, devId):
         """removeDevice id
         Tells device to leave the network and remove it from the database"""

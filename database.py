@@ -156,6 +156,10 @@ def InitAll(db, curs):
     timestamp DATETIME, value INTEGER, devKey INTEGER,
     FOREIGN KEY(devKey) REFERENCES Devices(devKey))""") # For thermostat
     curs.execute("""
+    CREATE TABLE IF NOT EXISTS Time (
+    timestamp DATETIME, value TEXT, devKey INTEGER,
+    FOREIGN KEY(devKey) REFERENCES Devices(devKey))""") # For time server, eg thermostat
+    curs.execute("""
     CREATE TABLE IF NOT EXISTS Events (
     timestamp DATETIME, event TEXT, devKey INTEGER, reason TEXT,
     FOREIGN KEY(devKey) REFERENCES Devices(devKey))""")

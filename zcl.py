@@ -27,10 +27,16 @@ class Attribute():
     # OnOff
     OnOffState = "0000" # OnOff cluster, 8 bit bool
     # Time
-    Time = "0000" # Time cluster, UTC as U32 in seconds since midnight 1/1/2000
-    DstStart ="0003" # Time cluster, this year's Summer Time start, U32 as for Time
-    DstEnd = "00004" # As above, but end
-    DstShift = "0005" # Time cluster, S32 in seconds (-86400 -> +86400)
+    Time = "0000" # WR UTC as U32 in seconds since midnight 1/1/2000
+    TimeStatus = "0001" # WR 8-Bitmap. 
+    TimeZone = "0002" # RW S32
+    DstStart ="0003" #  RW U32 this year's Summer Time start, U32 as for Time
+    DstEnd = "00004" # RW U32 As above, but end
+    DstShift = "0005" # RW S32 in seconds (-86400 -> +86400)
+    StandardTime = "0006"   # RO U32 Time+TimeZone (but not DST)
+    LocalTime = "0007" # RO U32 Time+TimeZone+DST
+    LastSetTime = "0008" # RO UTC
+    ValidUntilTime = "0009" # RW UTC
     # OTA
     firmwareVersion = "0002" # U32 version number, stack in bottom 16, app in top 16.  4 bits each for major.minor.release.build
     # PollCtrl

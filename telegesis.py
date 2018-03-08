@@ -117,6 +117,9 @@ def Leave(nwkId):    # Tell device to leave the network
 def TxCmd(cmd):  # Takes command to send
     txBuf.append(cmd)  # Append command
 
-def ReadAttr(devId, ep, clstrId, attrId): # NB All args as hex strings
-    return ("AT+READATR:"+devId+","+ep+",0,"+clstrId+","+attrId, "RESPATTR")
+def ReadAttr(nwkId, ep, clstrId, attrId): # NB All args as hex strings
+    return ("AT+READATR:"+nwkId+","+ep+",0,"+clstrId+","+attrId, "RESPATTR")
+
+def WriteAttr(nwkId, ep, clstrId, attrId, attrType, attrVal):   # All args are hex strings
+    return ("AT+WRITEATR:"+nwkId+","+ep+",0,"+clstrId+","+attriId+","+attrType+","+attrVal, "WRITEATTR") #  Set attribute in cluster
 

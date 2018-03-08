@@ -140,18 +140,10 @@ def GetSourceTemp(devKey):
     queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
 
 def SetTargetTemp(devKey, temp):
-    ep = database.GetDeviceItem(devKey, "endPoints")
-    frameCtl="10" # General (clear bit 0), direction is client->server (clear bit 3) and Disable DFTREP (set bit 4)
-    seqId="00"
     nwkId = database.GetDeviceItem(devKey, "nwkId")
     ep = database.GetDeviceItem(devKey, "endPoints")
     centiTemp = format(int(float(temp)*100), 'X').zfill(4)
-    deciTemp = format(int(float(temp)*10), 'X').zfill(2) # Should really be relative
-    #cmdRsp = ("AT+WRITEATR:"+nwkId+","+ep+",0,"+zcl.Cluster.Thermostat+","+zcl.Attribute.OccupiedHeatingSetPoint+","+zcl.AttributeTypes.Uint16+","+centiTemp) #  Set Thermostat's target temp
-    cmdRsp = (["AT+WRITEATR:"+nwkId+","+ep+",0,"+zcl.Cluster.Thermostat+","+zcl.Attribute.OccupiedHeatingSetPoint+","+zcl.AttributeTypes.Sint16+","+centiTemp, "WRITEATTR"]) #  Set Thermostat's target temp
-    #cmdRsp = ("AT+RAWZCL:"+nwkId+","+ep+","+zcl.Cluster.Thermostat+","+frameCtl+seqId+zcl.Commands.AdjustSetpoint+"0019")
-    #cmdRsp = (["AT+RAWZCL:"+nwkId+","+ep+","+zcl.Cluster.Thermostat+","+frameCtl+seqId+zcl.Commands.WriteAttributes+zcl.Attribute.OccupiedHeatingSetPoint+zcl.AttributeTypes.Sint16+centiTemp, "WRITEATTR"]) #  Set Thermostat's target temp
-    #cmdRsp = ("AT+TSTATSET:"+nwkId+","+ep+",0,00,"+deciTemp) # Send AdjustSetpoint Heating as decitemp
+    cmdRsp = telegesis.WriteAttr(nwkId, ep, zcl.Cluster.Thermostat, zcl.Attribute.OccupiedHeatingSetPoint, zcl.AttributeTypes.Sint16, centiTemp) #  Set Thermostat's target temp
     queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
 
 def GetTargetTemp(devKey):
