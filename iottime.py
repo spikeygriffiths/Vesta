@@ -180,6 +180,9 @@ def SetTime(devKey):    # To be called once/day, at 4am, to ensure it's up-to-da
     zigBeeTime = ToZigbee(time.localtime())   # Get local time in Unix epoch (1/Jan/1970) and convert it to Zigbee standard
     cmdRsp = telegesis.WriteAttr(nwkId, ep, zcl.Cluster.Time, zcl.Attribute.Time, zcl.AttributeTypes.UtcTime, "{:08x}".format(int(zigBeeTime))) #  Set time
     queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
+    cmdRsp = telegesis.WriteAttr(nwkId, ep, zcl.Cluster.Time, zcl.Attribute.TimeStatus, zcl.AttributeTypes.BitMap8, "02") #  Set timeStatus to "Synchronised"
+    queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
+
 
 def GetTime(devKey):
     nwkId = database.GetDeviceItem(devKey, "nwkId")
