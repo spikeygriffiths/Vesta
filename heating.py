@@ -105,17 +105,12 @@ def SetDaySchedule(devKey, scheduleType="Heating", dayOfWeek="Sun"):
         tempStr = timeTemp[1]
         time = datetime.strptime(timeStr, "%H:%M")
         minsSinceMidnight = (time.hour*60)+time.minute
-        htonMins = ByteSwap(minsSinceMidnight)
-        htonTemp = ByteSwap(int(float(tempStr)*100))
+        htonMins = telegesis.ByteSwap(minsSinceMidnight)
+        htonTemp = telegesis.ByteSwap(int(float(tempStr)*100))
         scheduleStr = scheduleStr + "{:04x}".format(htonMins)
         scheduleStr = scheduleStr + "{:04x}".format(htonTemp)
     cmdRsp = ("AT+RAWZCL:"+nwkId+","+ep+","+zcl.Cluster.Thermostat+","+frameCtl+seqId+zcl.Commands.SetSchedule+"{:02x}".format(numSetpoints)+"{:02x}".format(dayBit)+"01"+scheduleStr, "CWSCHEDULE") #  Set heating(01) schedule
     queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
-
-def ByteSwap(val): # Assumes val is 16-bit int for now
-    loVal = val & 0xff
-    hiVal = val >> 8
-    return hiVal + (256 * loVal) 
 
 def CheckThermostat(devKey):
     nwkId = database.GetDeviceItem(devKey, "nwkId")

@@ -289,12 +289,17 @@ class Commands(cmd.Cmd):
         if devKey != None:
             heating.GetSourceTemp(devKey)
 
-    def do_setTime(self, devId):
-        """setTime id
-        Sets the time on the device using the time cluster"""
-        devKey = devices.FindDev(devId)
+    def do_setTime(self, line):
+        """setTime id [offset]
+        Sets the time on the device using the time cluster.  If offset supplied, then add this first"""
+        argList = line.split()
+        devKey = devices.FindDev(argList[0])
+        if len(argList) >= 2:
+            offset = argList[1]
+        else:
+            offset = 0
         if devKey != None:
-            iottime.SetTime(devKey)
+            iottime.SetTime(devKey, time.localtime()+temp)
 
     def do_getTime(self, devId):
         """getTime id

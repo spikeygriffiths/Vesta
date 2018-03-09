@@ -111,6 +111,11 @@ def Parse(atLine):
         events.Issue(events.ids.RXMSG, atList)
     # end Parse
 
+def ByteSwap(val): # Assumes val is 16-bit int for now
+    loVal = val & 0xff
+    hiVal = val >> 8
+    return hiVal + (256 * loVal) # Correct endianess when reading or writing raw Zigbee
+
 def Leave(nwkId):    # Tell device to leave the network
     TxCmd("AT+DASSR:"+nwkId)
 

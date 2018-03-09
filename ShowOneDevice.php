@@ -202,10 +202,14 @@ function ShowDeviceInfo($db, $devKey, $username)
             echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=setSourceTemp ",$username," 23'\">Test 23C</button>&nbsp&nbsp&nbsp"; 
             echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=setTargetTemp ",$username," 11'\">Test 11C</button><br><br>";
             echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=getSourceTemp ",$username,"'\">GetSourceTemp</button><br>"; 
+            AppCmd("getSourceTemp ".$username, false);
+            AppCmd("getTargetTemp ".$username, false);  # Automatically ask for these 
         }
         if (strpos($inClusters, "000A") !== false) { // Time cluster
             echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=getTime ",$username,"'\">Get time</button>&nbsp&nbsp&nbsp";
+            AppCmd("getTime ".$username, false);
             echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=setTime ",$username,"'\">Set time</button>&nbsp&nbsp&nbsp";
+            echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=setTime 9000",$username,"'\">Set time plus 2:30 for testing</button><br>";
         }
     }
 }

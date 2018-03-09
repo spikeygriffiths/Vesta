@@ -220,7 +220,7 @@ def EventHandler(eventId, eventArg):
     #        if devDict[devKey] >= 0:    # Make sure device hasn't been deleted
     #            inClstr = database.GetDeviceItem(devKey, "inClusters") # Assume we have a list of clusters if we get this far
     #            if (zcl.Clusters.Time in inClstr): # Or should this be in the outClusters?
-    #                iottime.SetTime(devKey) # ToDo: Enable this when we're confident it'll work!
+    #                iottime.SetTime(devKey, time.localtime()) # ToDo: Enable this when we're confident it'll work!
     # End event handler
 
 def EnsureReporting(devKey, clstrId, attrId, attrVal): # Check when this attr last reported and update device's reporting if necessary
