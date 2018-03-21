@@ -322,7 +322,14 @@ def SetAttrVal(devKey, clstrId, attrId, value):
                     else: # Assume SwitchOff
                         devcmds.SwitchOff(devKey)  # Re-issue command
                 else: # We got the expected result
-                    DelTempVal(devKey, "ExpectOnOff")            
+                    DelTempVal(devKey, "ExpectOnOff")
+    if clstrId == zcl.Cluster.Time and attrId == zcl.Attribute.LocalTime:
+        if isnumeric(value, 16):
+            varVal = int(value, 16) # Arrives in Watts, so store it in the same way
+            log.debug("Raw time:"+str(varVal))
+            timeStr = iottime.ZclTimeToTimestamp(varVal)
+            log.debug("Human time:"+timeStr)
+            database.UpdateLoggedItem(devKey, "Time", timeStr)  # Just store latest time string
     if clstrId == zcl.Cluster.SimpleMetering and attrId == zcl.Attribute.InstantaneousDemand:
         if isnumeric(value, 16):
             varVal = int(value, 16) # Arrives in Watts, so store it in the same way

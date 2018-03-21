@@ -117,6 +117,14 @@ def Leave(nwkId):    # Tell device to leave the network
 def TxCmd(cmd):  # Takes command to send
     txBuf.append(cmd)  # Append command
 
-def ReadAttr(devId, ep, clstrId, attrId): # NB All args as hex strings
-    return ("AT+READATR:"+devId+","+ep+",0,"+clstrId+","+attrId, "RESPATTR")
+def TxReadDevAttr(devKey, clstrId, attrId):
+    nwkId = database.GetDeviceItem(devKey, "nwkId")
+    if nwkId == None:
+        return # Make sure it's a real device before continuing (it may have just been deleted)
+    ep = database.GetDeviceItem(devKey, "endPoints")
+    cmdRsp = ReadAttr(nwkId, ep, clstrId, attrId)
+    queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
+
+def ReadAttr(nwkId, ep, clstrId, attrId): # NB All args as hex strings
+    return ("AT+READATR:"+nwkId+","+ep+",0,"+clstrId+","+attrId, "RESPATTR")
 

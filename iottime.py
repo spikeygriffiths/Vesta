@@ -16,9 +16,9 @@ import database
 import config
 import synopsis
 import queue
+import telegesis
 import zcl
 
-calendar.setfirstweekday(calendar.SUNDAY)
 appStartTime = datetime.now()
 oldMins = -1
 oldHours = -1   # Force the first reading of time to change hour
@@ -158,21 +158,30 @@ def Sanitise(val):  # Assume val is a string containing a hour:minute time
 
 def GetDowIndex(dayOfWeek): # Get int from string, where "Sun"=>0, "Mon"=>1, etc.
     days = dict(zip(calendar.day_abbr, range(7)))
-    return days[dayOfWeek]
+    return (days[dayOfWeek]+1)%7 # Convert Mon-Sun (Python default) to Sun-Sat (ZCL default)
 
 def GetDow(dowIndex): # Get string from int, where 0=>"Sun", 1=>"Mon", etc.
+   dowIndex = dowIndex-1
+   if dowIndex == -1:
+       dowIndex = 6 # Simple modulus arithmetic (%7) won't wrap for negative numbers
    return calendar.day_abbr[dowIndex%7]
 
 def GetDaysOfWeek():
     return dict(zip(calendar.day_abbr, range(7)))
 
-def SetTime(devKey):
+def ZclTimeToTimestamp(zclTime):
+    nixTime = zclTime + 946684800 # Convert to *nix time by adding 30 years to convert time since 1/1/2000 to 1/1/1970
+    return datetime.fromtimestamp(nixTime).strftime('%Y-%m-%d %H:%M:%S')
+
+def SetTime(devKey, offset=0): # offset here for testing rather than anything else.  Doesn't work - returns code 87 (Invalid Value)
     nwkId = database.GetDeviceItem(devKey, "nwkId")
     if nwkId == None:
         return  # Make sure it's a real device before continuing (it may have just been deleted)
     ep = database.GetDeviceItem(devKey, "endPoints")
-    localTime = time.time()   # Get local time in Unix epock (1/Jan/1970)
-    zigBeeTime = localTime - 946684800  # Convert to seconds since 1/Jan/2000
-    cmdRsp = ("AT+WRITEATR:"+nwkId+","+ep+",0,"+zcl.Cluster.Time+","+zcl.Attribute.Time+","+zcl.AttributeTypes.UtcTime+","+"{:08x}".format(int(zigBeeTime))) #  Set time attribute in time cluster
+    localTime = time.time()   # Get local time in Unix epoch (1/Jan/1970)
+    zclTime = int(localTime) - int(946684800) + int(offset)  # Convert to seconds since 1/Jan/2000
+    cmdRsp = ("AT+WRITEATR:"+nwkId+","+ep+",0,"+zcl.Cluster.Time+","+zcl.Attribute.Time+","+zcl.AttributeTypes.UtcTime+","+"{:08X}".format(int(zclTime)), "WRITEATTR") #  Set time attribute in time cluster
     queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
 
+def GetTime(devKey):
+    telegesis.TxReadDevAttr(devKey, zcl.Cluster.Time, zcl.Attribute.LocalTime) # Create string and queue it up for sending

@@ -50,7 +50,7 @@ def ParseCWShedule(eventArg):
         timeOfDay = time.strftime("%H:%M", time.gmtime(secs))
         scheduleTemp = int(targetTemp, 16)/100
         newSchedule.append((timeOfDay, scheduleTemp))
-    username = devices.GetDevItem("userName", devKey)
+    username = database.GetDeviceItem(devKey, "userName")
     log.debug("Schedule from "+username+" for "+dayOfWeek+" is "+str(newSchedule))
     scheduleType = username  # was config.Get("HeatingSchedule", "Heating")
     database.SetSchedule(scheduleType, dayOfWeek, str(newSchedule)) # Update the database from the Thermostat/boiler device
@@ -73,7 +73,7 @@ def GetDaySchedule(devKey, dayOfWeek="Sun"):  # Ask Thermostat/Boiler device for
     seqId="00"
     dayOfWeekIndex = iottime.GetDowIndex(dayOfWeek)
     dayBit = 2 ** dayOfWeekIndex # ** is "raise to the power".  Assumes dayOfWeek is a int where 0=Sunday, 1=Monday, etc.
-    cmdRsp = ("AT+RAWZCL:"+nwkId+","+ep+","+zcl.Cluster.Thermostat+","+frameCtl+seqId+zcl.Commands.GetSchedule+"{:02x}".format(dayBit)+"01", "CWSCHEDULE") #  Get heating(01) schedule
+    cmdRsp = ("AT+RAWZCL:"+nwkId+","+ep+","+zcl.Cluster.Thermostat+","+frameCtl+seqId+zcl.Commands.GetSchedule+"{:02X}".format(dayBit)+"01", "CWSCHEDULE") #  Get heating(01) schedule
     queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
 
 def SetSchedule(devKey, scheduleType="Heating"): # Tell Thermostat/boiler device about this schedule
@@ -91,6 +91,7 @@ def SetDaySchedule(devKey, scheduleType="Heating", dayOfWeek="Sun"):
     frameCtl="11"
     seqId="00"
     dayOfWeekIndex = iottime.GetDowIndex(dayOfWeek)
+    log.debug("From "+dayOfWeek+" get value of "+str(dayOfWeekIndex))
     dayBit = 2 ** dayOfWeekIndex # ** is "raise to the power".  Assumes dayOfWeek is a int where 0=Sunday, 1=Monday, etc.
     scheduleStr = database.GetSchedule(scheduleType, dayOfWeek)
     try:
@@ -107,9 +108,9 @@ def SetDaySchedule(devKey, scheduleType="Heating", dayOfWeek="Sun"):
         minsSinceMidnight = (time.hour*60)+time.minute
         htonMins = ByteSwap(minsSinceMidnight)
         htonTemp = ByteSwap(int(float(tempStr)*100))
-        scheduleStr = scheduleStr + "{:04x}".format(htonMins)
-        scheduleStr = scheduleStr + "{:04x}".format(htonTemp)
-    cmdRsp = ("AT+RAWZCL:"+nwkId+","+ep+","+zcl.Cluster.Thermostat+","+frameCtl+seqId+zcl.Commands.SetSchedule+"{:02x}".format(numSetpoints)+"{:02x}".format(dayBit)+"01"+scheduleStr, "CWSCHEDULE") #  Set heating(01) schedule
+        scheduleStr = scheduleStr + "{:04X}".format(htonMins)
+        scheduleStr = scheduleStr + "{:04X}".format(htonTemp)
+    cmdRsp = ("AT+RAWZCL:"+nwkId+","+ep+","+zcl.Cluster.Thermostat+","+frameCtl+seqId+zcl.Commands.SetSchedule+"{:02X}".format(numSetpoints)+"{:02X}".format(dayBit)+"01"+scheduleStr, "CWSCHEDULE") #  Set heating(01) schedule
     queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
 
 def ByteSwap(val): # Assumes val is 16-bit int for now
@@ -126,14 +127,7 @@ def CheckThermostat(devKey):
         return None # Not a thermostat
     return nwkId
 
-def SetSourceTemp(devKey, temp):
-    nwkId = database.GetDeviceItem(devKey, "nwkId")
-    ep = database.GetDeviceItem(devKey, "endPoints")
-    centiTemp = int(float(temp)*100)
-    cmdRsp = ("AT+WRITECATR:"+nwkId+","+ep+",0,"+zcl.Cluster.Temperature+","+zcl.Attribute.Celsius+","+zcl.AttributeTypes.Sint16+","+"{:04x}".format(centiTemp), "OK") #  Set Thermostat's LocalTemp
-    queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
-
-def GetSourceTemp(devKey):
+def GetSourceTemp(devKey): # NB Cannot SetSourceTemp, since Boiler Control Module pulls it directly from SLT2
     nwkId = database.GetDeviceItem(devKey, "nwkId")
     ep = database.GetDeviceItem(devKey, "endPoints")
     cmdRsp = telegesis.ReadAttr(nwkId, ep, zcl.Cluster.Thermostat, zcl.Attribute.LocalTemp) #  Get Thermostat's source temp
@@ -141,17 +135,10 @@ def GetSourceTemp(devKey):
 
 def SetTargetTemp(devKey, temp):
     ep = database.GetDeviceItem(devKey, "endPoints")
-    frameCtl="10" # General (clear bit 0), direction is client->server (clear bit 3) and Disable DFTREP (set bit 4)
-    seqId="00"
     nwkId = database.GetDeviceItem(devKey, "nwkId")
     ep = database.GetDeviceItem(devKey, "endPoints")
     centiTemp = format(int(float(temp)*100), 'X').zfill(4)
-    deciTemp = format(int(float(temp)*10), 'X').zfill(2) # Should really be relative
-    #cmdRsp = ("AT+WRITEATR:"+nwkId+","+ep+",0,"+zcl.Cluster.Thermostat+","+zcl.Attribute.OccupiedHeatingSetPoint+","+zcl.AttributeTypes.Uint16+","+centiTemp) #  Set Thermostat's target temp
     cmdRsp = (["AT+WRITEATR:"+nwkId+","+ep+",0,"+zcl.Cluster.Thermostat+","+zcl.Attribute.OccupiedHeatingSetPoint+","+zcl.AttributeTypes.Sint16+","+centiTemp, "WRITEATTR"]) #  Set Thermostat's target temp
-    #cmdRsp = ("AT+RAWZCL:"+nwkId+","+ep+","+zcl.Cluster.Thermostat+","+frameCtl+seqId+zcl.Commands.AdjustSetpoint+"0019")
-    #cmdRsp = (["AT+RAWZCL:"+nwkId+","+ep+","+zcl.Cluster.Thermostat+","+frameCtl+seqId+zcl.Commands.WriteAttributes+zcl.Attribute.OccupiedHeatingSetPoint+zcl.AttributeTypes.Sint16+centiTemp, "WRITEATTR"]) #  Set Thermostat's target temp
-    #cmdRsp = ("AT+TSTATSET:"+nwkId+","+ep+",0,00,"+deciTemp) # Send AdjustSetpoint Heating as decitemp
     queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
 
 def GetTargetTemp(devKey):

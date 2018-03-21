@@ -19,20 +19,22 @@ class Cluster():
 
 class Attribute():
     # Basic
-    Manuf_Name = "0004" # Basic cluster, string (Read Only)
-    Model_Name = "0005" # Basic cluster, string (Read Only)
+    Manuf_Name = "0004" # RO Basic cluster, string
+    Model_Name = "0005" # RO Basic cluster, string
     # PowerConfig
-    Batt_Voltage = "0020" # Power_Config cluster, 8 bit in 0.1V steps (Read Only)
-    Batt_Percentage = "0021" # Power_Config cluster, 8-bit in 0.5% steps (Read Only)
+    Batt_Voltage = "0020" # RO U8 Power_Config cluster, 0.1V steps
+    Batt_Percentage = "0021" # R0 U8 Power_Config cluster, 0.5% steps
     # OnOff
-    OnOffState = "0000" # OnOff cluster, 8 bit bool
+    OnOffState = "0000" # RO U8 OnOff cluster
     # Time
-    Time = "0000" # Time cluster, UTC as U32 in seconds since midnight 1/1/2000
-    DstStart ="0003" # Time cluster, this year's Summer Time start, U32 as for Time
-    DstEnd = "00004" # As above, but end
-    DstShift = "0005" # Time cluster, S32 in seconds (-86400 -> +86400)
+    Time = "0000" # RW UTC as U32 in seconds since midnight 1/1/2000
+    DstStart ="0003" # RW U32 this year's Summer Time start
+    DstEnd = "00004" # RW U32 As above, but end
+    DstShift = "0005" # RW S32 in seconds (-86400 -> +86400)
+    StandardTime = "0006" # RO U32 Including Timezone, but not DST
+    LocalTime = "0007" # RO U32 including Timezone and DST if necessary
     # OTA
-    firmwareVersion = "0002" # U32 version number, stack in bottom 16, app in top 16.  4 bits each for major.minor.release.build
+    firmwareVersion = "0002" # RO U32 version number, stack in bottom 16, app in top 16.  4 bits each for major.minor.release.build
     # PollCtrl
     CheckInIntervalQs = "0000"  # RW U32
     LongPollIntervalQs = "0001" # RO U32
@@ -49,6 +51,7 @@ class Attribute():
     OccupiedHeatingSetPoint = "0012" # RW S16 Target temp in 0.01'C
     #ThermostatProgrammingOperationMode = "0025" # RW 8-bit bitmap
     #OccupiedHeatingSetPoint = "0014" # Unoccupied Heating RW S16 Target temp in 0.01'C
+    StartOfWeek = "0020" # RO ENUM8, 0=Sun, etc.
     # Illuminance
     Log_Lux = "0000" # Illuminance cluster, 16-bit as 10000 x log(10)Lux + 1 (Read Only)
     # Temperature

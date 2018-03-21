@@ -31,13 +31,14 @@ echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/
 echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=newSchedule New_Schedule'\">New Schedule</button><br><br>"; // Button here to create new schedule in database
 echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=getSchedule ",$username,"'\">Get Schedule<br/>From ",$username,"</button>&nbsp&nbsp&nbsp";
 echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=setSchedule ",$username," ",$type,"'\">Set Schedule<br>On ",$username,"</button><br><br>"; // Button here to push new schedule to device
+//echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=getAttr ",$username," 0201 0020'\">Get StartOfWeek<br>On ",$username,"</button>&nbsp&nbsp&nbsp&nbsp";
 echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/ShowOneDevice.php/?devKey=",$devKey,"'\">",$username,"</button><br><br>";
 PageFooter();
 echo "</body></html>";
 
 function ShowSchedule($db, $type)
 {
-    $dows=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+    $dows=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
     $sth = $db->prepare("SELECT * FROM Schedules WHERE type=\"".$type."\"");
     $sth->execute();
     while ($row = $sth->fetch()) {

@@ -88,6 +88,12 @@ class Commands(cmd.Cmd):
         Displays useful information"""
         events.Issue(events.ids.INFO)
 
+    def do_restart(self, line):
+        """restart
+        Restarts program execution"""
+        os.execl(sys.executable, sys.executable, *sys.argv)
+        #sys.exit()
+
     def do_uptime(self, line):
         """uptime
         Shows time app has been running"""
@@ -228,6 +234,17 @@ class Commands(cmd.Cmd):
             if devKey != None:
                 queue.EnqueueCmd(devKey, ["AT"+cmd, "OK"])
 
+    def do_getAttr(self, line):
+        """getAttr name clstr attr
+        Get attribute on cluster from named device"""
+        argList = line.split()
+        if len(argList) >= 3:
+            devKey = devices.FindDev(argList[0])
+            clstr = argList[1]
+            attr = argList[2]
+            if devKey != None:
+                telegesis.TxReadDevAttr(devKey, clstr, attr) # WOrk out details and send command via queue
+
     def do_newSchedule(self, name):
         """newSchedule name
         Creates new schedule"""
@@ -265,26 +282,36 @@ class Commands(cmd.Cmd):
             if devKey != None:
                 heating.SetTargetTemp(devKey, temp)
 
-    def do_getTargetTemp(seld, devId):
+    def do_getTargetTemp(self, devId):
         """getTargetTemp id
         Gets the target temperature from a thermostat device"""
         devKey = devices.FindDev(devId)
         if devKey != None:
             heating.GetTargetTemp(devKey)
 
-    def do_getSourceTemp(seld, devId):
+    def do_getSourceTemp(self, devId): # NB Cannot SetSourceTemp, since BCM pulls it directly from SLT2
         """getSourceTemp id
         Gets the source temperature from a thermostat device"""
         devKey = devices.FindDev(devId)
         if devKey != None:
             heating.GetSourceTemp(devKey)
 
-    def do_setTime(self, devId):
-        """setTime id
+    def do_setTime(self, line):
+        """setTime id offset(s)
         Sets the time on the device using the time cluster"""
+        argList = line.split()
+        if len(argList) >= 2:
+            devKey = devices.FindDev(argList[0])
+            offset = argList[1]
+            if devKey != None:
+                iottime.SetTime(devKey, offset)
+
+    def do_getTime(self, devId):
+        """getTime id
+        Gets the time from the device using the time cluster"""
         devKey = devices.FindDev(devId)
         if devKey != None:
-            iottime.SetTime(devKey)
+            iottime.GetTime(devKey)
 
     def do_removeDevice(self, devId):
         """removeDevice id

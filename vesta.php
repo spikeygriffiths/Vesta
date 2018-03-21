@@ -39,7 +39,8 @@ if ($appRunning) {
     echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Config.php'\">Config</button><br><br>";
     echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/ManageUsers.php'\">Manage users</button><br><br>";
     echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/AppLog.php'\">Application Log</button>&nbsp&nbsp&nbsp";
-    echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/log.php'\">Error Logs</button><br><br>";
+    echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/log.php'\">Error Logs</button>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp";
+    echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=restart'\">Restart</button><br><br>";
     echo "</center>";
  } else {
     echo "<br>";

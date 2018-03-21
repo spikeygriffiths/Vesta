@@ -141,6 +141,7 @@ function ShowDeviceInfo($db, $devKey, $username)
     ShowDevStatus("PowerReadingW", "Power", "W", 60, $devKey, $db);
     ShowDevEnergy("EnergyConsumedWh", "Energy consumed", "Wh", $devKey, $db);
     ShowDevEnergy("EnergyGeneratedWh", "Energy generated", "Wh", $devKey, $db);
+    ShowDevStatus("Time", "Time", "", 60, $devKey, $db);
     ShowEvent($devKey, $db);
     ShowDevItem("manufName", "Manufacturer", $devKey, $db);
     ShowDevItem("modelName", "Model", $devKey, $db);
@@ -173,10 +174,10 @@ function ShowDeviceInfo($db, $devKey, $username)
         }
     }
     echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/ChangeDevName.php/?devKey=".$devKey."'\">Change Name</button>&nbsp&nbsp&nbsp";
-    echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/rules.php/?item=",$username,"&type=dev&devKey=",$devKey,"'\">Rules</button><br><br>";
+    echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/rules.php/?item=",$username,"&type=dev&devKey=",$devKey,"'\">Rules</button>&nbsp&nbsp&nbsp";
     echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/activity.php/?devKey=",$devKey,"'\">Activity Log</button>&nbsp&nbsp&nbsp";
     if ("0000" != $nwkId) {
-        echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=identify ",$username," 30'\">Identify for 30s</button>&nbsp&nbsp&nbsp";
+        echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=identify ",$username," 30'\">Identify for 30s</button><br><br>";
         $inClusters = GetDevItem("inClusters", $devKey, $db);
         if (strpos($inClusters, "0006") !== false) { // Is switchable, eg smartplug, bulb, etc.
             echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=toggle ",$username,"'\">Toggle</button>&nbsp&nbsp&nbsp";
@@ -192,14 +193,19 @@ function ShowDeviceInfo($db, $devKey, $username)
         }
         if (strpos($inClusters, "0201") !== false) { // Thermostat cluster
             $type = GetConfig("HeatingSchedule", "Heating", $db);
-            $boostDegC = GetConfig("BoostDegC", "21", $db);
+            $boostDegC = GetConfig("BoostDegC", "18", $db);
             $frostDegC = GetConfig("FrostDegC", "7", $db);
             echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Schedule.php/?type=",$type,"&devKey=",$devKey,"'\">Schedule</button>&nbsp&nbsp&nbsp";
             echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=setTargetTemp ",$username," ",$boostDegC,"'\">Boost</button>&nbsp&nbsp&nbsp"; 
             echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=setTargetTemp ",$username," ",$frostDegC,"'\">Frost</button><br><br>";
             echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=getTargetTemp ",$username,"'\">GetTargetTemp</button>&nbsp&nbsp&nbsp"; 
             echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=getSourceTemp ",$username,"'\">GetSourceTemp</button>&nbsp&nbsp&nbsp"; 
-            echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=setTime ",$username,"'\">Set time</button>&nbsp&nbsp&nbsp";
+        }
+        if (strpos($inClusters, "000A") !== false) { // Time cluster
+            //echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=setTime ",$username," 5400'\">Set time +90mins</button>&nbsp&nbsp&nbsp";
+            //echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=setTime ",$username," 0'\">Set time</button>&nbsp&nbsp&nbsp";
+            echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=getTime ",$username,"'\">Get time</button>&nbsp&nbsp&nbsp";
+            //echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=getAttr ",$username," 000A 0001'\">Get timeStatus</button>&nbsp&nbsp&nbsp";
         }
     }
 }
