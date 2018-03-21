@@ -37,12 +37,12 @@ def EventHandler(eventId, eventArg):
     elif eventId == events.ids.SECONDS:
         now = datetime.now()
         if now.minute != oldMins:
-            events.Issue(events.ids.MINUTES)
+            events.Issue(events.ids.MINUTES, now.minute)
             oldMins = now.minute # Ready for next time
     elif eventId == events.ids.MINUTES:
         now = datetime.now()
         if now.hour != oldHours:
-            events.Issue(events.ids.HOURS)
+            events.Issue(events.ids.HOURS, now.hour)
             oldHours = now.hour # Ready for next time
         variables.Set("time", str(now.strftime("%H:%M")))
         rules.Run("time=="+ str(now.strftime("%H:%M"))) # Run timed rules once per minute
@@ -61,8 +61,7 @@ def EventHandler(eventId, eventArg):
                 rules.Run("dark=="+variables.Get("dark"))  # This will also delete the variable afterwards
                 variables.Set("dark", dark)  # Re-instate the variable after the rule has deleted it
     if eventId == events.ids.HOURS:
-        now = datetime.now()
-        if now.hour == 0: # Midnight, time to calculate sunrise and sunset for new day
+        if eventArg == 0: # Midnight, time to calculate sunrise and sunset for new day
             events.Issue(events.ids.NEWDAY)
     if eventId == events.ids.NEWDAY:
         SetSunTimes()
@@ -169,18 +168,28 @@ def GetDow(dowIndex): # Get string from int, where 0=>"Sun", 1=>"Mon", etc.
 def GetDaysOfWeek():
     return dict(zip(calendar.day_abbr, range(7)))
 
-def ZclTimeToTimestamp(zclTime):
-    nixTime = zclTime + 946684800 # Convert to *nix time by adding 30 years to convert time since 1/1/2000 to 1/1/1970
-    return datetime.fromtimestamp(nixTime).strftime('%Y-%m-%d %H:%M:%S')
+def FromZigbee(zigSecs):    # Return timestamp given Zigbee time
+    unixTime = zigSecs + 946684800  # Convert to seconds since 1/Jan/1970
+    return datetime.fromtimestamp(unixTime).strftime("%Y-%m-%d %H:%M:%S")
 
-def SetTime(devKey, offset=0): # offset here for testing rather than anything else.  Doesn't work - returns code 87 (Invalid Value)
+def ToZigbee(unixSecs):
+    return unixSecs - 946684800  # Convert to seconds since 1/Jan/2000
+
+def SetTime(devKey, timeUtc=time.localtime()):    # To be called once/day, at 4am, to ensure it's up-to-date for DST changes
     nwkId = database.GetDeviceItem(devKey, "nwkId")
     if nwkId == None:
         return  # Make sure it's a real device before continuing (it may have just been deleted)
     ep = database.GetDeviceItem(devKey, "endPoints")
-    localTime = time.time()   # Get local time in Unix epoch (1/Jan/1970)
-    zclTime = int(localTime) - int(946684800) + int(offset)  # Convert to seconds since 1/Jan/2000
-    cmdRsp = ("AT+WRITEATR:"+nwkId+","+ep+",0,"+zcl.Cluster.Time+","+zcl.Attribute.Time+","+zcl.AttributeTypes.UtcTime+","+"{:08X}".format(int(zclTime)), "WRITEATTR") #  Set time attribute in time cluster
+    zigBeeTime = ToZigbee(timeUtc)   # Get local time in Unix epoch (1/Jan/1970) and convert it to Zigbee standard
+    cmdRsp = telegesis.WriteAttr(nwkId, ep, zcl.Cluster.Time, zcl.Attribute.Time, zcl.AttributeTypes.UtcTime, "{:08x}".format(int(zigBeeTime))) #  Set time
+    queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
+    cmdRsp = telegesis.WriteAttr(nwkId, ep, zcl.Cluster.Time, zcl.Attribute.TimeStatus, zcl.AttributeTypes.BitMap8, "02") #  Set timeStatus to "Synchronised"
+    queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
+
+def GetTime(devKey):
+    nwkId = database.GetDeviceItem(devKey, "nwkId")
+    ep = database.GetDeviceItem(devKey, "endPoints")
+    cmdRsp = telegesis.ReadAttr(nwkId, ep, zcl.Cluster.Time, zcl.Attribute.LocalTime) #  Get time from remote device
     queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
 
 def GetTime(devKey):

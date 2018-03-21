@@ -106,17 +106,14 @@ def SetDaySchedule(devKey, scheduleType="Heating", dayOfWeek="Sun"):
         tempStr = timeTemp[1]
         time = datetime.strptime(timeStr, "%H:%M")
         minsSinceMidnight = (time.hour*60)+time.minute
-        htonMins = ByteSwap(minsSinceMidnight)
-        htonTemp = ByteSwap(int(float(tempStr)*100))
+        htonMins = telegesis.ByteSwap(minsSinceMidnight)
+        htonTemp = telegesis.ByteSwap(int(float(tempStr)*100))
+        #htonMins = ByteSwap(minsSinceMidnight)
+        #htonTemp = ByteSwap(int(float(tempStr)*100))
         scheduleStr = scheduleStr + "{:04X}".format(htonMins)
         scheduleStr = scheduleStr + "{:04X}".format(htonTemp)
     cmdRsp = ("AT+RAWZCL:"+nwkId+","+ep+","+zcl.Cluster.Thermostat+","+frameCtl+seqId+zcl.Commands.SetSchedule+"{:02X}".format(numSetpoints)+"{:02X}".format(dayBit)+"01"+scheduleStr, "CWSCHEDULE") #  Set heating(01) schedule
     queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
-
-def ByteSwap(val): # Assumes val is 16-bit int for now
-    loVal = val & 0xff
-    hiVal = val >> 8
-    return hiVal + (256 * loVal) 
 
 def CheckThermostat(devKey):
     nwkId = database.GetDeviceItem(devKey, "nwkId")
@@ -134,11 +131,10 @@ def GetSourceTemp(devKey): # NB Cannot SetSourceTemp, since Boiler Control Modul
     queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
 
 def SetTargetTemp(devKey, temp):
-    ep = database.GetDeviceItem(devKey, "endPoints")
     nwkId = database.GetDeviceItem(devKey, "nwkId")
     ep = database.GetDeviceItem(devKey, "endPoints")
     centiTemp = format(int(float(temp)*100), 'X').zfill(4)
-    cmdRsp = (["AT+WRITEATR:"+nwkId+","+ep+",0,"+zcl.Cluster.Thermostat+","+zcl.Attribute.OccupiedHeatingSetPoint+","+zcl.AttributeTypes.Sint16+","+centiTemp, "WRITEATTR"]) #  Set Thermostat's target temp
+    cmdRsp = telegesis.WriteAttr(nwkId, ep, zcl.Cluster.Thermostat, zcl.Attribute.OccupiedHeatingSetPoint, zcl.AttributeTypes.Sint16, centiTemp) #  Set Thermostat's target temp
     queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
 
 def GetTargetTemp(devKey):

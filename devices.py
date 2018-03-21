@@ -215,6 +215,12 @@ def EventHandler(eventId, eventArg):
                     newState = "inactive"
                     database.NewEvent(devKey, newState)
                     Rule(devKey, newState)
+    #if eventId == events.ids.HOURS and eventArg == 4: # 4am, time to send timestamp to all devices with time cluster
+    #    for devKey in devDict:  # Go through devDict, pulling out each entry
+    #        if devDict[devKey] >= 0:    # Make sure device hasn't been deleted
+    #            inClstr = database.GetDeviceItem(devKey, "inClusters") # Assume we have a list of clusters if we get this far
+    #            if (zcl.Clusters.Time in inClstr): # Or should this be in the outClusters?
+    #                iottime.SetTime(devKey, time.localtime()) # ToDo: Enable this when we're confident it'll work!
     # End event handler
 
 def EnsureReporting(devKey, clstrId, attrId, attrVal): # Check when this attr last reported and update device's reporting if necessary
@@ -354,17 +360,19 @@ def SetAttrVal(devKey, clstrId, attrId, value):
             database.SetDeviceItem(devKey, "longPollInterval", varVal) # For web page and also to see whether to wait for CheckIn or just send messages (if <6 secs)
     if clstrId == zcl.Cluster.Thermostat:
         if attrId == zcl.Attribute.LocalTemp:
-            try:
+            if isnumeric(value, 16):
                 varVal = int(value, 16) / 100 # Arrives in 0.01'C increments 
                 database.LogItem(devKey, "SourceCelsius", varVal) # For web page
-            except ValueError:
-                log.debug("Bad local temperature of "+ value)
         if attrId == zcl.Attribute.OccupiedHeatingSetPoint:
-            try:
+            if isnumeric(value, 16):
                 varVal = int(value, 16) / 100 # Arrives in 0.01'C increments 
                 database.LogItem(devKey, "TargetCelsius", varVal) # For web page
-            except ValueError:
-                log.debug("Bad target temperature of "+ value)
+    if clstrId == zcl.Cluster.Time:
+        if attrId == zcl.Attribute.Time:
+            if isnumeric(value, 16):
+                varVal = int(value, 16) # Arrives in seconds since 1st Jan 2000
+                timeStamp = iottime.FromZigbee(varVal)
+                database.LogItem(devKey, "time", str(timeStamp)) # For web page
 
 def Rule(devKey, state):
     userName = database.GetDeviceItem(devKey, "userName")

@@ -272,7 +272,7 @@ class Commands(cmd.Cmd):
             if devKey != None:
                 heating.SetSchedule(devKey, scheduleName)
 
-    def do_setTargetTemp(self,line):
+    def do_setTargetTemp(self, line):
         """setTargetTemp id temp
         Sets the target temperature on the thermostat device"""
         argList = line.split()
@@ -297,14 +297,16 @@ class Commands(cmd.Cmd):
             heating.GetSourceTemp(devKey)
 
     def do_setTime(self, line):
-        """setTime id offset(s)
-        Sets the time on the device using the time cluster"""
+        """setTime id [offset]
+        Sets the time on the device using the time cluster.  If offset supplied, then add this first"""
         argList = line.split()
+        devKey = devices.FindDev(argList[0])
         if len(argList) >= 2:
-            devKey = devices.FindDev(argList[0])
             offset = argList[1]
-            if devKey != None:
-                iottime.SetTime(devKey, offset)
+        else:
+            offset = 0
+        if devKey != None:
+            iottime.SetTime(devKey, time.localtime()+temp)
 
     def do_getTime(self, devId):
         """getTime id
