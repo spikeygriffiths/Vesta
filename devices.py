@@ -333,7 +333,7 @@ def SetAttrVal(devKey, clstrId, attrId, value):
         if isnumeric(value, 16):
             varVal = int(value, 16) # Arrives in Watts, so store it in the same way
             log.debug("Raw time:"+str(varVal))
-            timeStr = iottime.ZclTimeToTimestamp(varVal)
+            timeStr = iottime.FromZigbee(varVal)
             log.debug("Human time:"+timeStr)
             database.UpdateLoggedItem(devKey, "Time", timeStr)  # Just store latest time string
     if clstrId == zcl.Cluster.SimpleMetering and attrId == zcl.Attribute.InstantaneousDemand:
