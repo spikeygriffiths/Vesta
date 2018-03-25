@@ -27,6 +27,7 @@ def SwitchOn(devKey):
     nwkId = database.GetDeviceItem(devKey, "nwkId")
     ep = database.GetDeviceItem(devKey, "endPoints")
     if nwkId and ep:
+        database.UpdateLoggedItem(devKey, "State", "SwitchOn") # So that we can access it from the rules later
         devices.SetTempVal(devKey, "JustSentOnOff", "True")
         devices.SetTempVal(devKey, "ExpectOnOff", "SwitchOn")
         queue.EnqueueCmd(devKey, ["AT+RONOFF:"+nwkId+","+ep+",0,1", "OK"]) # Assume FFD if it supports OnOff cluster
@@ -37,6 +38,7 @@ def SwitchOff(devKey):
     nwkId = database.GetDeviceItem(devKey, "nwkId")
     ep = database.GetDeviceItem(devKey, "endPoints")
     if nwkId and ep:
+        database.UpdateLoggedItem(devKey, "State", "SwitchOff") # So that we can access it from the rules later
         devices.DelTempVal(devKey,"SwitchOff@") # Remove any pending "Off" events if we're turning the device off directly
         devices.SetTempVal(devKey, "JustSentOnOff", "True")
         devices.SetTempVal(devKey, "ExpectOnOff", "SwitchOff")

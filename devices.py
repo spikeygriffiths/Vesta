@@ -318,6 +318,7 @@ def SetAttrVal(devKey, clstrId, attrId, value):
             else:
                 newState = "SwitchOn"
             if oldState != newState:
+                database.UpdateLoggedItem(devKey, "State", newState) # So that we can access it from the rules later
                 database.NewEvent(devKey, newState)
                 Rule(devKey, newState)
             expectedState = GetTempVal(devKey, "ExpectOnOff")

@@ -133,6 +133,7 @@ function ShowDeviceInfo($db, $devKey, $username)
     $nwkId = GetDevItem("nwkId", $devkey, $db);
     echo "<table>";
     ShowDevStatus("Presence", "Presence", "", 300, $devKey, $db);
+    ShowDevStatus("State", "State", "", 300, $devKey, $db);
     ShowDevStatus("SignalPercentage", "Radio Signal", "%", 300, $devKey, $db);
     ShowDevStatus("BatteryPercentage", "Battery", "%", 0, $devKey, $db);
     ShowDevStatus("TemperatureCelsius", "Temperature", "'C", 600, $devKey, $db);
