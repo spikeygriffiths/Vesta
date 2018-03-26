@@ -186,9 +186,8 @@ def SetDstTimes(devKey, startDate, endDate):
 
 def SetTime(devKey, timeVal=datetime.now()):
     timeVal = time.mktime(timeVal.timetuple())
-    log.debug("RaspberryPi time is "+str(timeVal))
     zigBeeTime = ToZigbee(timeVal)   # Get local time in Unix epoch (1/Jan/1970) and convert it to Zigbee standard
-    telegesis.TxReportAttr(devKey, zcl.Cluster.Time, zcl.Attribute.Time, zcl.AttributeTypes.UtcTime, "{:08X}".format(int(zigBeeTime))) #  Set time. Doesn't work - returns error 86 ("Illegal value")
+    telegesis.TxReadAttrRsp(devKey, zcl.Cluster.Time, zcl.Attribute.Time, zcl.AttributeTypes.UtcTime, "{:08X}".format(int(zigBeeTime))) #  Set time. Doesn't work - returns error 86 ("Illegal value")
 
 def GetTime(devKey):
     telegesis.TxReadDevAttr(devKey, zcl.Cluster.Time, zcl.Attribute.LocalTime) # Create string and queue it up for sending

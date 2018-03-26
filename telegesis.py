@@ -155,6 +155,14 @@ def TxReportAttr(devKey, clstrId, attrId, attrType, attrVal):
     cmdRsp = ReportAttr(nwkId, ep, clstrId, attrId, attrType, attrVal)
     queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
 
+def TxReadAttrRsp(devKey, clstrId, attrId, attrType, attrVal):
+    nwkId = database.GetDeviceItem(devKey, "nwkId")
+    if nwkId == None:
+        return # Make sure it's a real device before continuing (it may have just been deleted)
+    ep = database.GetDeviceItem(devKey, "endPoints")
+    cmdRsp = ReadAttrRsp(nwkId, ep, clstrId, attrId, attrType, attrVal)
+    queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
+
 def ReadAttr(nwkId, ep, clstrId, attrId): # NB All args as hex strings
     return ("AT+READATR:"+nwkId+","+ep+",0,"+clstrId+","+attrId, "RESPATTR")
 
@@ -166,3 +174,7 @@ def ReportAttr(nwkId, ep, clstrId, attrId, attrType, attrVal):   # All args are 
     seqId="00"
     return ("AT+RAWZCL:"+nwkId+","+ep+","+clstrId+","+frameCtl+seqId+zcl.Commands.ReportAttr+StrByteSwap(attrId)+attrType+StrByteSwap(attrVal), "DFTREP") #  Report attribute in cluster
 
+def ReadAttrRsp(nwkId, ep, clstrId, attrId, attrType, attrVal):
+    frameCtl="08"
+    seqId="00"
+    return ("AT+RAWZCL:"+nwkId+","+ep+","+clstrId+","+frameCtl+seqId+zcl.Commands.ReadAttrRsp+StrByteSwap(attrId)+attrType+StrByteSwap(attrVal), "DFTREP") #  Report attribute in cluster
