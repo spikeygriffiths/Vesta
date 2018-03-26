@@ -28,15 +28,15 @@ function ShowDevStatus($item, $devKey, $db, $suffix)
     }
 }
 
-function ShowEvent($devKey, $db)
+function ShowState($devKey, $db)
 {
-    $result = $db->query("SELECT * FROM Events WHERE devKey=".$devKey." ORDER BY TIMESTAMP DESC LIMIT 1");
-    $result->setFetchMode(PDO::FETCH_ASSOC);
-    $fetch = $result->fetch();
-    $val = $fetch['event'];
-    $time = $fetch['timestamp'];
-    $time = ElapsedTime($time);
-    if ($val != "") echo "<td>",$val,"<div style=\"float:right;width:35%;\">(",$time, " ago)</td>"; else echo "<td>N/A</td>";
+    $row = GetLatestLoggedItem("State", $devKey,$db);
+    if ($row != null) {
+        $val = $row['value'];
+        $time = $row['timestamp'];
+        $time = ElapsedTime($time);
+        if ($val != "") echo "<td>",$val,"<div style=\"float:right;width:35%;\">(",$time, " ago)</td>"; else echo "<td>N/A</td>";
+    } else echo "<td>N/A</td>";
 }
 
 function ShowDevices()
@@ -60,7 +60,7 @@ function ShowDevices()
 	        ShowDevStatus("BatteryPercentage", $devKey, $db, "%");
 	        ShowDevStatus("SignalPercentage", $devKey, $db, "%");
       	    ShowDevStatus("Presence", $devKey, $db, "");
-            ShowEvent($devKey, $db);
+            ShowState($devKey, $db);
             echo "</tr>";
         }
         echo "</table>";
