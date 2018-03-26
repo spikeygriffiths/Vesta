@@ -340,6 +340,9 @@ def SetAttrVal(devKey, clstrId, attrId, value):
     if clstrId == zcl.Cluster.SimpleMetering and attrId == zcl.Attribute.InstantaneousDemand:
         if isnumeric(value, 16):
             varVal = int(value, 16) # Arrives in Watts, so store it in the same way
+            inClstr = database.GetDeviceItem(devKey, "inClusters") # Assume we have a list of clusters if we get this far
+            if zcl.Cluster.OnOff not in inClstr:    # Device is powerclamp (has simplemetering but no OnOff)
+                database.UpdateLoggedItem(devKey, "State", str(varVal)+"W") # So that we can access it from the rules later, or show it on the web
             database.UpdateLoggedItem(devKey, "PowerReadingW", varVal)  # Just store latest reading
     if clstrId == zcl.Cluster.SimpleMetering and attrId == zcl.Attribute.CurrentSummationDelivered:
         if isnumeric(value, 16):
