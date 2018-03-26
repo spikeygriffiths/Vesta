@@ -77,6 +77,7 @@ class Commands():
     ReadAttrRsp = "01"
     WriteAttributes = "02"
     WriteAttrRsp = "04"
+    ReportAttr = "0A"
     AdjustSetpoint = "00" # Thermostat Client->server
     GetScheduleRsp = "00" # Server->client
     SetSchedule = "01"

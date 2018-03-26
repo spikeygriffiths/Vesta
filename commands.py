@@ -296,17 +296,32 @@ class Commands(cmd.Cmd):
         if devKey != None:
             heating.GetSourceTemp(devKey)
 
-    def do_setTime(self, line):
-        """setTime id [offset]
-        Sets the time on the device using the time cluster.  If offset supplied, then add this first"""
+    def do_rptSourceTemp(self, line): # NB As a version of SetSourceTemp, since SLT2 reports it to BCM
+        """rptSourceTemp id tmp
+        Reports the source temperature to a thermostat device"""
+        argList = line.split()
+        if len(argList) >= 2:
+            devKey = devices.FindDev(argList[0])
+            temp = argList[1]
+            if devKey != None:
+                heating.RptSourceTemp(devKey, temp)
+
+    def do_setDst(self, line):
+        """setDst id offset
+        Sets the Daylight Saving Time offset on the device"""
         argList = line.split()
         devKey = devices.FindDev(argList[0])
         if len(argList) >= 2:
             offset = argList[1]
-        else:
-            offset = 0
+            if devKey != None:
+                iottime.SetDstOffset(devKey, offset)
+
+    def do_SetDstTimes(self, devId):
+        """SetDstTimes id
+        Sets the DST start & end times"""
+        devKey = devices.FindDev(devId)
         if devKey != None:
-            iottime.SetTime(devKey, time.localtime()+temp)
+            iottime.SetDstTimes(devKey, "2018/3/25", "2018/10/28")
 
     def do_getTime(self, devId):
         """getTime id

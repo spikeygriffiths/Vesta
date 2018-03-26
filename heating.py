@@ -125,21 +125,16 @@ def CheckThermostat(devKey):
     return nwkId
 
 def GetSourceTemp(devKey): # NB Cannot SetSourceTemp, since Boiler Control Module pulls it directly from SLT2
-    nwkId = database.GetDeviceItem(devKey, "nwkId")
-    ep = database.GetDeviceItem(devKey, "endPoints")
-    cmdRsp = telegesis.ReadAttr(nwkId, ep, zcl.Cluster.Thermostat, zcl.Attribute.LocalTemp) #  Get Thermostat's source temp
-    queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
+    telegesis.TxReadDevAttr(devKey, zcl.Cluster.Thermostat, zcl.Attribute.LocalTemp) #  Get Thermostat's source temp
+
+def RptSourceTemp(devKey, temp):
+    centiTemp = format(int(float(temp)*100), 'X').zfill(4)
+    telegesis.TxReportAttr(devKey, zcl.Cluster.Thermostat, zcl.Attribute.OccupiedHeatingSetPoint, zcl.AttributeTypes.Sint16, centiTemp) #  Set Thermostat's target temp
 
 def SetTargetTemp(devKey, temp):
-    nwkId = database.GetDeviceItem(devKey, "nwkId")
-    ep = database.GetDeviceItem(devKey, "endPoints")
     centiTemp = format(int(float(temp)*100), 'X').zfill(4)
-    cmdRsp = telegesis.WriteAttr(nwkId, ep, zcl.Cluster.Thermostat, zcl.Attribute.OccupiedHeatingSetPoint, zcl.AttributeTypes.Sint16, centiTemp) #  Set Thermostat's target temp
-    queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
+    telegesis.TxWriteAttr(devKey, zcl.Cluster.Temperature, zcl.Attribute.Celsius, zcl.AttributeTypes.Sint16, centiTemp) #  Set Thermostat's source temp
 
 def GetTargetTemp(devKey):
-    nwkId = database.GetDeviceItem(devKey, "nwkId")
-    ep = database.GetDeviceItem(devKey, "endPoints")
-    cmdRsp = telegesis.ReadAttr(nwkId, ep, zcl.Cluster.Thermostat, zcl.Attribute.OccupiedHeatingSetPoint) #  Get Thermostat's target temp
-    queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
+    telegesis.TxReadDevAttr(devKey, zcl.Cluster.Thermostat, zcl.Attribute.OccupiedHeatingSetPoint) #  Get Thermostat's target temp
 

@@ -116,6 +116,11 @@ def ByteSwap(val): # Assumes val is 16-bit int for now
     hiVal = val >> 8
     return hiVal + (256 * loVal) # Correct endianess when reading or writing raw Zigbee
 
+def StrByteSwap(str):   # Assume simple 4-char string (16-bit Hex)
+    loPart = str[2:] # Last two chars
+    hiPart = str[:2] # First two chars
+    return loPart+hiPart
+
 def Leave(nwkId):    # Tell device to leave the network
     TxCmd("AT+DASSR:"+nwkId)
 
@@ -130,9 +135,30 @@ def TxReadDevAttr(devKey, clstrId, attrId):
     cmdRsp = ReadAttr(nwkId, ep, clstrId, attrId)
     queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
 
+def TxWriteAttr(devKey, clstrId, attrId, attrType, attrVal):
+    nwkId = database.GetDeviceItem(devKey, "nwkId")
+    if nwkId == None:
+        return # Make sure it's a real device before continuing (it may have just been deleted)
+    ep = database.GetDeviceItem(devKey, "endPoints")
+    cmdRsp = WriteAttr(nwkId, ep, clstrId, attrId, attrType, attrVal)
+    queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
+
+def TxReportAttr(devKey, clstrId, attrId, attrType, attrVal):
+    nwkId = database.GetDeviceItem(devKey, "nwkId")
+    if nwkId == None:
+        return # Make sure it's a real device before continuing (it may have just been deleted)
+    ep = database.GetDeviceItem(devKey, "endPoints")
+    cmdRsp = WriteAttr(nwkId, ep, clstrId, attrId, attrType, attrVal)
+    queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
+
 def ReadAttr(nwkId, ep, clstrId, attrId): # NB All args as hex strings
     return ("AT+READATR:"+nwkId+","+ep+",0,"+clstrId+","+attrId, "RESPATTR")
 
 def WriteAttr(nwkId, ep, clstrId, attrId, attrType, attrVal):   # All args are hex strings
     return ("AT+WRITEATR:"+nwkId+","+ep+",0,"+clstrId+","+attriId+","+attrType+","+attrVal, "WRITEATTR") #  Set attribute in cluster
+
+def ReportAttr(nwkId, ep, clstrId, attrId, attrType, attrVal):   # All args are hex strings
+    frameCtl="18"
+    seqId="23"
+    return ("AT+RAWZCL:"+nwkId+","+ep+",0,"+clstrId+","+frameCtl+seqId+zcl.Commands.ReportAttr+StrByteSwap(attriId)+attrType+StrByteSwap(attrVal), "OK") #  Report attribute in cluster
 

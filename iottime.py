@@ -175,16 +175,18 @@ def FromZigbee(zigSecs):    # Return timestamp given Zigbee time
 def ToZigbee(unixSecs):
     return unixSecs - 946684800  # Convert to seconds since 1/Jan/2000
 
-def SetTime(devKey, timeUtc=time.localtime()):    # To be called once/day, at 4am, to ensure it's up-to-date for DST changes
-    nwkId = database.GetDeviceItem(devKey, "nwkId")
-    if nwkId == None:
-        return  # Make sure it's a real device before continuing (it may have just been deleted)
-    ep = database.GetDeviceItem(devKey, "endPoints")
+def SetDstOffset(devKey, offset):
+    telegesis.TxWriteAttr(devKey, zcl.Cluster.Time, zcl.Attribute.DstShift, zcl.AttributeTypes.Sint32, "{:08x}".format(int(offset))) # Create string and queue it up for sending
+
+def SetDstTimes(devKey, startDate, endDate):
+    zigBeeStart = ToZigbee(calendar.timegm(time.strptime(startDate+" 1:00", "%Y-%m-%d %H:%M")))   # Convert 1am on date specified to Zigbee standard
+    zigBeeEnd = ToZigbee(calendar.timegm(time.strptime(endDate+" 1:00", "%Y-%m-%d %H:%M")))   # Convert 1am on date specified to Zigbee standard
+    telegesis.TxWriteAttr(devKey, zcl.Cluster.Time, zcl.Attribute.DstStart, zcl.AttributeTypes.Uint32, "{:08x}".format(int(zigBeeStart))) # Set Start date and time
+    telegesis.TxWriteAttr(devKey, zcl.Cluster.Time, zcl.Attribute.DstEnd, zcl.AttributeTypes.Uint32, "{:08x}".format(int(zigBeeEnd))) # Set End date and time
+
+def SetTime(devKey, timeUtc=time.localtime()):
     zigBeeTime = ToZigbee(timeUtc)   # Get local time in Unix epoch (1/Jan/1970) and convert it to Zigbee standard
-    cmdRsp = telegesis.WriteAttr(nwkId, ep, zcl.Cluster.Time, zcl.Attribute.Time, zcl.AttributeTypes.UtcTime, "{:08x}".format(int(zigBeeTime))) #  Set time
-    queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
-    cmdRsp = telegesis.WriteAttr(nwkId, ep, zcl.Cluster.Time, zcl.Attribute.TimeStatus, zcl.AttributeTypes.BitMap8, "02") #  Set timeStatus to "Synchronised"
-    queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
+    telegesis.TxWriteAttr(nwkId, ep, zcl.Cluster.Time, zcl.Attribute.Time, zcl.AttributeTypes.UtcTime, "{:08x}".format(int(zigBeeTime))) #  Set time. Doesn't work - returns error 86 ("Illegal value")
 
 def GetTime(devKey):
     nwkId = database.GetDeviceItem(devKey, "nwkId")
