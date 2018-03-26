@@ -209,7 +209,8 @@ function ShowDeviceInfo($db, $devKey, $username)
             echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=setDstOffset ",$username," -3600'\">Set time to BST</button>&nbsp&nbsp&nbsp";
             echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=SetDstTimes ",$username,"'\">Set BST start & end</button>&nbsp&nbsp&nbsp";
             echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=getTime ",$username,"'\">Get time</button>&nbsp&nbsp&nbsp";
-            //echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=getAttr ",$username," 000A 0001'\">Get timeStatus</button>&nbsp&nbsp&nbsp";
+            echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=setTime ",$username,"'\">Set time</button>&nbsp&nbsp&nbsp";
+            #echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=getAttr ",$username," 000A 0001'\">Get timeStatus</button>&nbsp&nbsp&nbsp";
             #AppCmd("getTime ".$username, false);
         }
     }

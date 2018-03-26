@@ -108,8 +108,6 @@ def SetDaySchedule(devKey, scheduleType="Heating", dayOfWeek="Sun"):
         minsSinceMidnight = (time.hour*60)+time.minute
         htonMins = telegesis.ByteSwap(minsSinceMidnight)
         htonTemp = telegesis.ByteSwap(int(float(tempStr)*100))
-        #htonMins = ByteSwap(minsSinceMidnight)
-        #htonTemp = ByteSwap(int(float(tempStr)*100))
         scheduleStr = scheduleStr + "{:04X}".format(htonMins)
         scheduleStr = scheduleStr + "{:04X}".format(htonTemp)
     cmdRsp = ("AT+RAWZCL:"+nwkId+","+ep+","+zcl.Cluster.Thermostat+","+frameCtl+seqId+zcl.Commands.SetSchedule+"{:02X}".format(numSetpoints)+"{:02X}".format(dayBit)+"01"+scheduleStr, "CWSCHEDULE") #  Set heating(01) schedule
@@ -124,10 +122,10 @@ def CheckThermostat(devKey):
         return None # Not a thermostat
     return nwkId
 
-def GetSourceTemp(devKey): # NB Cannot SetSourceTemp, since Boiler Control Module pulls it directly from SLT2
+def GetSourceTemp(devKey):
     telegesis.TxReadDevAttr(devKey, zcl.Cluster.Thermostat, zcl.Attribute.LocalTemp) #  Get Thermostat's source temp
 
-def RptSourceTemp(devKey, temp):
+def RptSourceTemp(devKey, temp): # This could be renamed as SetSourceTemp()
     centiTemp = format(int(float(temp)*100), 'X').zfill(4)
     telegesis.TxReportAttr(devKey, zcl.Cluster.Temperature, zcl.Attribute.Celsius, zcl.AttributeTypes.Sint16, centiTemp) #  Set Thermostat's target temp
 

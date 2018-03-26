@@ -330,6 +330,19 @@ class Commands(cmd.Cmd):
         if devKey != None:
             iottime.GetTime(devKey)
 
+    def do_setTime(self, line):
+        """setTime id newTime
+        Sets the time on the device"""
+        argList = line.split()
+        devKey = devices.FindDev(argList[0])
+        if len(argList) >= 2:
+            tim = argList[1]
+            if devKey != None:
+                iottime.SetTime(devKey, tim)
+        else:
+            if devKey != None:
+                iottime.SetTime(devKey)
+
     def do_removeDevice(self, devId):
         """removeDevice id
         Tells device to leave the network and remove it from the database"""

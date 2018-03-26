@@ -31,7 +31,7 @@ class Attribute():
     TimeStatus = "0001" # WR 8-Bitmap. 
     TimeZone = "0002" # RW S32
     DstStart ="0003" #  RW U32 this year's Summer Time start, U32 as for Time
-    DstEnd = "00004" # RW U32 As above, but end
+    DstEnd = "0004" # RW U32 As above, but end
     DstShift = "0005" # RW S32 in seconds (-86400 -> +86400)
     StandardTime = "0006"   # RO U32 Time+TimeZone (but not DST)
     LocalTime = "0007" # RO U32 Time+TimeZone+DST

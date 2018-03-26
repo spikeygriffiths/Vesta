@@ -118,9 +118,12 @@ def ByteSwap(val): # Assumes val is 16-bit int for now
     return hiVal + (256 * loVal) # Correct endianess when reading or writing raw Zigbee
 
 def StrByteSwap(str):   # Assume simple 4-char string (16-bit Hex)
-    loPart = str[2:] # Last two chars
-    hiPart = str[:2] # First two chars
-    return loPart+hiPart
+    if len(str)==4:
+        return str[2:4]+str[0:2]
+    elif len(str)==8:
+        return str[6:8]+str[4:6]+str[2:4]+str[0:2]
+    else:
+        return str # Don't know what to do here
 
 def Leave(nwkId):    # Tell device to leave the network
     TxCmd("AT+DASSR:"+nwkId)
@@ -161,5 +164,5 @@ def WriteAttr(nwkId, ep, clstrId, attrId, attrType, attrVal):   # All args are h
 def ReportAttr(nwkId, ep, clstrId, attrId, attrType, attrVal):   # All args are hex strings
     frameCtl="08"
     seqId="00"
-    return ("AT+RAWZCL:"+nwkId+","+ep+","+clstrId+","+frameCtl+seqId+zcl.Commands.ReportAttr+StrByteSwap(attrId)+attrType+StrByteSwap(attrVal), "OK") #  Report attribute in cluster
+    return ("AT+RAWZCL:"+nwkId+","+ep+","+clstrId+","+frameCtl+seqId+zcl.Commands.ReportAttr+StrByteSwap(attrId)+attrType+StrByteSwap(attrVal), "DFTREP") #  Report attribute in cluster
 
