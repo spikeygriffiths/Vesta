@@ -312,12 +312,13 @@ def SetAttrVal(devKey, clstrId, attrId, value):
                 log.debug("Bad temperature of "+ value)
     if clstrId == zcl.Cluster.OnOff and attrId == zcl.Attribute.OnOffState:
         if isnumeric(value, 16):
-            oldState = database.GetLatestEvent(devKey)
+            oldState = database.GetLatestLoggedValue(devKey, "State")
             if int(value, 16) == 0:
                 newState = "SwitchOff"
             else:
                 newState = "SwitchOn"
             if oldState != newState:
+                database.UpdateLoggedItem(devKey, "State", newState) # So that we can access it from the rules later
                 database.NewEvent(devKey, newState)
                 Rule(devKey, newState)
             expectedState = GetTempVal(devKey, "ExpectOnOff")

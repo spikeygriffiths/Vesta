@@ -47,6 +47,7 @@ def EventHandler(eventId, eventArg):
                     else:
                         newState = "closed"
                     if oldState != newState:    # NB Might get same state if sensor re-sends, or due to battery report 
+                        database.UpdateLoggedItem(devKey, "State", newState) # So that we can access it from the rules later
                         database.NewEvent(devKey, newState) # For web page.  Only update event log when state changes
                         DeviceRun(devKey, "=="+newState) # See if rule exists (when state changes)
                         #log.debug("Door "+ eventArg[1]+ " "+newState)
@@ -57,6 +58,7 @@ def EventHandler(eventId, eventArg):
                     else:
                         newState = "inactive" # Might happen if we get an IAS battery report
                     if oldState != newState:
+                        database.UpdateLoggedItem(devKey, "State", newState) # So that we can access it from the rules later
                         database.NewEvent(devKey, newState) # For web page.  Only update event log when state changes
                     DeviceRun(devKey, "=="+newState) # See if rule exists
                 else:
