@@ -32,6 +32,8 @@ def Check():  # Expected to be called infrequently - ie once/minute
                 notHeardFromList.append(devKey)    # Make a list of devices to query
             if presence != states.absent and datetime.now() > lastSeen+timedelta(seconds=1800): # More than 30 minutes since we last heard from device
                 Set(devKey, states.absent)
+            if presence == states.absent:
+                notHeardFromList.append(devKey)    # Make a list of devices to query
     if notHeardFromList != []:
         numDevs = len(notHeardFromList)
         if numDevs > 3:
