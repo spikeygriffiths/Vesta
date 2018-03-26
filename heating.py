@@ -129,11 +129,11 @@ def GetSourceTemp(devKey): # NB Cannot SetSourceTemp, since Boiler Control Modul
 
 def RptSourceTemp(devKey, temp):
     centiTemp = format(int(float(temp)*100), 'X').zfill(4)
-    telegesis.TxReportAttr(devKey, zcl.Cluster.Thermostat, zcl.Attribute.OccupiedHeatingSetPoint, zcl.AttributeTypes.Sint16, centiTemp) #  Set Thermostat's target temp
+    telegesis.TxReportAttr(devKey, zcl.Cluster.Temperature, zcl.Attribute.Celsius, zcl.AttributeTypes.Sint16, centiTemp) #  Set Thermostat's target temp
 
 def SetTargetTemp(devKey, temp):
     centiTemp = format(int(float(temp)*100), 'X').zfill(4)
-    telegesis.TxWriteAttr(devKey, zcl.Cluster.Temperature, zcl.Attribute.Celsius, zcl.AttributeTypes.Sint16, centiTemp) #  Set Thermostat's source temp
+    telegesis.TxWriteAttr(devKey, zcl.Cluster.Thermostat, zcl.Attribute.OccupiedHeatingSetPoint, zcl.AttributeTypes.Sint16, centiTemp) #  Set Thermostat's source temp
 
 def GetTargetTemp(devKey):
     telegesis.TxReadDevAttr(devKey, zcl.Cluster.Thermostat, zcl.Attribute.OccupiedHeatingSetPoint) #  Get Thermostat's target temp

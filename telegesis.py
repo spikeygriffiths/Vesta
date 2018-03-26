@@ -11,6 +11,7 @@ import log
 import events
 import database
 import config
+import zcl
 
 ser = 0
 expectOurEui = False
@@ -148,17 +149,17 @@ def TxReportAttr(devKey, clstrId, attrId, attrType, attrVal):
     if nwkId == None:
         return # Make sure it's a real device before continuing (it may have just been deleted)
     ep = database.GetDeviceItem(devKey, "endPoints")
-    cmdRsp = WriteAttr(nwkId, ep, clstrId, attrId, attrType, attrVal)
+    cmdRsp = ReportAttr(nwkId, ep, clstrId, attrId, attrType, attrVal)
     queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
 
 def ReadAttr(nwkId, ep, clstrId, attrId): # NB All args as hex strings
     return ("AT+READATR:"+nwkId+","+ep+",0,"+clstrId+","+attrId, "RESPATTR")
 
 def WriteAttr(nwkId, ep, clstrId, attrId, attrType, attrVal):   # All args are hex strings
-    return ("AT+WRITEATR:"+nwkId+","+ep+",0,"+clstrId+","+attriId+","+attrType+","+attrVal, "WRITEATTR") #  Set attribute in cluster
+    return ("AT+WRITEATR:"+nwkId+","+ep+",0,"+clstrId+","+attrId+","+attrType+","+attrVal, "WRITEATTR") #  Set attribute in cluster
 
 def ReportAttr(nwkId, ep, clstrId, attrId, attrType, attrVal):   # All args are hex strings
-    frameCtl="18"
-    seqId="23"
-    return ("AT+RAWZCL:"+nwkId+","+ep+",0,"+clstrId+","+frameCtl+seqId+zcl.Commands.ReportAttr+StrByteSwap(attriId)+attrType+StrByteSwap(attrVal), "OK") #  Report attribute in cluster
+    frameCtl="08"
+    seqId="00"
+    return ("AT+RAWZCL:"+nwkId+","+ep+","+clstrId+","+frameCtl+seqId+zcl.Commands.ReportAttr+StrByteSwap(attrId)+attrType+StrByteSwap(attrVal), "OK") #  Report attribute in cluster
 

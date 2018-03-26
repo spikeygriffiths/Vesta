@@ -179,8 +179,8 @@ def SetDstOffset(devKey, offset):
     telegesis.TxWriteAttr(devKey, zcl.Cluster.Time, zcl.Attribute.DstShift, zcl.AttributeTypes.Sint32, "{:08x}".format(int(offset))) # Create string and queue it up for sending
 
 def SetDstTimes(devKey, startDate, endDate):
-    zigBeeStart = ToZigbee(calendar.timegm(time.strptime(startDate+" 1:00", "%Y-%m-%d %H:%M")))   # Convert 1am on date specified to Zigbee standard
-    zigBeeEnd = ToZigbee(calendar.timegm(time.strptime(endDate+" 1:00", "%Y-%m-%d %H:%M")))   # Convert 1am on date specified to Zigbee standard
+    zigBeeStart = ToZigbee(calendar.timegm(time.strptime(startDate+" 1:00", "%Y/%m/%d %H:%M")))   # Convert 1am on date specified to Zigbee standard
+    zigBeeEnd = ToZigbee(calendar.timegm(time.strptime(endDate+" 1:00", "%Y/%m/%d %H:%M")))   # Convert 1am on date specified to Zigbee standard
     telegesis.TxWriteAttr(devKey, zcl.Cluster.Time, zcl.Attribute.DstStart, zcl.AttributeTypes.Uint32, "{:08x}".format(int(zigBeeStart))) # Set Start date and time
     telegesis.TxWriteAttr(devKey, zcl.Cluster.Time, zcl.Attribute.DstEnd, zcl.AttributeTypes.Uint32, "{:08x}".format(int(zigBeeEnd))) # Set End date and time
 

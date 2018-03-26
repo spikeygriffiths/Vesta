@@ -297,7 +297,7 @@ class Commands(cmd.Cmd):
             heating.GetSourceTemp(devKey)
 
     def do_rptSourceTemp(self, line): # NB As a version of SetSourceTemp, since SLT2 reports it to BCM
-        """rptSourceTemp id tmp
+        """rptSourceTemp id temp
         Reports the source temperature to a thermostat device"""
         argList = line.split()
         if len(argList) >= 2:
@@ -306,8 +306,8 @@ class Commands(cmd.Cmd):
             if devKey != None:
                 heating.RptSourceTemp(devKey, temp)
 
-    def do_setDst(self, line):
-        """setDst id offset
+    def do_setDstOffset(self, line):
+        """setDstOffset id offset
         Sets the Daylight Saving Time offset on the device"""
         argList = line.split()
         devKey = devices.FindDev(argList[0])
