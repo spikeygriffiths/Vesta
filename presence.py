@@ -54,7 +54,8 @@ def Get(devKey):
         #log.debug("Presence entry says " + str(entry))
         return datetime.strptime(entry[1], "%Y-%m-%d %H:%M:%S"), entry[0]   # Should be time, val
     else:
-        return datetime.now(), states.unknown
+        Set(devKey, states.unknown) # Set up an entry for this device for use in future
+        return datetime.now(), states.unknown # Return something for now
 
 def GetAvailability(devKey):    # Over last 24 hours
     lastSeen, presence = Get(devKey)
