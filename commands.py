@@ -28,6 +28,7 @@ import iottime
 import database
 import synopsis
 import heating
+import schedule
 
 sck = ""
 cliSck = ""
@@ -273,14 +274,15 @@ class Commands(cmd.Cmd):
                 heating.SetSchedule(devKey, scheduleName)
 
     def do_setTargetTemp(self, line):
-        """setTargetTemp id temp
-        Sets the target temperature on the thermostat device"""
+        """setTargetTemp id temp durationS
+        Sets the target temperature on the thermostat device for durationS"""
         argList = line.split()
-        if len(argList) >= 2:
+        if len(argList) >= 3:
             devKey = devices.FindDev(argList[0])
             temp = argList[1]
+            timeoutS = argList[2]
             if devKey != None:
-                heating.SetTargetTemp(devKey, temp)
+                schedule.Override(devKey, temp, timeoutS)
 
     def do_getTargetTemp(self, devId):
         """getTargetTemp id

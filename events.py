@@ -11,6 +11,7 @@ import iottime
 import database
 import weather
 import presence
+import schedule
 
 class ids:
     INIT = 0 # No arg
@@ -47,4 +48,5 @@ def Issue(eventId, eventArg=0):
     commands.EventHandler(eventId, eventArg)
     weather.EventHandler(eventId, eventArg)
     presence.EventHandler(eventId, eventArg)
+    schedule.EventHandler(eventId, eventArg)
 

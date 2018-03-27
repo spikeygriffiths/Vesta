@@ -197,8 +197,8 @@ function ShowDeviceInfo($db, $devKey, $username)
             $boostDegC = GetConfig("BoostDegC", "18", $db);
             $frostDegC = GetConfig("FrostDegC", "7", $db);
             echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Schedule.php/?type=",$type,"&devKey=",$devKey,"'\">Schedule</button>&nbsp&nbsp&nbsp";
-            echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=setTargetTemp ",$username," ",$boostDegC,"'\">Boost</button>&nbsp&nbsp&nbsp"; 
-            echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=setTargetTemp ",$username," ",$frostDegC,"'\">Frost</button><br><br>";
+            echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=setTargetTemp ",$username," ",$boostDegC," 3600'\">Boost</button>&nbsp&nbsp&nbsp"; 
+            echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=setTargetTemp ",$username," ",$frostDegC,"' 3600\">Frost</button><br><br>";
             echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=getTargetTemp ",$username,"'\">GetTargetTemp</button>&nbsp&nbsp&nbsp"; 
             echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=rptSourceTemp ",$username," 12.34'\">RptSourceTemp as 12.34C</button>&nbsp&nbsp&nbsp"; 
             AppCmd("getSourceTemp ".$username, false);

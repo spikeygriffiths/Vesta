@@ -17,6 +17,7 @@ import database
 import config
 import telegesis
 import synopsis
+import schedule
 
 # Example rules
 # if HallwayPir==active do SwitchOn HallwayLight for 120
@@ -233,16 +234,12 @@ def Action(actList, ruleId):
             sendmail.email("Vesta Alert!", plainText, None)
         else:
             synopsis.problem("NoEmail", "No emailAddress entry in config")
-    elif action == "boost": # Syntax is "Boost <name of target device>"
-        boostDegC = config.Get("BoostDegC", "21")
+    elif action == "override": # Syntax is "Override <targetDevice> <targetDegC> <durationSecs>"
         devKey = devices.FindDev(actList[1])
+        target = actList[2]
+        timeSecs = actList[3]
         if devKey != None:
-            heating.SetTargetTemp(ThermostatDevKey, boostDegC)
-    elif action == "frost": # Syntax is "Frost <name of target device>"
-        frostDegC = config.Get("FrostDegC", "7")
-        devKey = devices.FindDev(actList[1])
-        if devKey != None:
-            heating.SetTargetTemp(devKey, frostDegC)
+            schedule.Override(ThermostatDevKey, target, timeSecs)
     elif action == "set":   # Set a named variable to a value
         expression = "".join(actList[1:])   # First recombine actList[1] onwards, with no spaces.  Now expression should be of the form "<var>=<val>"
         if "--" in expression:
