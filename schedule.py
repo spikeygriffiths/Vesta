@@ -25,15 +25,17 @@ def EventHandler(eventId, eventArg):
     elif eventId == events.ids.MINUTES:
         if overrideTimeoutMins > 0:
             overrideTimeoutMins = overrideTimeoutMins-1
-            if overrideTimeoutMins == 0:
+            if overrideTimeoutMins == 0 and heatingDevKey != None:
                 target = GetTarget("HeatingSchedule")
                 if target != None:
-                    database.NewEvent(heatingDevKey, "Resume after override to "+str(target)) # For web page.  Update event log so I can check my schedule follower works
+                    database.NewEvent(heatingDevKey, "Resume to "+str(target)+"'C") # For web page.  Update event log so I can check my schedule follower works
                     heating.SetTargetTemp(heatingDevKey, target)   # Resume schedule here
                 else:
                     database.NewEvent(heatingDevKey, "No target to resume to!")
         else:
             if heatingDevKey != None:   # and running schedule remotely...
+                heating.GetTargetTemp(heatingDevKey) # Ensure we keep track of remote device's target
+                heating.GetSourceTemp(heatingDevKey) # ...and source temperature's
                 scheduleType = config.Get("HeatingSchedule")
                 if scheduleType == None:
                     log.fault("No HeatingSchedule!")
@@ -43,7 +45,6 @@ def EventHandler(eventId, eventArg):
                 if scheduleStr == None:
                     log.debug("No schedule found for "+scheduleType)
                     return
-                log.debug("Schedule for today:"+scheduleStr)
                 try:
                     scheduleList = eval(scheduleStr)
                 except:
@@ -56,14 +57,14 @@ def EventHandler(eventId, eventArg):
                     timeStr = timeTemp[0]
                     tempStr = timeTemp[1]
                     if iottime.MakeTime(timeStr) == iottime.MakeTime(timeOfDay):
-                        database.NewEvent(devKey, "Scheduled "+tempStr) # For web page.  Update event log so I can check my schedule follower works
+                        database.NewEvent(devKey, "Scheduled "+tempStr+"'C") # For web page.  Update event log so I can check my schedule follower works
                         #heating.SetTargetTemp(heatingDevKey, tempStr)   # Set target in heating device here
 
 def Override(devKey, targetC, timeSecs):
     global overrideTimeoutMins
     timeMins = int(int(timeSecs)/60)
     if timeMins > 0:
-        database.NewEvent(devKey, "Override to "+str(targetC)) # For web page.  Update event log so I can check my schedule follower works
+        database.NewEvent(devKey, "Override to "+str(targetC)+"'C") # For web page.  Update event log so I can check my schedule follower works
         overrideTimeoutMins = timeMins
         heating.SetTargetTemp(devKey, targetC)   # Set target in heating device here
 

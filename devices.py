@@ -367,10 +367,16 @@ def SetAttrVal(devKey, clstrId, attrId, value):
             if isnumeric(value, 16):
                 varVal = int(value, 16) / 100 # Arrives in 0.01'C increments 
                 database.LogItem(devKey, "SourceCelsius", varVal) # For web page
+                src = varVal
+                tgt = database.GetLatestLoggedValue(devKey, "TargetCelsius")
+                database.UpdateLoggedItem(devKey, "State", "source "+str(src)+"'C/target "+str(tgt)+"'C") # So that we can show it on the web
         if attrId == zcl.Attribute.OccupiedHeatingSetPoint:
             if isnumeric(value, 16):
                 varVal = int(value, 16) / 100 # Arrives in 0.01'C increments 
                 database.LogItem(devKey, "TargetCelsius", varVal) # For web page
+                tgt = varVal
+                src = database.GetLatestLoggedValue(devKey, "SourceCelsius")
+                database.UpdateLoggedItem(devKey, "State", "source "+str(src)+"'C/target "+str(tgt)+"'C") # So that we can show it on the web
     if clstrId == zcl.Cluster.Time:
         if attrId == zcl.Attribute.Time:
             if isnumeric(value, 16):
