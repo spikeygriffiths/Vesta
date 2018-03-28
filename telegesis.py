@@ -2,11 +2,14 @@
 
 # Standard Python modules
 import serial
+from datetime import datetime
+import time
 from collections import deque
 # App-specific Python modules
 import vesta
 import devices
 import queue
+import iottime
 import log
 import events
 import database
@@ -130,6 +133,12 @@ def Leave(nwkId):    # Tell device to leave the network
 
 def TxCmd(cmd):  # Takes command to send
     txBuf.append(cmd)  # Append command
+
+def SetTime(): # Set time up for HA devices to synchronise to
+    timeVal = datetime.now()
+    timeVal = time.mktime(timeVal.timetuple())
+    zigBeeTime = iottime.ToZigbee(timeVal)   # Get local time in Unix epoch (1/Jan/1970) and convert it to Zigbee standard
+    queue.EnqueueCmd(0, ["AT+SETTIME:{:08X}".format(int(zigBeeTime)), "OK"]) #  Set time in CICIE ready for setting up time server
 
 def TxReadDevAttr(devKey, clstrId, attrId):
     nwkId = database.GetDeviceItem(devKey, "nwkId")

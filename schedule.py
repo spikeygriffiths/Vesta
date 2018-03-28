@@ -6,6 +6,7 @@ import events
 import devices
 import log
 import variables
+import iottime
 import database
 import config
 import zcl
@@ -26,39 +27,71 @@ def EventHandler(eventId, eventArg):
             overrideTimeoutMins = overrideTimeoutMins-1
             if overrideTimeoutMins == 0:
                 target = GetTarget("HeatingSchedule")
-                database.NewEvent(devKey, "Resume after override "+str(target)) # For web page.  Update event log so I can check my schedule follower works
-                heating.SetTargetTemp(heatingDevKey, target)   # Resume schedule here
+                if target != None:
+                    database.NewEvent(heatingDevKey, "Resume after override to "+str(target)) # For web page.  Update event log so I can check my schedule follower works
+                    heating.SetTargetTemp(heatingDevKey, target)   # Resume schedule here
+                else:
+                    database.NewEvent(heatingDevKey, "No target to resume to!")
         else:
             if heatingDevKey != None:   # and running schedule remotely...
                 scheduleType = config.Get("HeatingSchedule")
-                dayOfWeek = variables.Get("dayOfWeek")
+                if scheduleType == None:
+                    log.fault("No HeatingSchedule!")
+                    return
+                dayOfWeek = iottime.GetDow(datetime.today().weekday())
                 scheduleStr = database.GetSchedule(scheduleType, dayOfWeek)
-                now = datetime.strptime(datetime.now().strftime("%H:%M"), "%H:%M")  # Just time of day
-                for item in scheduleStr:
-                    if item[0] == now:
-                        target = item[1]
-                        database.NewEvent(devKey, "Scheduled "+str(target)) # For web page.  Update event log so I can check my schedule follower works
-                        #heating.SetTargetTemp(heatingDevKey, target)   # Set target in heating device here
+                if scheduleStr == None:
+                    log.debug("No schedule found for "+scheduleType)
+                    return
+                log.debug("Schedule for today:"+scheduleStr)
+                try:
+                    scheduleList = eval(scheduleStr)
+                except:
+                    log.fault("Can't turn "+scheduleStr+" into a list")
+                    return  # Bad list from database
+                numSetpoints = len(scheduleList)
+                timeOfDay = datetime.strptime(datetime.now().strftime("%H:%M"), "%H:%M")  # Just time of day
+                for index in range(0, numSetpoints):
+                    timeTemp = scheduleList[index]  # Get each time & temp from schedule
+                    timeStr = timeTemp[0]
+                    tempStr = timeTemp[1]
+                    if iottime.MakeTime(timeStr) == iottime.MakeTime(timeOfDay):
+                        database.NewEvent(devKey, "Scheduled "+tempStr) # For web page.  Update event log so I can check my schedule follower works
+                        #heating.SetTargetTemp(heatingDevKey, tempStr)   # Set target in heating device here
 
 def Override(devKey, targetC, timeSecs):
     global overrideTimeoutMins
-    timeMins = int(timeSecs/60)
+    timeMins = int(int(timeSecs)/60)
     if timeMins > 0:
         database.NewEvent(devKey, "Override to "+str(targetC)) # For web page.  Update event log so I can check my schedule follower works
         overrideTimeoutMins = timeMins
-        SetTarget(devKey, targetC)   # Set target in heating device here
+        heating.SetTargetTemp(devKey, targetC)   # Set target in heating device here
 
 def GetTarget(scheduleName):
     scheduleType = config.Get(scheduleName)
-    dayOfWeek = variables.Get("dayOfWeek")
-    scheduleStr = database.GetSchedule(scheduleType, dayOfWeek) # Get schedule for today
     timeOfDay = datetime.strptime(datetime.now().strftime("%H:%M"), "%H:%M")
-    for item in scheduleStr:    # Each item consists of a time and a target
+    dayOfWeek = iottime.GetDow(datetime.today().weekday())
+    scheduleStr = database.GetSchedule(scheduleType, dayOfWeek) # Get schedule for today
+    if scheduleStr == None:
+        log.fault("No schedule found for "+scheduleType+" on "+dayOfWeek)
+        return None
+    log.debug("Schedule for today("+dayOfWeek+") is "+scheduleStr)
+    try:
+        scheduleList = eval(scheduleStr)
+    except:
+        log.fault("Can't turn "+scheduleStr+" into a list")
+        return None # Bad list from database
+    target = None
+    numSetpoints = len(scheduleList)
+    for index in range(0, numSetpoints):
+        timeTemp = scheduleList[index]  # Get each time & temp from schedule
+        timeStr = timeTemp[0]
+        tempStr = timeTemp[1]
         if target == None:
-            target = item[1]    # Make sure have a target even early in the morning, before first change
-        if item[0] > timeOfDay:
-            return target   # Stop as soon as we find the current slot
+            target = tempStr    # Make sure have a target even early in the morning, before first change
+        if iottime.MakeTime(timeStr) > iottime.MakeTime(timeOfDay):
+            return tempStr   # Stop as soon as we find the current slot
         else:
-            target = item[1]    # Remember last target
+            target = tempStr    # Remember last target
         return target   # If we reach the end of today's schedule, then assume our time is after last change, so use last target
 

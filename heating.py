@@ -125,9 +125,9 @@ def CheckThermostat(devKey):
 def GetSourceTemp(devKey):
     telegesis.TxReadDevAttr(devKey, zcl.Cluster.Thermostat, zcl.Attribute.LocalTemp) #  Get Thermostat's source temp
 
-def RptSourceTemp(devKey, temp): # This could be renamed as SetSourceTemp()
+def RptTemp(devKey, temp): # This could be renamed as SetSourceTemp()
     centiTemp = format(int(float(temp)*100), 'X').zfill(4)
-    telegesis.TxReportAttr(devKey, zcl.Cluster.Temperature, zcl.Attribute.Celsius, zcl.AttributeTypes.Sint16, centiTemp) #  Set Thermostat's target temp
+    telegesis.TxReportAttr(devKey, zcl.Cluster.Temperature, zcl.Attribute.Celsius, zcl.AttributeTypes.Sint16, centiTemp) #  Report measured temperature to a device (eg thermostat)
 
 def SetTargetTemp(devKey, temp):
     centiTemp = format(int(float(temp)*100), 'X').zfill(4)

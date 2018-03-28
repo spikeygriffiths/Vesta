@@ -291,39 +291,22 @@ class Commands(cmd.Cmd):
         if devKey != None:
             heating.GetTargetTemp(devKey)
 
-    def do_getSourceTemp(self, devId): # NB Cannot SetSourceTemp, since BCM pulls it directly from SLT2
+    def do_getSourceTemp(self, devId):
         """getSourceTemp id
         Gets the source temperature from a thermostat device"""
         devKey = devices.FindDev(devId)
         if devKey != None:
             heating.GetSourceTemp(devKey)
 
-    def do_rptSourceTemp(self, line): # NB As a version of SetSourceTemp, since SLT2 reports it to BCM
-        """rptSourceTemp id temp
-        Reports the source temperature to a thermostat device"""
+    def do_rptTemp(self, line): # NB As a version of SetSourceTemp
+        """rptTemp id temp
+        Reports the temperature to a device"""
         argList = line.split()
         if len(argList) >= 2:
             devKey = devices.FindDev(argList[0])
             temp = argList[1]
             if devKey != None:
-                heating.RptSourceTemp(devKey, temp)
-
-    def do_setDstOffset(self, line):
-        """setDstOffset id offset
-        Sets the Daylight Saving Time offset on the device"""
-        argList = line.split()
-        devKey = devices.FindDev(argList[0])
-        if len(argList) >= 2:
-            offset = argList[1]
-            if devKey != None:
-                iottime.SetDstOffset(devKey, offset)
-
-    def do_SetDstTimes(self, devId):
-        """SetDstTimes id
-        Sets the DST start & end times"""
-        devKey = devices.FindDev(devId)
-        if devKey != None:
-            iottime.SetDstTimes(devKey, "2018/3/25", "2018/10/28")
+                heating.RptTemp(devKey, temp)
 
     def do_getTime(self, devId):
         """getTime id
@@ -331,19 +314,6 @@ class Commands(cmd.Cmd):
         devKey = devices.FindDev(devId)
         if devKey != None:
             iottime.GetTime(devKey)
-
-    def do_setTime(self, line):
-        """setTime id newTime
-        Sets the time on the device"""
-        argList = line.split()
-        devKey = devices.FindDev(argList[0])
-        if len(argList) >= 2:
-            tim = argList[1]
-            if devKey != None:
-                iottime.SetTime(devKey, tim)
-        else:
-            if devKey != None:
-                iottime.SetTime(devKey)
 
     def do_removeDevice(self, devId):
         """removeDevice id

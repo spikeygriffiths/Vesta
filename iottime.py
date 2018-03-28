@@ -34,6 +34,9 @@ def EventHandler(eventId, eventArg):
             variables.Set("dark", str(GetDark()))
         rules.Run("trigger==appstart")
         database.NewEvent(0, "App started") # 0 is always hub
+        telegesis.SetTime() # Set time up for HA devices to synchronise to
+        queue.EnqueueCmd(0, ["AT+SETATR:000A,0001,03", "OK"])
+        queue.EnqueueCmd(0, ["AT+TIMERD", "OK"]) # Set CICIE as time server
     elif eventId == events.ids.SECONDS:
         now = datetime.now()
         if now.minute != oldMins:
@@ -63,6 +66,8 @@ def EventHandler(eventId, eventArg):
     if eventId == events.ids.HOURS:
         if eventArg == 0: # Midnight, time to calculate sunrise and sunset for new day
             events.Issue(events.ids.NEWDAY)
+        if eventArg == 4: # Re-synch Telegesis clock to local time at 4am every day to cope with DST
+            telegesis.SetTime() # Set time up for HA devices to synchronise to
     if eventId == events.ids.NEWDAY:
         SetSunTimes()
         log.RollLogs() # Roll the logs, to avoid running out of disc space
@@ -174,20 +179,6 @@ def FromZigbee(zigSecs):    # Return timestamp given Zigbee time
 
 def ToZigbee(unixSecs):
     return unixSecs - 946684800  # Convert to seconds since 1/Jan/2000
-
-def SetDstOffset(devKey, offset): # NB Messes up -ve offset
-    telegesis.TxReportAttr(devKey, zcl.Cluster.Time, zcl.Attribute.DstShift, zcl.AttributeTypes.Sint32, "{:08X}".format(int(offset))) # Create string and queue it up for sending
-
-def SetDstTimes(devKey, startDate, endDate):
-    zigBeeStart = ToZigbee(calendar.timegm(time.strptime(startDate+" 1:00", "%Y/%m/%d %H:%M")))   # Convert 1am on date specified to Zigbee standard
-    zigBeeEnd = ToZigbee(calendar.timegm(time.strptime(endDate+" 1:00", "%Y/%m/%d %H:%M")))   # Convert 1am on date specified to Zigbee standard
-    telegesis.TxReportAttr(devKey, zcl.Cluster.Time, zcl.Attribute.DstStart, zcl.AttributeTypes.Uint32, "{:08X}".format(int(zigBeeStart))) # Set Start date and time
-    telegesis.TxReportAttr(devKey, zcl.Cluster.Time, zcl.Attribute.DstEnd, zcl.AttributeTypes.Uint32, "{:08X}".format(int(zigBeeEnd))) # Set End date and time
-
-def SetTime(devKey, timeVal=datetime.now()):
-    timeVal = time.mktime(timeVal.timetuple())
-    zigBeeTime = ToZigbee(timeVal)   # Get local time in Unix epoch (1/Jan/1970) and convert it to Zigbee standard
-    telegesis.TxReadAttrRsp(devKey, zcl.Cluster.Time, zcl.Attribute.Time, zcl.AttributeTypes.UtcTime, "{:08X}".format(int(zigBeeTime))) #  Set time. Doesn't work - returns error 86 ("Illegal value")
 
 def GetTime(devKey):
     telegesis.TxReadDevAttr(devKey, zcl.Cluster.Time, zcl.Attribute.LocalTime) # Create string and queue it up for sending

@@ -198,19 +198,15 @@ function ShowDeviceInfo($db, $devKey, $username)
             $frostDegC = GetConfig("FrostDegC", "7", $db);
             echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Schedule.php/?type=",$type,"&devKey=",$devKey,"'\">Schedule</button>&nbsp&nbsp&nbsp";
             echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=setTargetTemp ",$username," ",$boostDegC," 3600'\">Boost</button>&nbsp&nbsp&nbsp"; 
-            echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=setTargetTemp ",$username," ",$frostDegC,"' 3600\">Frost</button><br><br>";
+            echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=setTargetTemp ",$username," ",$frostDegC," 3600'\">Frost</button><br><br>";
+            echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=setTargetTemp ",$username," 15 60'\">Test 15C 1min</button><br><br>";
             echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=getTargetTemp ",$username,"'\">GetTargetTemp</button>&nbsp&nbsp&nbsp"; 
-            echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=rptSourceTemp ",$username," 12.34'\">RptSourceTemp as 12.34C</button>&nbsp&nbsp&nbsp"; 
+            echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=rptTemp ",$username," 12.34'\">SetSourceTemp as 12.34C</button>&nbsp&nbsp&nbsp"; 
             AppCmd("getSourceTemp ".$username, false);
             //AppCmd("getTargetTemp ".$username, false);  # Automatically ask for these 
         }
         if (strpos($inClusters, "000A") !== false) { // Time cluster
-            echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=setDstOffset ",$username," 5400'\">Set time +90mins</button>&nbsp&nbsp&nbsp";
-            echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=setDstOffset ",$username," -3600'\">Set time to BST</button>&nbsp&nbsp&nbsp";
-            echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=SetDstTimes ",$username,"'\">Set BST start & end</button>&nbsp&nbsp&nbsp";
             echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=getTime ",$username,"'\">Get time</button>&nbsp&nbsp&nbsp";
-            echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=setTime ",$username,"'\">Set time</button>&nbsp&nbsp&nbsp";
-            #echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=getAttr ",$username," 000A 0001'\">Get timeStatus</button>&nbsp&nbsp&nbsp";
             #AppCmd("getTime ".$username, false);
         }
     }
