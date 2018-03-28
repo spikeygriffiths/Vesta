@@ -57,7 +57,7 @@ def EventHandler(eventId, eventArg):
                     timeStr = timeTemp[0]
                     tempStr = timeTemp[1]
                     if iottime.MakeTime(timeStr) == iottime.MakeTime(timeOfDay):
-                        database.NewEvent(devKey, "Scheduled "+tempStr+"'C") # For web page.  Update event log so I can check my schedule follower works
+                        database.NewEvent(heatingDevKey, "Scheduled "+str(tempStr)+"'C") # For web page.  Update event log so I can check my schedule follower works
                         #heating.SetTargetTemp(heatingDevKey, tempStr)   # Set target in heating device here
 
 def Override(devKey, targetC, timeSecs):

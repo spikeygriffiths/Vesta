@@ -38,7 +38,7 @@ def HandleSerial(ser):
         atCmd = txBuf.popleft()
         wrAtCmd = atCmd + "\r\n"
         ser.write(wrAtCmd.encode())
-        #log.debug("Tx>"+atCmd)
+        log.debug("Tx>"+atCmd)
 
 def EventHandler(eventId, eventArg):
     global ser, txBuf, rxBuf

@@ -77,6 +77,7 @@ function ShowClusters($item, $name, $devKey, $db)
      "LevelCtrl" => "0008",
      "Alarms" => "0009",
      "Time" => "000A",
+     "MultistateInput" => "0012",
      "OTA" => "0019",
      "PollCtrl" => "0020",
      "Thermostat" => "0201",

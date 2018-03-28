@@ -143,6 +143,12 @@ def EventHandler(eventId, eventArg):
                 attrId = eventArg[4]
                 attrType = eventArg[5]
                 attrVal = eventArg[6]
+                if clusterId == zcl.Cluster.MultistateInput and attrId == zcl.Attribute.PresentValue:
+                    args = [attrVal, eventArg[1]]
+                    events.Issue(events.ids.MULTISTATE, args) 
+                    return # Ignore reports on Basic cluster (eg lumi.sensor_cube when it joins will send this)
+                #if clusterId == zcl.Cluster.Basic:
+                #    return # Ignore reports on Basic cluster (eg lumi.sensor_cube when it joins will send this)
                 NoteMsgDetails(devKey, eventArg)
                 EnsureReporting(devKey, clusterId, attrId, attrVal) # Make sure reports are happening at the correct frequency and update device if not
                 SetAttrVal(devKey, clusterId, attrId, attrVal)
@@ -465,12 +471,12 @@ def Check(devKey):
     inClstr = database.GetDeviceItem(devKey, "inClusters") # Assume we have a list of clusters if we get this far
     outClstr = database.GetDeviceItem(devKey, "outClusters")
     if None == ep:
-        return ("AT+ACTEPDESC:"+nwkId+","+nwkId, "ActEpDesc")
+        return (["AT+ACTEPDESC:"+nwkId+","+nwkId, "ActEpDesc"])
     if None == eui:
-        return ("AT+EUIREQ:"+nwkId+","+nwkId, "AddrResp")
+        return (["AT+EUIREQ:"+nwkId+","+nwkId, "AddrResp"])
     if None == inClstr or None == outClstr:
         database.SetDeviceItem(devKey, "outClusters", "[]") # Some devices have no outclusters...
-        return ("AT+SIMPLEDESC:"+nwkId+","+nwkId+","+ep, "OutCluster")
+        return (["AT+SIMPLEDESC:"+nwkId+","+nwkId+","+ep, "OutCluster"])
     binding = database.GetDeviceItem(devKey, "binding" "[]")
     if binding == None:
         log.debug("No binding for devKey "+str(devKey))

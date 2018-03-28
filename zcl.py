@@ -7,6 +7,7 @@ class Cluster():
     OnOff = "0006"
     LevelCtrl = "0008"
     Time = "000A"
+    MultistateInput = "0012"
     OTA = "0019"
     PollCtrl = "0020"
     ColourCtrl = "0300"
@@ -37,6 +38,8 @@ class Attribute():
     LocalTime = "0007" # RO U32 Time+TimeZone+DST
     LastSetTime = "0008" # RO UTC
     ValidUntilTime = "0009" # RW UTC
+    # MultistateInput
+    PresentValue = "0055" # R*W U16
     # OTA
     firmwareVersion = "0002" # RO U32 version number, stack in bottom 16, app in top 16.  4 bits each for major.minor.release.build
     # PollCtrl

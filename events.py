@@ -34,7 +34,8 @@ class ids:
     ALARM = 17 # Arg is string, one of "Arming", "Armed", Elevated", "Activated", "Disarmed" 
     RADIO_INFO = 18 # No arg, just displays info about the radio (channel, power, PAN id)
     NEWDEVICE = 19 # Arg is devKey, and only issued after the database has added the new device
-    SHUTDOWN = 20 # No arg.  Issued prior to rebooting, esp. to allow DB to commit
+    MULTISTATE = 20 # Arg is list, including nodeId in arg[1] and new presentValue in arg[0]
+    SHUTDOWN = 21 # No arg.  Issued prior to rebooting, esp. to allow DB to commit
 
 def Issue(eventId, eventArg=0):
     # Tell all interested parties about the new event

@@ -76,6 +76,13 @@ def EventHandler(eventId, eventArg):
             DeviceRun(devKey, "=="+eventArg[0]) # See if rule exists
         else: # devKey == None
             telegesis.Leave(eventArg[1])    # Tell device to leave the network, since we don't know anything about it
+    elif eventId == events.ids.MULTISTATE:
+        devKey = devices.GetKey(eventArg[1]) # Lookup device from network address in eventArg[1]
+        if devKey != None:
+            database.NewEvent(devKey, "MultiState=="+eventArg[0]) # For web page
+            DeviceRun(devKey, "=="+eventArg[0]) # See if rule exists
+        else: # devKey == None
+            telegesis.Leave(eventArg[1])    # Tell device to leave the network, since we don't know anything about it
     # End of EventHandler
 
 def DeviceRun(devKey, restOfRule): # Run rule for specified device
