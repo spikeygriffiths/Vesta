@@ -1,6 +1,7 @@
 #!synopsis.py
 
 from datetime import datetime
+from datetime import timedelta
 import os
 import glob
 # Application-specific modules
@@ -29,12 +30,17 @@ def BuildPage():
     writeLine("", html, txt)    # Just newline
     keyList = database.GetAllDevKeys()  # Get a list of all the device identifiers from the database
     noProblems = True
-    for devKey in keyList:  # Element 0 is hub, rest are devices
-        if database.GetDeviceItem(devKey, "nwkId") != "0000":  # Ignore hub
-            availability = presence.GetAvailability(devKey)
-            if availability != "":  # If device missing even only occasionally, tell user (Empty string means "fine")
-                noProblems = False
-                writeLine(availability, html, txt)
+    restartCount = database.CountEvents(0, "App started", "date('now', '-1 days')")
+    if restartCount>0:
+        noProblems = False
+        writeLine("App restarted "+str(restartCount)+" times in the last 24 hours", html, txt)
+    else: # Don't check availablilty of devices if app has restarted
+        for devKey in keyList:  # Element 0 is hub, rest are devices
+            if database.GetDeviceItem(devKey, "nwkId") != "0000":  # Ignore hub
+                availability = presence.GetAvailability(devKey)
+                if availability != "":  # If device missing even only occasionally, tell user (Empty string means "fine")
+                    noProblems = False
+                    writeLine(availability, html, txt)
     dbSize = database.GetFileSize() 
     if (dbSize / len(keyList)) > (30 * 1024):   # Arbitrary limit of 30K per device
         noProblems = False

@@ -369,6 +369,14 @@ def GetLatestEvent(devKey):
         return rows[0]
     return None
 
+def CountEvents(devKey, eventTxt, fromTime):
+    global curs
+    curs.execute("SELECT COUNT(*) FROM Events WHERE devKey="+str(devKey)+" AND event=\""+eventTxt+"\"AND timestamp>"+str(fromTime))
+    rows = curs.fetchone()
+    if rows != None:
+        return rows[0]
+    return None
+
 def FlushOldEvents():
     global curs, flushDB
     curs.execute("DELETE FROM Events WHERE timestamp <= datetime('now', '-7 days')")  # Remove all events older than 1 week
