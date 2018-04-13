@@ -246,7 +246,7 @@ def Action(actList, ruleId):
         target = actList[2]
         timeSecs = actList[3]
         if devKey != None:
-            schedule.Override(ThermostatDevKey, target, timeSecs)
+            schedule.Override(devKey, target, timeSecs)
     elif action == "set":   # Set a named variable to a value
         expression = "".join(actList[1:])   # First recombine actList[1] onwards, with no spaces.  Now expression should be of the form "<var>=<val>"
         if "--" in expression:
