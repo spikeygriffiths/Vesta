@@ -1,6 +1,8 @@
 #!schedule.py
 
 from datetime import datetime
+from datetime import date
+import time
 # App-specific modules
 import events
 import devices
@@ -26,12 +28,16 @@ def EventHandler(eventId, eventArg):
         if overrideTimeoutMins > 0:
             overrideTimeoutMins = overrideTimeoutMins-1
             if overrideTimeoutMins == 0 and heatingDevKey != None:
-                target = GetTarget("HeatingSchedule")
-                if target != None:
-                    database.NewEvent(heatingDevKey, "Resume to "+str(target)+"'C") # For web page.  Update event log so I can check my schedule follower works
-                    heating.SetTargetTemp(heatingDevKey, target)   # Resume schedule here
+                schedule = config.Get("HeatingSchedule")
+                if schedule != None:
+                    target = GetTarget(schedule)
+                    if target != None:
+                        database.NewEvent(heatingDevKey, "Resume to "+str(target)+"'C") # For web page.  Update event log so I can check my schedule follower works
+                        heating.SetTargetTemp(heatingDevKey, target)   # Resume schedule here
+                    else:
+                        database.NewEvent(heatingDevKey, "No target to resume to!")
                 else:
-                    database.NewEvent(heatingDevKey, "No target to resume to!")
+                    database.NewEvent(heatingDevKey, "No HeatingSchedule!")
         else:
             if heatingDevKey != None:   # and running schedule remotely...
                 heating.GetTargetTemp(heatingDevKey) # Ensure we keep track of remote device's target
@@ -40,7 +46,7 @@ def EventHandler(eventId, eventArg):
                 if scheduleType == None:
                     log.fault("No HeatingSchedule!")
                     return
-                dayOfWeek = iottime.GetDow(datetime.today().weekday())
+                dayOfWeek = iottime.GetDow(date.today().isoweekday() % 7) # So that Sun=0, Mon=1, etc.
                 scheduleStr = database.GetSchedule(scheduleType, dayOfWeek)
                 if scheduleStr == None:
                     log.debug("No schedule found for "+scheduleType)
@@ -51,7 +57,7 @@ def EventHandler(eventId, eventArg):
                     log.fault("Can't turn "+scheduleStr+" into a list")
                     return  # Bad list from database
                 numSetpoints = len(scheduleList)
-                timeOfDay = datetime.strptime(datetime.now().strftime("%H:%M"), "%H:%M")  # Just time of day
+                timeOfDay = datetime.now().strftime("%H:%M")  # Just time of day
                 for index in range(0, numSetpoints):
                     timeTemp = scheduleList[index]  # Get each time & temp from schedule
                     timeStr = timeTemp[0]
@@ -69,30 +75,26 @@ def Override(devKey, targetC, timeSecs):
         heating.SetTargetTemp(devKey, targetC)   # Set target in heating device here
 
 def GetTarget(scheduleName):
-    scheduleType = config.Get(scheduleName)
-    timeOfDay = datetime.strptime(datetime.now().strftime("%H:%M"), "%H:%M")
-    dayOfWeek = iottime.GetDow(datetime.today().weekday())
-    scheduleStr = database.GetSchedule(scheduleType, dayOfWeek) # Get schedule for today
+    timeOfDay = datetime.now().strftime("%H:%M")
+    dayOfWeek = iottime.GetDow(date.today().isoweekday() % 7) # So that Sun=0, Mon=1, etc.
+    scheduleStr = database.GetSchedule(scheduleName, dayOfWeek) # Get schedule for today
     if scheduleStr == None:
-        log.fault("No schedule found for "+scheduleType+" on "+dayOfWeek)
+        log.fault("No schedule found for "+scheduleType+" on "+str(dayOfWeek))
         return None
-    log.debug("Schedule for today("+dayOfWeek+") is "+scheduleStr)
+    log.debug("Resuming using schedule for today("+str(dayOfWeek)+") is "+scheduleStr)
     try:
         scheduleList = eval(scheduleStr)
     except:
-        log.fault("Can't turn "+scheduleStr+" into a list")
+        log.fault("Bad schedule - Can't turn "+scheduleStr+" into a list")
         return None # Bad list from database
-    target = None
+    target = 7 # Should really be the last scheduled temperature from the previous day's schedule
     numSetpoints = len(scheduleList)
     for index in range(0, numSetpoints):
         timeTemp = scheduleList[index]  # Get each time & temp from schedule
         timeStr = timeTemp[0]
         tempStr = timeTemp[1]
-        if target == None:
-            target = tempStr    # Make sure have a target even early in the morning, before first change
-        if iottime.MakeTime(timeStr) > iottime.MakeTime(timeOfDay):
-            return tempStr   # Stop as soon as we find the current slot
-        else:
+        #log.debug("Checking whether "+str(timeOfDay)+" is greater than "+str(timeStr))
+        if iottime.MakeTime(timeOfDay) >= iottime.MakeTime(timeStr):
             target = tempStr    # Remember last target
-        return target   # If we reach the end of today's schedule, then assume our time is after last change, so use last target
+    return target   # If we reach the end of today's schedule, then assume our time is after last change, so use last target
 
