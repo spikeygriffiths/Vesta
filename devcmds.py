@@ -26,13 +26,14 @@ def Identify(devKey, durationS):    # Duration in seconds to flash the device's 
 def SwitchOn(devKey):
     nwkId = database.GetDeviceItem(devKey, "nwkId")
     ep = database.GetDeviceItem(devKey, "endPoints")
+    inClstr = database.GetDeviceItem(devKey, "inClusters") # For checking whether we have LevelCtrl
     if nwkId and ep:
         #database.UpdateLoggedItem(devKey, "State", "SwitchOn") # So that we can access it from the rules later
         devices.SetTempVal(devKey, "JustSentOnOff", "True")
         devices.SetTempVal(devKey, "ExpectOnOff", "SwitchOn")
+        if zcl.Cluster.LevelCtrl in inClstr:  # Only queue up a dimming command if that cluster is available on device
+            queue.EnqueueCmd(devKey, ["AT+LCMVTOLEV:"+nwkId+","+ep+",0,0,FE,0001", "OK"]) # Ensure fully bright ready to be turned on
         queue.EnqueueCmd(devKey, ["AT+RONOFF:"+nwkId+","+ep+",0,1", "OK"]) # Assume FFD if it supports OnOff cluster
-        # Only queue up a dimming command if that cluster is available on device
-        queue.EnqueueCmd(devKey, ["AT+LCMVTOLEV:"+nwkId+","+ep+",0,0,FE,0001", "OK"]) # Ensure fully bright ready to be turned on later
 
 def SwitchOff(devKey):
     nwkId = database.GetDeviceItem(devKey, "nwkId")
@@ -66,6 +67,8 @@ def Dim(devKey, level):
             level = level / 100 # Convert to a fraction
         levelStr = format(int(level * 254), 'X').zfill(2)
         queue.EnqueueCmd(devKey, ["AT+LCMVTOLEV:"+nwkId+","+ep+",0,1,"+levelStr+",000A", "DFTREP"]) # Fade over 1 sec (in 10ths)
+        if level == 0:
+            SwitchOff(devKey)
 
 def Hue(devKey, hueDegree):
     nwkId = database.GetDeviceItem(devKey, "nwkId")

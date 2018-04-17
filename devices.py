@@ -214,6 +214,7 @@ def EventHandler(eventId, eventArg):
                 if datetime.now() >= fadeDownAt:
                     DelTempVal(devKey, "FadeDown@")
                     devcmds.Dim(devKey, 0)
+                    devcmds.SwitchOff(devKey)   # Switch off after dim command
             pirOffAt = GetTempVal(devKey, "PirInactive@")
             if pirOffAt:
                 if datetime.now() >= pirOffAt:
@@ -221,12 +222,6 @@ def EventHandler(eventId, eventArg):
                     newState = "inactive"
                     database.NewEvent(devKey, newState)
                     Rule(devKey, newState)
-    #if eventId == events.ids.HOURS and eventArg == 4: # 4am, time to send timestamp to all devices with time cluster
-    #    for devKey in devDict:  # Go through devDict, pulling out each entry
-    #        if devDict[devKey] >= 0:    # Make sure device hasn't been deleted
-    #            inClstr = database.GetDeviceItem(devKey, "inClusters") # Assume we have a list of clusters if we get this far
-    #            if (zcl.Clusters.Time in inClstr): # Or should this be in the outClusters?
-    #                iottime.SetTime(devKey, time.localtime()) # ToDo: Enable this when we're confident it'll work!
     # End event handler
 
 def EnsureReporting(devKey, clstrId, attrId, attrVal): # Check when this attr last reported and update device's reporting if necessary
