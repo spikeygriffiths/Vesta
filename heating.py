@@ -132,6 +132,7 @@ def RptTemp(devKey, temp): # This could be renamed as SetSourceTemp()
 def SetTargetTemp(devKey, temp):
     centiTemp = format(int(float(temp)*100), 'X').zfill(4)
     telegesis.TxWriteAttr(devKey, zcl.Cluster.Thermostat, zcl.Attribute.OccupiedHeatingSetPoint, zcl.AttributeTypes.Sint16, centiTemp) #  Set Thermostat's source temp
+    return temp # So we can say current = SetTargetTemp(temp)
 
 def GetTargetTemp(devKey):
     telegesis.TxReadDevAttr(devKey, zcl.Cluster.Thermostat, zcl.Attribute.OccupiedHeatingSetPoint) #  Get Thermostat's target temp
