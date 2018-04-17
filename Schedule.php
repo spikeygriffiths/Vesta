@@ -13,6 +13,11 @@ if ($numSchedules > 1) {
 } else $rightBtn = "";
 PageHeader("Schedule for ".$type, $rightBtn);
 
+$configType = GetConfig("HeatingSchedule", "Heating", $db); # Ensure HeatingSchedule config follows selected schedule (even if that hasn't been pushed to the heating controller yet)
+if ($type != $configType) {
+    SetConfig("HeatingSchedule", $type, $db);    # Update config here!
+}
+
 // See if the schedule needs changing
 echo "<form action='/vesta/SelectSchedule.php/?devKey=".$devKey."' method='post'>";
 echo "<p>Select Schedule from:<select id='type' name='type'>";
