@@ -420,7 +420,7 @@ def NoteMsgDetails(devKey, arg):
     devIndex = GetIndexFromKey(devKey)
     if arg[0] == expRsp[devIndex]:
         expRsp[devIndex] = None   # Note that we've found the expected response now, so we're now clear to send
-    presence.Set(devKey, presence.states.present) # Note presence
+    presence.Set(devKey, presence.states.present) # Note presence, and update radio quality
     if isnumeric(arg[-2]):
         if int(arg[-2]) < 0: # Assume penultimate item is RSSI, and thus that ultimate one is LQI
             rssi = arg[-2]

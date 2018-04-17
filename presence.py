@@ -44,9 +44,13 @@ def Check():  # Expected to be called infrequently - ie once/minute
                 devcmds.Prod(devKey)    # Ask device a question, just to provoke a response
 
 def Set(devKey, newState):
+    oldState = Get(devKey)
+    if oldState != newState:
+        database.NewEvent(devKey, newState) # For ActivityLog on web page
     if newState == states.absent:
         database.LogItem(devKey, "SignalPercentage", 0) # Clear down signal strength when device goes missing
     database.LogItem(devKey, "Presence", newState)
+
 
 def Get(devKey):
     entry = database.GetLatestLoggedItem(devKey, "Presence")
