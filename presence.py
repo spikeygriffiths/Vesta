@@ -44,13 +44,12 @@ def Check():  # Expected to be called infrequently - ie once/minute
                 devcmds.Prod(devKey)    # Ask device a question, just to provoke a response
 
 def Set(devKey, newState):
-    oldState = Get(devKey)
+    oldTime,oldState = Get(devKey)
     if oldState != newState:
         database.NewEvent(devKey, newState) # For ActivityLog on web page
     if newState == states.absent:
         database.LogItem(devKey, "SignalPercentage", 0) # Clear down signal strength when device goes missing
     database.LogItem(devKey, "Presence", newState)
-
 
 def Get(devKey):
     entry = database.GetLatestLoggedItem(devKey, "Presence")
@@ -58,7 +57,7 @@ def Get(devKey):
         #log.debug("Presence entry says " + str(entry))
         return datetime.strptime(entry[1], "%Y-%m-%d %H:%M:%S"), entry[0]   # Should be time, val
     else:
-        Set(devKey, states.unknown) # Set up an entry for this device for use in future
+        database.LogItem(devKey, "Presence", states.unknown) # Set up an entry for this device for use in future
         return datetime.now(), states.unknown # Return something for now
 
 def GetAvailability(devKey):    # Over last 24 hours
