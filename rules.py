@@ -108,7 +108,7 @@ def Run(trigger): # Run through the rules looking to see if we have a match for 
         ruleId = line[0]
         rule = ' '.join(line[1].split()) # Compact multiple spaces into single ones and make each line into a rule
         ruleList = rule.split(" ") # Make each rule into a list
-        if ruleList[0] == "if":
+        if ruleList[0].lower() == "if":
             doIndex = FindItemInList("do", ruleList) # Safely look for "do"
             if doIndex != None:
                 if ParseCondition(ruleList[1:doIndex], trigger) == True: # Parse condition from element 1 (ie immediately after "if") to "do" 

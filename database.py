@@ -346,8 +346,9 @@ def GetLastNLoggedItems(devKey, item, num):
 
 def FlushOldLoggedItems():
     global curs, flushDB
-    curs.execute("DELETE FROM BatteryPercentage WHERE timestamp <= datetime('now', '-1 year')")
-    curs.execute("DELETE FROM TemperatureCelsius WHERE timestamp <= datetime('now', '-1 month')")
+    # ToDo: Rather than flush completely, it would be better to reduce temporal resolution instead
+    curs.execute("DELETE FROM BatteryPercentage WHERE timestamp <= datetime('now', '-3 days')")
+    curs.execute("DELETE FROM TemperatureCelsius WHERE timestamp <= datetime('now', '-3 days')")
     curs.execute("DELETE FROM SignalPercentage WHERE timestamp <= datetime('now', '-3 days')")  # Signal strength is only a worry for a while
     curs.execute("DELETE FROM Presence WHERE timestamp <= datetime('now', '-3 days')")  # Don't care about presence after a while
     curs.execute("DELETE FROM PowerReadingW WHERE timestamp <= datetime('now', '-3 days')") # We have the energy readings for long-term comparisons
