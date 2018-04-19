@@ -43,7 +43,7 @@ def Get(name):  # Get value associated with name
         postName = name[dotPos+1:]
         devKey = database.GetDevKey("userName", foreName)
         if devKey: # Check that name is a device name
-            return = database.GetLatestLoggedValue(devKey, postName) # To get latest temperature, power, etc.        
+            return database.GetLatestLoggedValue(devKey, postName) # To get latest temperature, power, etc.        
     return database.GetVarVal(name)
 
 def GetTime(name):  # Get time when value associated with name was last updated
