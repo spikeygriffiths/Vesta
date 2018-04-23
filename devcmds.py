@@ -13,6 +13,7 @@ def Prod(devKey):    # Ask device a question, just to provoke a response
     nwkId = database.GetDeviceItem(devKey, "nwkId")
     ep = database.GetDeviceItem(devKey, "endPoints")
     if nwkId != None and ep != None:
+        log.debug("Prodding devKey "+str(devKey)+" (nwkId:"+nwkId+")")
         cmdRsp = telegesis.ReadAttr(nwkId, ep, zcl.Cluster.Basic, zcl.Attribute.Model_Name) # Get Basic's Device Name in order to prod it into life
         queue.EnqueueCmd(devKey, cmdRsp)
 
