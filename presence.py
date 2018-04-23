@@ -46,7 +46,7 @@ def Check():  # Expected to be called infrequently - ie once/minute
             for devKey in notHeardFromList:
                 devcmds.Prod(devKey)    # Ask device a question, just to provoke a response
 
-def Set(devKey, newState):
+def Set(devKey, newState = states.present):
     oldTime,oldState = Get(devKey)
     if oldState != newState:
         database.NewEvent(devKey, newState) # For ActivityLog on web page
