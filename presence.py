@@ -32,13 +32,16 @@ def Check():  # Expected to be called infrequently - ie once/minute
                 notHeardFromList.append(devKey)    # Make a list of devices to query
             if presence != states.absent and datetime.now() > lastSeen+timedelta(seconds=1800): # More than 30 minutes since we last heard from device
                 Set(devKey, states.absent)
-            if presence == states.absent:
+            if presence != states.present:
                 notHeardFromList.append(devKey)    # Make a list of devices to query
     if notHeardFromList != []:
+        log.debug("List of missing (or nearly missing) devices: "+str(notHeardFromList))
         numDevs = len(notHeardFromList)
         if numDevs > 3:
             for i in range(3):  # Prod 3 random devices from list
-                devcmds.Prod(random.choice(notHeardFromList))    # Ask device a question, just to provoke a response
+                devKey = random.choice(notHeardFromList)
+                devcmds.Prod(devKey)    # Ask device a question, just to provoke a response
+                notHeardFromList.remove(keyKey) # Having prodded it, make sure we don't prod it again
         else:   # Prod each device in list
             for devKey in notHeardFromList:
                 devcmds.Prod(devKey)    # Ask device a question, just to provoke a response
