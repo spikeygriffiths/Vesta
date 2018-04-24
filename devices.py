@@ -174,6 +174,9 @@ def EventHandler(eventId, eventArg):
                 pendingRptAttrId = None # Ready for the next report
         elif eventArg[0] == "CWSCHEDULE":
             heating.ParseCWShedule(eventArg)
+        elif eventArg[0] == "DFTREP":
+            devKey = GetKey(eventArg[1])
+            NoteMsgDetails(devKey, eventArg)
         #else:   # Unrecognised message, but we still want to extract OOB info
         #    if len(eventArg) >= 2:
         #        devKey = GetKey(eventArg[1])    # Assume this is sensible
