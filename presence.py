@@ -41,7 +41,7 @@ def Check():  # Expected to be called infrequently - ie once/minute
             for i in range(3):  # Prod 3 random devices from list
                 devKey = random.choice(notHeardFromList)
                 devcmds.Prod(devKey)    # Ask device a question, just to provoke a response
-                notHeardFromList.remove(keyKey) # Having prodded it, make sure we don't prod it again
+                notHeardFromList.remove(devKey) # Having prodded it, make sure we don't prod it again
         else:   # Prod each device in list
             for devKey in notHeardFromList:
                 devcmds.Prod(devKey)    # Ask device a question, just to provoke a response
