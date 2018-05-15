@@ -22,6 +22,7 @@ import heating
 
 globalDevKey = None
 pendingBinding = None # Needed because the BIND response doesn't include the cluster
+pendingBindingTimeoutS = 0 # So that we can cope with a missing BIND response
 pendingRptAttrId = None # Needed because CFGRPTRSP only includes the cluster and not the attr
 
 # Keep a track of known devices present in the system
@@ -32,7 +33,7 @@ expRspTimeoutS = array('f',[]) # Array of timeouts if we're expecting a response
 msp_ota = None  # Until filled in from config
 
 def EventHandler(eventId, eventArg):
-    global ephemera, globalDevKey, pendingBinding, pendingRptAttrId, msp_ota
+    global ephemera, globalDevKey, pendingBinding, pendingBindingTimeoutS, pendingRptAttrId, msp_ota
     if eventId == events.ids.PREINIT:
         keyList = database.GetAllDevKeys()  # Get a list of all the device identifiers from the database
         for devKey in keyList:  # Hub and devices
@@ -222,6 +223,16 @@ def EventHandler(eventId, eventArg):
                     newState = "inactive"
                     database.NewEvent(devKey, newState)
                     Rule(devKey, newState)
+            if pendingBindingTimeoutS > 0:
+                pendingBindingTimeoutS = pendingBindingTimeoutS -1
+                if pendingBindingTimeoutS < 1:
+                    pendingBindingTimeoutS = 0
+                    pendingBinding = None   # Release pendingBinding ready for next time
+    if eventId == events.ids.INFO:
+        if pendingBinding:
+            log.debug("PendingBinding="+pendingBinding)
+        else:
+            log.debug("No pendingBinding")
     # End event handler
 
 def EnsureReporting(devKey, clstrId, attrId, attrVal): # Check when this attr last reported and update device's reporting if necessary
@@ -463,7 +474,7 @@ def Check(devKey):
         return  # Make sure it's a real device before continuing (it may have just been deleted)
     ep = database.GetDeviceItem(devKey, "endPoints")
     eui = database.GetDeviceItem(devKey, "eui64")
-    inClstr = database.GetDeviceItem(devKey, "inClusters") # Assume we have a list of clusters if we get this far
+    inClstr = database.GetDeviceItem(devKey, "inClusters", "[]") # Assume we have a list of clusters if we get this far
     outClstr = database.GetDeviceItem(devKey, "outClusters")
     if None == ep:
         return (["AT+ACTEPDESC:"+nwkId+","+nwkId, "ActEpDesc"])
@@ -473,21 +484,18 @@ def Check(devKey):
         database.SetDeviceItem(devKey, "outClusters", "[]") # Some devices have no outclusters...
         return (["AT+SIMPLEDESC:"+nwkId+","+nwkId+","+ep, "OutCluster"])
     binding = database.GetDeviceItem(devKey, "binding" "[]")
-    if binding == None:
-        log.debug("No binding for devKey "+str(devKey))
-        return None
     if inClstr != None:
         if pendingBinding == None:  # Only try to add one binding at once
             if zcl.Cluster.PollCtrl in inClstr and zcl.Cluster.PollCtrl not in binding:
-                return SetBinding(devKey, zcl.Cluster.PollCtrl, "01") # 01 is our endpoint we want messages to come to
-            if zcl.Cluster.OnOff in outClstr and zcl.Cluster.OnOff not in binding: # If device sends OnOff commands...
+                return SetBinding(devKey, zcl.Cluster.PollCtrl, "01") # 01 is our endpoint we want CHECKIN messages to come to
+            if zcl.Cluster.OnOff in outClstr and zcl.Cluster.OnOff not in binding: # If device sends OnOff commands (eg a Button)
                 return SetBinding(devKey, zcl.Cluster.OnOff, "0A") # 0A is our endpoint we want messages to come to (so that we get TOGGLE, ON and OFF commands)
             if zcl.Cluster.Temperature in inClstr and zcl.Cluster.Temperature not in binding:
-                return SetBinding(devKey, zcl.Cluster.Temperature, "01") # 01 is our endpoint we want messages to come to
+                return SetBinding(devKey, zcl.Cluster.Temperature, "01") # 01 is our endpoint we want Temperature reports to come to
             if zcl.Cluster.SimpleMetering in inClstr and zcl.Cluster.SimpleMetering not in binding:
-                return SetBinding(devKey, zcl.Cluster.SimpleMetering, "01") # 01 is our endpoint we want messages to come to
+                return SetBinding(devKey, zcl.Cluster.SimpleMetering, "01") # 01 is our endpoint we want SimpleMetering messages to come to
             if zcl.Cluster.Thermostat in inClstr and zcl.Cluster.Thermostat not in binding:
-                return SetBinding(devKey, zcl.Cluster.Thermostat, "01") # 01 is our endpoint we want messages to come to
+                return SetBinding(devKey, zcl.Cluster.Thermostat, "01") # 01 is our endpoint we want Thermostat messages to come to
         if zcl.Cluster.IAS_Zone in inClstr:
             if None == database.GetDeviceItem(devKey, "iasZoneType"):
                 return telegesis.ReadAttr(nwkId, ep, zcl.Cluster.IAS_Zone, zcl.Attribute.Zone_Type) # Get IAS device type (PIR or contact, etc.)
@@ -555,12 +563,13 @@ def IsListening(devKey):
         return True # These devices are always awake and listening
 
 def SetBinding(devKey, cluster, ourEp):
-    global pendingBinding
+    global pendingBinding, pendingBindingTimeoutS
     nwkId = database.GetDeviceItem(devKey, "nwkId")
     ep = database.GetDeviceItem(devKey, "endPoints")
     eui = database.GetDeviceItem(devKey, "eui64")
     if None != ep and None != eui: 
         pendingBinding = cluster
+        pendingBindingTimeoutS = 20
         return ("AT+BIND:"+nwkId+",3,"+eui+","+ep+","+cluster+","+database.GetDeviceItem(0, "eui64")+","+ourEp, "Bind")
 
 def GetKeyFromIndex(idx):
