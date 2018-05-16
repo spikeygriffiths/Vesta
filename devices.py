@@ -21,8 +21,8 @@ import synopsis
 import heating
 
 globalDevKey = None
-pendingBinding = None # Needed because the BIND response doesn't include the cluster
-pendingBindingTimeoutS = 0 # So that we can cope with a missing BIND response
+pendingBinding = [] # Needed because the BIND response doesn't include the cluster
+pendingBindingTimeoutS = array('f',[]) # So that we can cope with a missing BIND response
 pendingRptAttrId = None # Needed because CFGRPTRSP only includes the cluster and not the attr
 
 # Keep a track of known devices present in the system
@@ -36,6 +36,9 @@ def EventHandler(eventId, eventArg):
     global ephemera, globalDevKey, pendingBinding, pendingBindingTimeoutS, pendingRptAttrId, msp_ota
     if eventId == events.ids.PREINIT:
         keyList = database.GetAllDevKeys()  # Get a list of all the device identifiers from the database
+        for i in range(100): # Fudge to ensure we have enough pendingBinding entries
+            pendingBinding.append("") # Problem is that the devKey indices aren't consecutive (removed devices) and so
+            pendingBindingTimeoutS.append(0) # using the keyList isn't the same as for x in range(maxDevKey)
         for devKey in keyList:  # Hub and devices
             Init(devKey) # Initialise dictionary and associated ephemera
             if database.GetDeviceItem(devKey, "nwkId") != "0000":  # Ignore hub
@@ -159,12 +162,12 @@ def EventHandler(eventId, eventArg):
         elif eventArg[0] == "Bind" and len(eventArg) >= 2:    # Binding Response from device
             devKey = GetKey(eventArg[1])
             if devKey != None:
-                if pendingBinding != None:
+                if pendingBinding[devKey]:
                     binding = eval(database.GetDeviceItem(devKey, "binding", "[]"))
-                    if pendingBinding not in binding:   # Only put it in once, even if we get multiple responses
-                        binding.append(pendingBinding)
+                    if pendingBinding[devKey] not in binding:   # Only put it in once, even if we get multiple responses
+                        binding.append(pendingBinding[devKey])
                         database.SetDeviceItem(devKey, "binding", str(binding))
-                    pendingBinding = None
+                    pendingBinding[devKey] = None
         elif eventArg[0] == "CFGRPTRSP" and len(eventArg) >= 5:   # Configure Report Response from device
             devKey = GetKey(eventArg[1])
             status = eventArg[4]
@@ -208,6 +211,10 @@ def EventHandler(eventId, eventArg):
                         expRspTimeoutS[devIndex] = expRspTimeoutS[devIndex] - eventArg
                         if expRspTimeoutS[devIndex] <= 0:
                             expRsp[devIndex] = None
+                    if pendingBinding[devKey]: # Make sure we timeout pendingBinding
+                        pendingBindingTimeoutS[devKey] = pendingBindingTimeoutS[devKey] - eventArg
+                        if pendingBindingTimeoutS[devKey] <= 0:
+                            pendingBinding[devKey] = None
             offAt = GetTempVal(devKey, "SwitchOff@")
             if offAt:
                 if datetime.now() >= offAt:
@@ -226,16 +233,6 @@ def EventHandler(eventId, eventArg):
                     newState = "inactive"
                     database.NewEvent(devKey, newState)
                     Rule(devKey, newState)
-            if pendingBindingTimeoutS > 0:
-                pendingBindingTimeoutS = pendingBindingTimeoutS -1
-                if pendingBindingTimeoutS < 1:
-                    pendingBindingTimeoutS = 0
-                    pendingBinding = None   # Release pendingBinding ready for next time
-    if eventId == events.ids.INFO:
-        if pendingBinding:
-            log.debug("PendingBinding="+pendingBinding)
-        else:
-            log.debug("No pendingBinding")
     # End event handler
 
 def EnsureReporting(devKey, clstrId, attrId, attrVal): # Check when this attr last reported and update device's reporting if necessary
@@ -478,17 +475,16 @@ def Check(devKey):
     ep = database.GetDeviceItem(devKey, "endPoints")
     eui = database.GetDeviceItem(devKey, "eui64")
     inClstr = database.GetDeviceItem(devKey, "inClusters", "[]") # Assume we have a list of clusters if we get this far
-    outClstr = database.GetDeviceItem(devKey, "outClusters")
+    outClstr = database.GetDeviceItem(devKey, "outClusters", "[]")
+    binding = database.GetDeviceItem(devKey, "binding" "[]")
     if None == ep:
         return (["AT+ACTEPDESC:"+nwkId+","+nwkId, "ActEpDesc"])
     if None == eui:
         return (["AT+EUIREQ:"+nwkId+","+nwkId, "AddrResp"])
-    if None == inClstr or None == outClstr:
-        database.SetDeviceItem(devKey, "outClusters", "[]") # Some devices have no outclusters...
+    if "[]" == inClstr:
         return (["AT+SIMPLEDESC:"+nwkId+","+nwkId+","+ep, "OutCluster"])
-    binding = database.GetDeviceItem(devKey, "binding" "[]")
-    if inClstr != None:
-        if pendingBinding == None:  # Only try to add one binding at once
+    else:
+        if pendingBinding[devKey] == None:  # Only try to add one binding per device at once
             if zcl.Cluster.PollCtrl in inClstr and zcl.Cluster.PollCtrl not in binding:
                 return SetBinding(devKey, zcl.Cluster.PollCtrl, "01") # 01 is our endpoint we want CHECKIN messages to come to
             if zcl.Cluster.OnOff in outClstr and zcl.Cluster.OnOff not in binding: # If device sends OnOff commands (eg a Button)
@@ -571,8 +567,8 @@ def SetBinding(devKey, cluster, ourEp):
     ep = database.GetDeviceItem(devKey, "endPoints")
     eui = database.GetDeviceItem(devKey, "eui64")
     if None != ep and None != eui: 
-        pendingBinding = cluster
-        pendingBindingTimeoutS = 20
+        pendingBinding[devKey] = cluster
+        pendingBindingTimeoutS[devKey] = 320 # Allow just over 5 minutes, in case device misses the CheckIn.  Should probably get LongPollInterval and add a bit to that
         return ("AT+BIND:"+nwkId+",3,"+eui+","+ep+","+cluster+","+database.GetDeviceItem(0, "eui64")+","+ourEp, "Bind")
 
 def GetKeyFromIndex(idx):
@@ -649,7 +645,7 @@ def Add(nwkId, eui64, devType):
     return devKey
 
 def Init(devKey):
-    global expRsp, expRspTimeoutS
+    global expRsp, expRspTimeoutS, pendingBinding, pendingBindingTimeoutS
     index = len(ephemera)   # Rely upon the length of this as the master for making a new index into everything else!
     devDict[devKey] = index # Add new item
     #log.debug("Added new item to devDict, which now is "+str(devDict))
@@ -657,6 +653,8 @@ def Init(devKey):
     queue.Init(devKey)
     expRsp.append("")
     expRspTimeoutS.append(0)
+    pendingBinding.append("")
+    pendingBindingTimeoutS.append(0)
     return devKey
 
 def Remove(devKey):
