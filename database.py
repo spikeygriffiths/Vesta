@@ -36,11 +36,11 @@ def EventHandler(eventId, eventArg):
         GarbageCollect("BatteryPercentage")
         GarbageCollect("TemperatureCelsius")
         GarbageCollect("SignalPercentage")
-        GarbageCollect("Presence")
+        #GarbageCollect("Presence") # Causes HallLight (devKey 1) to have its presence removed, although I can't work out why...
         GarbageCollect("PowerReadingW")
         GarbageCollect("EnergyConsumedWh")
         GarbageCollect("EnergyGeneratedWh")
-        GarbageCollect("Events")
+        #GarbageCollect("Events") # As above for the same HallLight (devKey 1)
         Defragment()    # Compact the database now that we've flushed the old items
         flushDB = True
     if eventId == events.ids.SHUTDOWN:
