@@ -50,6 +50,7 @@ def EventHandler(eventId, eventArg):
         variables.Set("time", str(now.strftime("%H:%M")))
         rules.Run("time=="+ str(now.strftime("%H:%M"))) # Run timed rules once per minute
         rules.Run("trigger==time") # Run timed rules once per minute
+        # Could alter above to rules.Run("trigger==minute")
         if variables.Get("sunrise") != None:
             CheckTimedRule("dawn", now) # Sky getting light before sunrise
             CheckTimedRule("sunrise", now) # Sun on horizon
@@ -64,11 +65,13 @@ def EventHandler(eventId, eventArg):
                 rules.Run("dark=="+variables.Get("dark"))  # This will also delete the variable afterwards
                 variables.Set("dark", dark)  # Re-instate the variable after the rule has deleted it
     if eventId == events.ids.HOURS:
+        # Could add rules.Run("trigger==hour")
         if eventArg == 0: # Midnight, time to calculate sunrise and sunset for new day
             events.Issue(events.ids.NEWDAY)
         if eventArg == 4: # Re-synch Telegesis clock to local time at 4am every day to cope with DST
             telegesis.SetTime() # Set time up for HA devices to synchronise to
     if eventId == events.ids.NEWDAY:
+        # Could add rules.Run("trigger==day")
         SetSunTimes()
         log.RollLogs() # Roll the logs, to avoid running out of disc space
         SetDayInfo()
