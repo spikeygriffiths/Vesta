@@ -93,6 +93,8 @@ def InitCore(db, curs):
         curs.execute("ALTER TABLE Devices ADD COLUMN longPollInterval TEXT")
     if TableHasColumn(curs, "Devices", "targetTempReporting") == False:
         curs.execute("ALTER TABLE Devices ADD COLUMN targetTempReporting TEXT")
+    if TableHasColumn(curs, "Devices", "dimLevel") == False:
+        curs.execute("ALTER TABLE Devices ADD COLUMN dimLevel INTEGER")
     curs.execute("""
     CREATE TABLE IF NOT EXISTS Groups (
     userName TEXT,

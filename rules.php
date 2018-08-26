@@ -40,7 +40,7 @@ function ShowRules($db, $item)
         $ruleIds[$index] = $row['rowid'];
         $index++;
     }
-    for ($ruleIdx = 0; $ruleIdx < $index/*sizeof(ruleTxts)?*/; $ruleIdx++) {
+    for ($ruleIdx = 0; $ruleIdx < $index; $ruleIdx++) {
         echo "<form action=\"/vesta/save_rules.php/?ruleId=", $ruleIds[$ruleIdx], "&item=", $item, "\" method=\"post\">";
         echo "<input type=\"text\" size=\"100\" name=\"ruleTxt\" value=\"", $ruleTxts[$ruleIdx], "\">";
         echo "<input type=\"submit\" value=\"Update\"></form>";

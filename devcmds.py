@@ -27,14 +27,16 @@ def Identify(devKey, durationS):    # Duration in seconds to flash the device's 
 def SwitchOn(devKey):
     nwkId = database.GetDeviceItem(devKey, "nwkId")
     ep = database.GetDeviceItem(devKey, "endPoints")
+    dimLevel = database.GetDeviceItem(devKey, "dimLevel")
     inClstr = database.GetDeviceItem(devKey, "inClusters") # For checking whether we have LevelCtrl
     if nwkId and ep:
         #database.UpdateLoggedItem(devKey, "State", "SwitchOn") # So that we can access it from the rules later
         devices.SetTempVal(devKey, "JustSentOnOff", "True")
         devices.SetTempVal(devKey, "ExpectOnOff", "SwitchOn")
-        if zcl.Cluster.LevelCtrl in inClstr:  # Only queue up a dimming command if that cluster is available on device
-            queue.EnqueueCmd(devKey, ["AT+LCMVTOLEV:"+nwkId+","+ep+",0,0,FE,0001", "OK"]) # Ensure fully bright ready to be turned on
         queue.EnqueueCmd(devKey, ["AT+RONOFF:"+nwkId+","+ep+",0,1", "OK"]) # Assume FFD if it supports OnOff cluster
+        if zcl.Cluster.LevelCtrl in inClstr and dimLevel != 100:  # Queue up a dimming command if available and we're at a different dimness
+            queue.EnqueueCmd(devKey, ["AT+LCMVTOLEV:"+nwkId+","+ep+",0,1,FE,0001", "OK"]) # Ensure fully bright ready to be turned on
+            database.SetDeviceItem(devKey, "dimLevel", 100) # Assume the LevelCtrl command above works
 
 def SwitchOff(devKey):
     nwkId = database.GetDeviceItem(devKey, "nwkId")
@@ -45,6 +47,7 @@ def SwitchOff(devKey):
         devices.SetTempVal(devKey, "JustSentOnOff", "True")
         devices.SetTempVal(devKey, "ExpectOnOff", "SwitchOff")
         queue.EnqueueCmd(devKey, ["AT+RONOFF:"+nwkId+","+ep+",0,0", "OK"]) # Assume FFD if it supports OnOff cluster
+        database.SetDeviceItem(devKey, "dimLevel", 0) # Set dimness to 0
 
 def Toggle(devKey):
     state = database.GetLatestEvent(devKey)
@@ -70,6 +73,7 @@ def Dim(devKey, level):
         queue.EnqueueCmd(devKey, ["AT+LCMVTOLEV:"+nwkId+","+ep+",0,1,"+levelStr+",000A", "DFTREP"]) # Fade over 1 sec (in 10ths)
         if level == 0:
             SwitchOff(devKey)
+        database.SetDeviceItem(devKey, "dimLevel", level*100) # Assume the LevelCtrl command above works
 
 def Hue(devKey, hueDegree):
     nwkId = database.GetDeviceItem(devKey, "nwkId")
