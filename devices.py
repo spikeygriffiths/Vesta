@@ -467,80 +467,68 @@ def isnumeric(item, base=10):
 
 def Check(devKey):
     global pendingBinding, msp_ota
-    if devKey == 0:
-        return  # We don't need anything from the hub
+    if devKey == 0: return  # We don't need anything from the hub
     nwkId = database.GetDeviceItem(devKey, "nwkId")
-    if nwkId == None:
-        return  # Make sure it's a real device before continuing (it may have just been deleted)
+    if None == nwkId: return  # Make sure it's a real device before continuing (it may have just been deleted)
     ep = database.GetDeviceItem(devKey, "endPoints")
+    if None == ep: return (["AT+ACTEPDESC:"+nwkId+","+nwkId, "ActEpDesc"])
     eui = database.GetDeviceItem(devKey, "eui64")
+    if None == eui: return (["AT+EUIREQ:"+nwkId+","+nwkId, "AddrResp"])
     inClstr = database.GetDeviceItem(devKey, "inClusters", "[]") # Assume we have a list of clusters if we get this far
+    if "[]" == inClstr: return (["AT+SIMPLEDESC:"+nwkId+","+nwkId+","+ep, "OutCluster"])
     outClstr = database.GetDeviceItem(devKey, "outClusters", "[]")
     binding = database.GetDeviceItem(devKey, "binding" "[]")
-    if None == ep:
-        return (["AT+ACTEPDESC:"+nwkId+","+nwkId, "ActEpDesc"])
-    if None == eui:
-        return (["AT+EUIREQ:"+nwkId+","+nwkId, "AddrResp"])
-    if "[]" == inClstr:
-        return (["AT+SIMPLEDESC:"+nwkId+","+nwkId+","+ep, "OutCluster"])
-    else:
-        if pendingBinding[devKey] == None:  # Only try to add one binding per device at once
-            if zcl.Cluster.PollCtrl in inClstr and zcl.Cluster.PollCtrl not in binding:
-                return SetBinding(devKey, zcl.Cluster.PollCtrl, "01") # 01 is our endpoint we want CHECKIN messages to come to
-            if zcl.Cluster.OnOff in outClstr and zcl.Cluster.OnOff not in binding: # If device sends OnOff commands (eg a Button)
-                return SetBinding(devKey, zcl.Cluster.OnOff, "0A") # 0A is our endpoint we want messages to come to (so that we get TOGGLE, ON and OFF commands)
-            if zcl.Cluster.Temperature in inClstr and zcl.Cluster.Temperature not in binding:
-                return SetBinding(devKey, zcl.Cluster.Temperature, "01") # 01 is our endpoint we want Temperature reports to come to
-            if zcl.Cluster.SimpleMetering in inClstr and zcl.Cluster.SimpleMetering not in binding:
-                return SetBinding(devKey, zcl.Cluster.SimpleMetering, "01") # 01 is our endpoint we want SimpleMetering messages to come to
-            if zcl.Cluster.Thermostat in inClstr and zcl.Cluster.Thermostat not in binding:
-                return SetBinding(devKey, zcl.Cluster.Thermostat, "01") # 01 is our endpoint we want Thermostat messages to come to
-        if zcl.Cluster.IAS_Zone in inClstr:
-            if None == database.GetDeviceItem(devKey, "iasZoneType"):
-                return telegesis.ReadAttr(nwkId, ep, zcl.Cluster.IAS_Zone, zcl.Attribute.Zone_Type) # Get IAS device type (PIR or contact, etc.)
-        if zcl.Cluster.Basic in inClstr:
-            if None == database.GetDeviceItem(devKey, "modelName"):
-                return telegesis.ReadAttr(nwkId, ep, zcl.Cluster.Basic, zcl.Attribute.Model_Name) # Get Basic's Device Name
-            if None == database.GetDeviceItem(devKey, "manufName"):
-                return telegesis.ReadAttr(nwkId, ep, zcl.Cluster.Basic, zcl.Attribute.Manuf_Name) # Get Basic's Manufacturer Name
-        if zcl.Cluster.PowerConfig in inClstr and "SED"== database.GetDeviceItem(devKey, "devType"):
-            checkBatt = GetTempVal(devKey, "GetNextBatteryAfter")
-            if checkBatt != None:
-                if datetime.now() > checkBatt:
-                    log.debug("Now = "+str(datetime.now())+" and checkBatt = "+str(checkBatt))
-                    return telegesis.ReadAttr(nwkId, ep, zcl.Cluster.PowerConfig, zcl.Attribute.Batt_Percentage) # Get Battery percentage
-        if zcl.Cluster.PollCtrl in inClstr:
-            if None == database.GetDeviceItem(devKey, "longPollInterval"):
-                return telegesis.ReadAttr(nwkId, ep, zcl.Cluster.PollCtrl, zcl.Attribute.LongPollIntervalQs) # Get Poll Control's Long poll interval
-        if zcl.Cluster.OTA in outClstr:
-            if None == database.GetDeviceItem(devKey, "firmwareVersion"):
-                return ("AT+READCATR:"+nwkId+","+ep+",0,"+zcl.Cluster.OTA+","+zcl.Attribute.firmwareVersion, "RESPATTR") # Get OTA's Version number as a string of hex digits
-        if msp_ota != None and msp_ota in outClstr:
-            if None == database.GetDeviceItem(devKey, "firmwareVersion"):
-                return ("AT+READMCATR:"+nwkId+","+ep+",0,"+config.Get(mfgId)+","+msp_ota+","+zcl.Attribute.firmwareVersion, "RESPMATTR") # Get OTA's Version number as a string of hex digits
-        reporting = database.GetDeviceItem(devKey, "reporting", "[]")
-        if zcl.Cluster.PowerConfig in binding and "SED"== database.GetDeviceItem(devKey, "devType"):
-            atCmd = CheckReporting(devKey, reporting, "batteryReporting", zcl.Cluster.PowerConfig, zcl.Attribute.Batt_Percentage, zcl.AttributeTypes.Uint8, "43200,43200,2")    # Default temperature reporting is "Every 12 hours"
-            if atCmd != None:
-                return atCmd
-        if zcl.Cluster.Temperature in binding:
-            atCmd = CheckReporting(devKey, reporting, "temperatureReporting", zcl.Cluster.Temperature, zcl.Attribute.Celsius, zcl.AttributeTypes.Uint16, "300,3600,100")    # Default temperature reporting is "between 5 mins and 1 hr, or +/- 1.00'C"
-            if atCmd != None:
-                return atCmd
-        if zcl.Cluster.SimpleMetering in binding:
-            atCmd = CheckReporting(devKey, reporting, "powerReporting", zcl.Cluster.SimpleMetering, zcl.Attribute.InstantaneousDemand, zcl.AttributeTypes.Sint24, "-1,-1,10")    # Default power reporting is "between 5 seconds and 15 minutes, or +/- 10W"
-            if atCmd != None:
-                return atCmd
-            atCmd = CheckReporting(devKey, reporting, "energyConsumedReporting", zcl.Cluster.SimpleMetering, zcl.Attribute.CurrentSummationDelivered, zcl.AttributeTypes.Uint48, "-1,-1,100")    # Default energy consumed reporting is "between 1 minute and 15 minutes, or +100Wh"
-            if atCmd != None:
-                return atCmd
-            atCmd = CheckReporting(devKey, reporting, "energyGeneratedReporting", zcl.Cluster.SimpleMetering, zcl.Attribute.CurrentSummationReceived, zcl.AttributeTypes.Uint48, "-1,-1,0")    # Default energy generated reporting is "never" (-1 as max)
-            if atCmd != None:
-                return atCmd
-        if zcl.Cluster.Thermostat in binding:
-            atCmd = CheckReporting(devKey, reporting, "targetTempReporting", zcl.Cluster.Thermostat, zcl.Attribute.OccupiedHeatingSetPoint, zcl.AttributeTypes.Sint16, "60,900,100")    # Default target temperature reporting is "between 1 minute and 15 minutes, or +/-1.00'C"
-            if atCmd != None:
-                return atCmd
+    if str(pendingBinding[devKey]) == "":  # Only try to add one binding per device at once
+        if zcl.Cluster.PollCtrl in inClstr and zcl.Cluster.PollCtrl not in binding:
+            return SetBinding(devKey, zcl.Cluster.PollCtrl, "01") # 01 is our endpoint we want CHECKIN messages to come to
+        if zcl.Cluster.OnOff in outClstr and zcl.Cluster.OnOff not in binding: # If device sends OnOff commands (eg a Button)
+            return SetBinding(devKey, zcl.Cluster.OnOff, "0A") # 0A is our endpoint we want messages to come to (so that we get TOGGLE, ON and OFF commands)
+        if zcl.Cluster.Temperature in inClstr and zcl.Cluster.Temperature not in binding:
+            return SetBinding(devKey, zcl.Cluster.Temperature, "01") # 01 is our endpoint we want Temperature reports to come to
+        if zcl.Cluster.SimpleMetering in inClstr and zcl.Cluster.SimpleMetering not in binding:
+            return SetBinding(devKey, zcl.Cluster.SimpleMetering, "01") # 01 is our endpoint we want SimpleMetering messages to come to
+        if zcl.Cluster.Thermostat in inClstr and zcl.Cluster.Thermostat not in binding:
+            return SetBinding(devKey, zcl.Cluster.Thermostat, "01") # 01 is our endpoint we want Thermostat messages to come to
+    if zcl.Cluster.IAS_Zone in inClstr:
+        if None == database.GetDeviceItem(devKey, "iasZoneType"):
+            return telegesis.ReadAttr(nwkId, ep, zcl.Cluster.IAS_Zone, zcl.Attribute.Zone_Type) # Get IAS device type (PIR or contact, etc.)
+    if zcl.Cluster.Basic in inClstr:
+        if None == database.GetDeviceItem(devKey, "modelName"):
+            return telegesis.ReadAttr(nwkId, ep, zcl.Cluster.Basic, zcl.Attribute.Model_Name) # Get Basic's Device Name
+        if None == database.GetDeviceItem(devKey, "manufName"):
+            return telegesis.ReadAttr(nwkId, ep, zcl.Cluster.Basic, zcl.Attribute.Manuf_Name) # Get Basic's Manufacturer Name
+    if zcl.Cluster.PowerConfig in inClstr and "SED"== database.GetDeviceItem(devKey, "devType"):
+        checkBatt = GetTempVal(devKey, "GetNextBatteryAfter")
+        if checkBatt != None:
+            if datetime.now() > checkBatt:
+                log.debug("Now = "+str(datetime.now())+" and checkBatt = "+str(checkBatt))
+                return telegesis.ReadAttr(nwkId, ep, zcl.Cluster.PowerConfig, zcl.Attribute.Batt_Percentage) # Get Battery percentage
+    if zcl.Cluster.PollCtrl in inClstr:
+        if None == database.GetDeviceItem(devKey, "longPollInterval"):
+            return telegesis.ReadAttr(nwkId, ep, zcl.Cluster.PollCtrl, zcl.Attribute.LongPollIntervalQs) # Get Poll Control's Long poll interval
+    if zcl.Cluster.OTA in outClstr:
+        if None == database.GetDeviceItem(devKey, "firmwareVersion"):
+            return ("AT+READCATR:"+nwkId+","+ep+",0,"+zcl.Cluster.OTA+","+zcl.Attribute.firmwareVersion, "RESPATTR") # Get OTA's Version number as a string of hex digits
+    if msp_ota != None and msp_ota in outClstr:
+        if None == database.GetDeviceItem(devKey, "firmwareVersion"):
+            return ("AT+READMCATR:"+nwkId+","+ep+",0,"+config.Get(mfgId)+","+msp_ota+","+zcl.Attribute.firmwareVersion, "RESPMATTR") # Get OTA's Version number as a string of hex digits
+    reporting = database.GetDeviceItem(devKey, "reporting", "[]")
+    if zcl.Cluster.PowerConfig in binding and "SED"== database.GetDeviceItem(devKey, "devType"):
+        atCmd = CheckReporting(devKey, reporting, "batteryReporting", zcl.Cluster.PowerConfig, zcl.Attribute.Batt_Percentage, zcl.AttributeTypes.Uint8, "43200,43200,2")    # Default temperature reporting is "Every 12 hours"
+        if atCmd != None: return atCmd
+    if zcl.Cluster.Temperature in binding:
+        atCmd = CheckReporting(devKey, reporting, "temperatureReporting", zcl.Cluster.Temperature, zcl.Attribute.Celsius, zcl.AttributeTypes.Uint16, "300,3600,100")    # Default temperature reporting is "between 5 mins and 1 hr, or +/- 1.00'C"
+        if atCmd != None: return atCmd
+    if zcl.Cluster.SimpleMetering in binding:
+        atCmd = CheckReporting(devKey, reporting, "powerReporting", zcl.Cluster.SimpleMetering, zcl.Attribute.InstantaneousDemand, zcl.AttributeTypes.Sint24, "-1,-1,10")    # Default power reporting is "between 5 seconds and 15 minutes, or +/- 10W"
+        if atCmd != None: return atCmd
+        atCmd = CheckReporting(devKey, reporting, "energyConsumedReporting", zcl.Cluster.SimpleMetering, zcl.Attribute.CurrentSummationDelivered, zcl.AttributeTypes.Uint48, "-1,-1,100")    # Default energy consumed reporting is "between 1 minute and 15 minutes, or +100Wh"
+        if atCmd != None: return atCmd
+        atCmd = CheckReporting(devKey, reporting, "energyGeneratedReporting", zcl.Cluster.SimpleMetering, zcl.Attribute.CurrentSummationReceived, zcl.AttributeTypes.Uint48, "-1,-1,0")    # Default energy generated reporting is "never" (-1 as max)
+        if atCmd != None: return atCmd
+    if zcl.Cluster.Thermostat in binding:
+        atCmd = CheckReporting(devKey, reporting, "targetTempReporting", zcl.Cluster.Thermostat, zcl.Attribute.OccupiedHeatingSetPoint, zcl.AttributeTypes.Sint16, "60,900,100")    # Default target temperature reporting is "between 1 minute and 15 minutes, or +/-1.00'C"
+        if atCmd != None: return atCmd
     if GetTempVal(devKey, "JustSentOnOff"):
         DelTempVal(devKey, "JustSentOnOff")
         return telegesis.ReadAttr(nwkId, ep, zcl.Cluster.OnOff, zcl.Attribute.OnOffState) # Get OnOff state after sending toggle
@@ -551,7 +539,7 @@ def IsListening(devKey):
     if type == "SED":
         pollFreq = database.GetDeviceItem(devKey, "longPollInterval")   # See if the device is a fast poller
         if pollFreq != None:
-            if float(pollFreq) < 6.0:
+            if float(pollFreq) < 7.6:
                 return True
         pollTime = GetTempVal(devKey, "PollingUntil")
         if pollTime != None:
@@ -568,7 +556,8 @@ def SetBinding(devKey, cluster, ourEp):
     eui = database.GetDeviceItem(devKey, "eui64")
     if None != ep and None != eui: 
         pendingBinding[devKey] = cluster
-        pendingBindingTimeoutS[devKey] = 320 # Allow just over 5 minutes, in case device misses the CheckIn.  Should probably get LongPollInterval and add a bit to that
+        pollFreq = float(database.GetDeviceItem(devKey, "longPollInterval", 0))   # See if the device is a fast poller
+        pendingBindingTimeoutS[devKey] = pollFreq+10 # Allow LongPollInterval and add 10 seconds to that.  Or just 10 seconds if an FFD
         return ("AT+BIND:"+nwkId+",3,"+eui+","+ep+","+cluster+","+database.GetDeviceItem(0, "eui64")+","+ourEp, "Bind")
 
 def GetKeyFromIndex(idx):
@@ -587,8 +576,7 @@ def CheckReporting(devKey, reporting, field, cluster, attrId, attrType, defVal):
         pendingRptAttrId = attrId
         devRpt = database.GetDeviceItem(devKey, field, defVal)
         rptList = devRpt.split(",") # Explode the CSV line to a list of min, max, delta
-        if "-1" == rptList[0]:
-            return  # Don't configure this attribute for reporting if min==-1 
+        if "-1" == rptList[0]: return  # Don't configure this attribute for reporting if min==-1 
         log.debug("Update device reporting for "+database.GetDeviceItem(devKey, "userName")+"'s "+field)
         log.debug("Reporting was "+reporting+" which didn't include " + rpt)
         if attrType == zcl.AttributeTypes.Uint8 or attrType == zcl.AttributeTypes.Sint8:
