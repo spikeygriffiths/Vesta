@@ -39,13 +39,13 @@ def EventHandler(eventId, eventArg):
             variables.Set("windSpeed", str(windSpeed), True)
             rain = w.get_rain()
             if rain != {}:
-                rain = rain["3h"]   # Rain volume in last 3 hours.  Unknown units, may be ml(?)
+                rain = 1    # was rain["3h"]   # Rain volume in last 3 hours.  Unknown units, may be ml(?)
             else:
                 rain = 0    # No rain
             variables.Set("rain", str(rain), True)
             snow = w.get_snow()
             if snow != {}:
-                snow = snow["3h"]   # Snow volume in last 3 hours.  Unknown units, may be ml(?)
+                snow = 1    # was snow["3h"]   # Snow volume in last 3 hours.  Unknown units, may be ml(?)
             else:
                 snow = 0    # No snow
             variables.Set("snow", str(snow), True)
