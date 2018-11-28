@@ -36,13 +36,13 @@ def email(subject, text, html):
             s.sendmail(addrFrom, addrTo, msg.as_string())
             s.close()
             #s.quit()
-        except:
-            log.fault("SMTP failed to send")
-            log.debug("Sending to:" + addrTo + ", and from:" + addrFrom)
-            log.debug("smtpServer:" + smtpServer + ", port:" + str(smtpPort))
-            log.debug("smtpUser:" + smtpUser + ", smtpPass:" + smtpPass)
+        except Exception as e:
+            log.fault("SMTP:Failed to send with exception Code: {c}, Message, {m}".format(c = type(e).__name__, m = str(e)))
+            log.debug("SMTP:Sending to:" + addrTo + ", from:" + addrFrom)
+            log.debug("SMTP:Server:" + smtpServer + ", port:" + str(smtpPort))
+            log.debug("SMTP:User:" + smtpUser + ", smtpPass:" + smtpPass)
             if html != None:
-                log.debug("HTML:" + html)
-            log.debug("Text:" + text)
+                log.debug("SMTP:HTML:" + html)
+            log.debug("SMTP:Text:" + text)
     else:
-        log.fault("Need smtpUser, smtpPass, smtpServer and emailAddress in config.txt")
+        log.fault("SMTP:Need smtpUser, smtpPass, smtpServer and emailAddress in config.txt")

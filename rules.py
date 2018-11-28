@@ -4,7 +4,6 @@ from datetime import datetime
 from datetime import timedelta
 from pathlib import Path
 from subprocess import call
-import sendmail
 # App-specific Python modules
 import events
 import log
@@ -16,6 +15,7 @@ import iottime
 import database
 import config
 import telegesis
+import sendmail
 import synopsis
 import schedule
 
@@ -219,6 +219,7 @@ def Action(actList, ruleId):
         # Could have other events here...
     elif action == "synopsis":  # Was status
         emailAddress = config.Get("emailAddress")
+        log.debug("About to send synopsis to "+emailAddress)
         if emailAddress != None:
             synopsis.BuildPage()  # Create synopsis page on demand
             with open("synopsis.txt", "r") as fh:   # Plain text of email
@@ -227,9 +228,9 @@ def Action(actList, ruleId):
             with open("synopsis.html", "r") as fh:    # HTML of email
                 emailHtml = fh.readlines()
             html = ''.join(emailHtml)
-            sendmail.email("Vesta Status", text, html)
+            sendmail.email("Vesta Status", text, html) # See sendmail.py
         else:
-            synopsis.problem("NoEmail", "No emailAddress entry in config, needed to send email")
+            synopsis.problem("NoEmail", "No emailAddress entry in config, needed to send synopsis")
     elif action == "email": # All args are body of the text.  Fixed subject and email address
         emailAddress = config.Get("emailAddress")
         if emailAddress != None:
@@ -238,7 +239,9 @@ def Action(actList, ruleId):
                 emailBody.append(item)
             plainText = " ".join(emailBody)
             log.debug("Sending email with '"+plainText+"'")
-            sendmail.email("Vesta Alert!", plainText, None)
+            result = sendmail.email("Vesta Alert!", plainText, None)
+            if result != 0:
+               synopsis.problem("Email", "sendmail.email() failed with code "+str(result)+" when trying to send:"+plainText)
         else:
             synopsis.problem("NoEmail", "No emailAddress entry in config")
     elif action == "override": # Syntax is "Override <targetDevice> <targetDegC> <durationSecs>"
