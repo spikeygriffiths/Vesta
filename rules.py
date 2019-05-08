@@ -179,9 +179,14 @@ def isNumber(s):
 
 def GetConditionResult(test, condition):
     sep = condition.index(test) # Assume this has already been shown to return a valid answer
-    varName = condition[:sep] # Variable must be on the left of the expression
     tstVal = condition[sep+len(test):] # Simple value must be on right
-    varVal = variables.Get(varName)
+    varName = condition[:sep] # Variable must be on the left of the expression
+    if "-" in varName:
+        variables.GetVal(varName, "-")
+    elif "+" in varName:
+        variables.GetVal(varName, "+")
+    else:
+        varVal = variables.Get(varName)
     if varVal != None:
         if isNumber(tstVal):
             varVal = str(varVal)

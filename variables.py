@@ -46,6 +46,13 @@ def Get(name):  # Get value associated with name
             return database.GetLatestLoggedValue(devKey, postName) # To get latest temperature, power, etc.        
     return database.GetVarVal(name)
 
+def GetVal(name, sign): # Get value, modified by having another number added or subtracted
+    signPos = name.find(sign)
+    varName = name[:signPos]
+    modifier = name[signPos+1:]
+    varVal = Get(varName)
+    return eval(varVal + sign + modifier) # Expect to return value of "sunset - 1800" or similar
+
 def GetTime(name):  # Get time when value associated with name was last updated
     return database.GetVarTime(name)
 

@@ -337,7 +337,11 @@ def GetLatestLoggedItem(devKey, item):
 
 def GetLastNLoggedItems(devKey, item, num):
     global curs
-    curs.execute("SELECT value, timestamp FROM "+item+" WHERE devKey="+str(devKey)+" ORDER BY timestamp DESC LIMIT "+str(num))  # Get latest specified logged items
+    try:
+        curs.execute("SELECT value, timestamp FROM "+item+" WHERE devKey="+str(devKey)+" ORDER BY timestamp DESC LIMIT "+str(num))  # Get latest specified logged items
+    except:
+        synopsis.problem("Database", "No such item "+item)
+        return None
     if num == 1:
         rows = curs.fetchone()
     else:

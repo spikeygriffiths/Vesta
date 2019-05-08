@@ -47,6 +47,19 @@ function GetDevKey($index, $db)
     return null;
 }
 
+function GetDevKeyFromItem($item, $value, $db)
+{
+    $result = $db->query("SELECT devKey FROM Devices WHERE ".$item."=\"".$value."\" COLLATE NOCASE");
+    if ($result != null) {
+        $result->setFetchMode(PDO::FETCH_ASSOC);
+        $fetch = $result->fetch();
+        if ($fetch != null) {
+            return $fetch["devKey"];
+        }
+    }
+    return null;
+}
+
 function GetDevItem($item, $devKey, $db)
 {
     $result = $db->query("SELECT ".$item." FROM Devices WHERE devKey=".$devKey);
@@ -67,9 +80,6 @@ function GetTimedLoggedItem($item, $devKey, $time, $db) # For Battery, Signal, P
         $result->setFetchMode(PDO::FETCH_ASSOC);
         $fetch = $result->fetch();
         return $fetch;  # Return value and time
-        #if ($fetch != null) {
-        #    return $fetch['value'];
-        #}
     }
     return null;
 }
@@ -81,9 +91,6 @@ function GetLatestLoggedItem($item, $devKey, $db)
         $result->setFetchMode(PDO::FETCH_ASSOC);
         $fetch = $result->fetch();
         return $fetch;  # Return value and time
-        #if ($fetch != null) {
-        #    return $fetch['value'];
-        #}
     }
     return null;
 }
