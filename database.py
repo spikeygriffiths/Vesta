@@ -41,6 +41,7 @@ def EventHandler(eventId, eventArg):
         GarbageCollect("EnergyConsumedWh")
         GarbageCollect("EnergyGeneratedWh")
         #GarbageCollect("Events") # As above for the same HallLight (devKey 1)
+        db.commit() # Flush events to disk prior to defragmenting
         Defragment()    # Compact the database now that we've flushed the old items
         flushDB = True
     if eventId == events.ids.SHUTDOWN:
@@ -527,7 +528,7 @@ def GetConfig(item):
 
 def SetConfig(item, value):
     global curs, flushDB
-    curs.execute("INSERT OR REPLACE INTO Config VALUES(\""+item+"\",\""+value+"\"")
+    curs.execute("INSERT OR REPLACE INTO Config VALUES(\""+item+"\",\""+value+"\")")
     flushDB = True # Batch up the commits
 
 # === AppState ===
