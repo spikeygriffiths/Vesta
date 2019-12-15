@@ -21,7 +21,7 @@ def EventHandler(eventId, eventArg):
     if eventId == events.ids.HOURS: # Get weather once/hour
         if owm == None:
             apiKey = config.Get("owmApiKey")
-            location =  config.Get("owmLocation")
+            #location =  config.Get("owmLocation") # pyowm.OWM() call crashes with AttributeError: module 'queue' has no attribute 'Queue'
         if (apiKey != None and location != None):
             owm = pyowm.OWM(apiKey) # My API key
             try:
