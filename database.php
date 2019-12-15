@@ -2,17 +2,29 @@
 // database.php
 session_start();
 
+function GetDbFileName()
+{
+    return "/home/pi/Vesta/vesta.db";
+}
+
 function DatabaseInit()
 {
-    $dir = "sqlite:/home/pi/Vesta/vesta.db";
-    $db = new PDO($dir) or die("Cannot open database");
-    return $db;
+    if (file_exists(GetDbFileName())) {
+        $dir = "sqlite:".GetDbFileName();
+        try {
+            $db = new PDO($dir);
+        } catch (PDOException $e) {
+            echo 'Connection to \'',$dir,'\' failed with ' . $e->getMessage();
+        }
+        return $db;
+    }
+    echo "Can't find database at ", GetDbFileName(), "<br>Ensure permissions on holding directory are chmod 755<br>";
+    die("No database");
 }
 
 function GetDbFileSize()
 {
-    $dir = "/home/pi/Vesta/vesta.db";
-    return filesize($dir);
+    return filesize(GetDbFileName());
 }
 
 function GetCount($db, $table, $qualifier = "")

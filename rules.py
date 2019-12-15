@@ -224,8 +224,8 @@ def Action(actList, ruleId):
         # Could have other events here...
     elif action == "synopsis":  # Was status
         emailAddress = config.Get("emailAddress")
-        log.debug("About to send synopsis to "+emailAddress)
         if emailAddress != None:
+            log.debug("About to send synopsis to "+emailAddress)
             synopsis.BuildPage()  # Create synopsis page on demand
             with open("synopsis.txt", "r") as fh:   # Plain text of email
                 emailText = fh.readlines()

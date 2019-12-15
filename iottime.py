@@ -127,6 +127,8 @@ def SetSunTimes():
 def Get(item):
     if ":" not in item: # If named item rather than HH:MM timestamp
         item = variables.Get(item)    # Get time of day from variable (eg sunrise, etc.)
+    if item == None:
+        item = "00:00" # Null items become midnight
     return datetime.strptime(item, "%H:%M")
 
 def CheckTimedRule(name, now):

@@ -429,6 +429,9 @@ def DelTempVal(devKey, name):
 
 def NoteMsgDetails(devKey, arg):
     devIndex = GetIndexFromKey(devKey)
+    if devIndex == None:
+        synopsis.problem("Unknown device:",str(devKey))
+        return
     if arg[0] == expRsp[devIndex]:
         expRsp[devIndex] = None   # Note that we've found the expected response now, so we're now clear to send
     presence.Set(devKey) # Note presence, and update radio quality
@@ -567,6 +570,8 @@ def GetKeyFromIndex(idx):
 
 def GetIndexFromKey(key):
     #log.debug("Looking up index for Key "+str(key))
+    if key == None:
+        return None
     return devDict[key]
 
 def CheckReporting(devKey, reporting, field, cluster, attrId, attrType, defVal):
