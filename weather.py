@@ -22,6 +22,9 @@ def EventHandler(eventId, eventArg):
         if owm == None:
             apiKey = config.Get("owmApiKey")
             #location =  config.Get("owmLocation") # pyowm.OWM() call crashes with AttributeError: module 'queue' has no attribute 'Queue'
+            variables.Set("cloudCover", "30", True) # Default to 30% cloudcover to give half an hour either side of sunrise & sunset for dark=true
+            variables.Set("rain", "0", True) # Assume no rain by default
+            variables.Set("snow", "0", True) # Assume no snow by default
         if (apiKey != None and location != None):
             owm = pyowm.OWM(apiKey) # My API key
             try:
