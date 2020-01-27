@@ -7,6 +7,7 @@ import devices
 import rules
 import commands
 import variables
+import wifiServer
 import iottime
 import database
 import weather
@@ -47,6 +48,7 @@ def Issue(eventId, eventArg=0):
     iottime.EventHandler(eventId, eventArg)
     rules.EventHandler(eventId, eventArg)
     commands.EventHandler(eventId, eventArg)
+    wifiServer.EventHandler(eventId, eventArg)
     weather.EventHandler(eventId, eventArg)
     presence.EventHandler(eventId, eventArg)
     schedule.EventHandler(eventId, eventArg)
