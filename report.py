@@ -39,10 +39,7 @@ def GetTimeInWords():
     return "Can't get here!"
 
 def MakeText():
-    #global forecastPeriod
-    #global cloudText, symSym, severestSymbol, severestGroup, severestSub
-    #global maxTemp, minTemp
-    #global maxWind, windText, windDir
+    if weather.forecastPeriod=="": return None;
     weatherDict = dict()
     weatherDict["period"] = weather.forecastPeriod
     weatherDict["icon"] = str(weather.symSym)[4:]

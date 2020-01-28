@@ -22,6 +22,7 @@ def EventHandler(eventId, eventArg):
             return # Ignore any error, since that just means the client hasn't contacted us this time
         else:
             dictText = report.MakeText() # Keep time up to date
-            print("WiFi sending:", dictText)
-            client.send(bytes(dictText, "utf-8"))
+            if dictText:
+                print("WiFi sending:", dictText)
+                client.send(bytes(dictText, "utf-8"))
             client.close()

@@ -15,9 +15,15 @@ import config
 import synopsis
 import database
 
+dayStart = datetime.strptime("08:00:00", "%H:%M:%S")
+dayEnd = datetime.strptime("16:00:00", "%H:%M:%S")
+eveStart = dayEnd  #datetime.strptime("16:00:00", "%H:%M:%S")
+eveEnd = datetime.strptime("23:00:00", "%H:%M:%S")
+
 def EventHandler(eventId, eventArg):
-    global updateWeather
+    global updateWeather, forecastPeriod
     if events.ids.INIT == eventId:
+        forecastPeriod = "" # Until we know better
         updateWeather = time.time() # Update weather immediately after start
     if events.ids.SECONDS == eventId:
         if time.time() >= updateWeather:
@@ -57,15 +63,9 @@ def GetWeatherNow():
                         #rain = 0    # No rain
                         #variables.Set("rain", str(rain), True)
             events.Issue(events.ids.WEATHER)    # Tell system that we have a new weather report
-        except Exception as inst:
-            database.NewEvent(0, "Weather Feed failed with error "+inst)
-            synopsis.problem("Weather", "Feed failed @ " + str(datetime.now())+" with error "+inst)
-
-
-dayStart = datetime.strptime("08:00:00", "%H:%M:%S")
-dayEnd = datetime.strptime("16:00:00", "%H:%M:%S")
-eveStart = dayEnd  #datetime.strptime("16:00:00", "%H:%M:%S")
-eveEnd = datetime.strptime("23:00:00", "%H:%M:%S")
+        except Exception:
+            synopsis.problem("Weather", "Feed failed @ " + str(datetime.now()))
+            database.NewEvent(0, "Weather Feed failed")
 
 class Sym(Enum):
     Sun = auto()
