@@ -46,7 +46,8 @@ def EventHandler(eventId, eventArg):
                     # else: No scheduled target
                 # else: No HeatingSchedule
             # else: Despite having a name, there's no associated device
-        # else: Ignore schedules and overrides if no named heating device
+        else: # Ignore schedules and overrides if no named heating device
+            synopsis.problem("NoHeatingDevice", "No HeatingDevice entry in config, needed to resume after override")
 
 def Override(devKey, targetC, timeSecs):
     global overrideTimeoutMins, currentTargetTemp
