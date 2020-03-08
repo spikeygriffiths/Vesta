@@ -4,6 +4,12 @@ import events
 import weather
 import time
 from datetime import datetime
+import re # Regular Expression library for re.findall() to get targetTemp
+
+import config # So that we can read power monitor
+import devices
+import database
+import log
 
 def GetTimeInWords():
     numbers = ['Twelve', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve']
@@ -55,4 +61,29 @@ def MakeText():
     weatherDict["dayOfWeekText"] = str(now.strftime("%A"))
     weatherDict["dayOfMonthText"] = str(int(now.strftime("%d")))# Use int() to remove leading zero
     weatherDict["monthText"] = str(now.strftime("%B"))
-    return str(weatherDict)  # Ready for sending via socket to client
+    powerMonitorName = config.Get("PowerMonitor") # House power monitoring device
+    if powerMonitorName != None:
+        devKey = devices.FindDev(powerMonitorName)
+        if devKey != None:
+            powerW = database.GetLatestLoggedItem(devKey, "PowerReadingW")
+            weatherDict["powerNow"] = str(powerW[0])
+            energyWh = database.GetLatestLoggedItem(devKey, "EnergyConsumedWh")
+            weatherDict["energyToday"] = str(energyWh[0])
+    tempMonitorName = config.Get("HouseTempDevice") # House temperature monitoring device
+    if tempMonitorName != None:
+        devKey = devices.FindDev(tempMonitorName)
+        if devKey != None:
+            houseTemp = database.GetLatestLoggedItem(devKey, "TemperatureCelsius")
+            weatherDict["houseTemp"] = str(houseTemp[0])
+    heatingName = config.Get("HeatingDevice")
+    if heatingName != None:
+        devKey = devices.FindDev(heatingName)
+        if devKey != None:
+            boilerEvent = database.GetLatestEvent(devKey) # Hope this is scheduled temperature!
+            houseTarget = re.findall('\d+', boilerEvent)[0] # Just get temperature value
+            #if houseTarget.find("Scheduled ") > -1:
+            #    houseTarget = houseTarget[10:] # Skip over "Scheduled " to get to just the temperature
+            weatherDict["TargetTemp"] = str(houseTarget)
+    log.debug(str(weatherDict))
+    return (str(weatherDict))
+

@@ -504,7 +504,7 @@ def RemoveDevice(devKey):
     curs.execute("DELETE FROM EnergyGeneratedWh WHERE devKey="+str(devKey))
     curs.execute("DELETE FROM Events WHERE devKey="+str(devKey))
     curs.execute("DELETE FROM Devices WHERE devKey="+str(devKey))
-    Defragment()    # Compact the database now that we've removed everything
+    #Defragment()    # Compact the database now that we've removed everything.  Crashes - not allowed to defragment here!
     db.commit() # Flush db to disk immediately
 
 # === Rules ===
