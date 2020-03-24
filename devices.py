@@ -31,6 +31,8 @@ ephemera = [] # Don't bother saving this
 expRsp = [] # List of expected responses for each device
 expRspTimeoutS = array('f',[]) # Array of timeouts if we're expecting a response, one per device
 msp_ota = None  # Until filled in from config
+oldClampTime = None # Illegal time until we get our first reading
+clampWattSeconds = 0 # No energy consumed at the start
 
 def EventHandler(eventId, eventArg):
     global ephemera, globalDevKey, pendingBinding, pendingBindingTimeoutS, pendingRptAttrId, msp_ota
@@ -45,6 +47,9 @@ def EventHandler(eventId, eventArg):
                 SetTempVal(devKey, "GetNextBatteryAfter", datetime.now())    # Ask for battery shortly after startup
     if eventId == events.ids.INIT:
         msp_ota = config.Get("MSP_OTA")
+    if eventId == events.ids.NEWDAY:
+        # ToDo: Store each day's energy somewhere - export to a CSV file?
+        clampWattSeconds = 0 # Every midnight, clear down previous day's energy use
     if eventId == events.ids.DEVICE_ANNOUNCE:
         if len(eventArg) >= 3:
             eui64 = eventArg[1]
@@ -300,7 +305,7 @@ def FindDev(nwkId):
     return GetKey(nwkId)   # Try nwkId if no name match
 
 def SetAttrVal(devKey, clstrId, attrId, value):
-    global msp_ota
+    global msp_ota, oldClampTime, clampWattSeconds
     if clstrId == zcl.Cluster.PowerConfig and attrId == zcl.Attribute.Batt_Percentage:
         SetTempVal(devKey, "GetNextBatteryAfter", datetime.now()+timedelta(seconds=86400))    # Ask for battery every day
         if value != "FF":
@@ -354,6 +359,11 @@ def SetAttrVal(devKey, clstrId, attrId, value):
             varVal = int(value, 16) # Arrives in Watts, so store it in the same way
             inClstr = database.GetDeviceItem(devKey, "inClusters") # Assume we have a list of clusters if we get this far
             if zcl.Cluster.OnOff not in inClstr:    # Thus device is powerclamp (has simplemetering but no OnOff)
+                newClampTime = datetime.now() # Assumes only one clamp!
+                if oldClampTime: # Must be a global
+                    elapsedClampTime = newClampTime - oldClampTime
+                    clampWattSeconds = clampWattSeconds + (elapsedClampTime.seconds * varVal) # Handy global for keeping track of clamp energy consumption 
+                oldClampTime = newClampTime # Ready for next power reading
                 database.UpdateLoggedItem(devKey, "State", str(varVal)+"W") # So that we can access it from the rules later, or show it on the web
             database.UpdateLoggedItem(devKey, "PowerReadingW", varVal)  # Just store latest reading
     if clstrId == zcl.Cluster.SimpleMetering and attrId == zcl.Attribute.CurrentSummationDelivered:
@@ -408,7 +418,7 @@ def SetTempVal(devKey, name, value):
         if item[0] == name:
             ephemera[devIndex].remove(item) # Remove old tuple if necessary
     ephemera[devIndex].append((name, value)) # Add new one regardless
-    
+
 def GetTempVal(devKey, name):
     global ephemera
     devIndex = GetIndexFromKey(devKey)

@@ -7,7 +7,7 @@ from datetime import datetime
 import re # Regular Expression library for re.findall() to get targetTemp
 
 import config # So that we can read power monitor
-import devices
+import devices # So that we can get devices.clampWattSeconds
 import database
 import log
 
@@ -67,8 +67,10 @@ def MakeText():
         if devKey != None:
             powerW = database.GetLatestLoggedItem(devKey, "PowerReadingW")
             weatherDict["powerNow"] = str(powerW[0])
-            energyWh = database.GetLatestLoggedItem(devKey, "EnergyConsumedWh")
-            weatherDict["energyToday"] = str(energyWh[0])
+            #energyWh = database.GetLatestLoggedItem(devKey, "EnergyConsumedWh")
+            #weatherDict["energyToday"] = str(energyWh[0])
+            energyWh = int(devices.clampWattSeconds / 3600)
+            weatherDict["energyToday"] = str(energyWh)
     tempMonitorName = config.Get("HouseTempDevice") # House temperature monitoring device
     if tempMonitorName != None:
         devKey = devices.FindDev(tempMonitorName)
