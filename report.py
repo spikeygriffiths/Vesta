@@ -44,48 +44,56 @@ def GetTimeInWords():
         return "Five to " + hourTxt
     return "Can't get here!"
 
-def MakeText():
+def MakeText(id):
     if weather.forecastPeriod=="": return None;
-    weatherDict = dict()
-    weatherDict["period"] = weather.forecastPeriod
-    weatherDict["icon"] = str(weather.symSym)[4:]
-    weatherDict["cloudText"] = weather.cloudText
-    weatherDict["maxTemp"] = str(round(weather.maxTemp))+"C"
-    weatherDict["minTemp"] = str(round(weather.minTemp))+"C"
-    weatherDict["windSpeed"] = str(round(weather.maxWind))
-    weatherDict["windDir"] = str(weather.windDir)
-    weatherDict["windText"] = weather.windText
+    reportDict = dict()
+    reportDict["target"] = id
+    minutes = datetime.now().minute
+    #if minutes % 2 == 0:
+    #    reportDict["display"] = "off"
+    #else:
+    reportDict["display"] = "on" # For now at least
+    reportDict["period"] = weather.forecastPeriod
+    reportDict["icon"] = str(weather.symSym)[4:]
+    reportDict["cloudText"] = weather.cloudText
+    reportDict["maxTemp"] = str(round(weather.maxTemp))+"C"
+    reportDict["minTemp"] = str(round(weather.minTemp))+"C"
+    reportDict["windSpeed"] = str(round(weather.maxWind))
+    reportDict["windDir"] = str(weather.windDir)
+    reportDict["windText"] = weather.windText
     now = datetime.now()
-    weatherDict["timeDigits"] = str(now.strftime("%H:%M"))
-    weatherDict["timeText"] = GetTimeInWords()
-    weatherDict["dayOfWeekText"] = str(now.strftime("%A"))
-    weatherDict["dayOfMonthText"] = str(int(now.strftime("%d")))# Use int() to remove leading zero
-    weatherDict["monthText"] = str(now.strftime("%B"))
+    reportDict["timeDigits"] = str(now.strftime("%H:%M"))
+    reportDict["timeText"] = GetTimeInWords()
+    reportDict["dayOfWeekText"] = str(now.strftime("%A"))
+    reportDict["dayOfMonthText"] = str(int(now.strftime("%d"))) # Use int() to remove leading zero
+    reportDict["monthText"] = str(now.strftime("%B"))
     powerMonitorName = config.Get("PowerMonitor") # House power monitoring device
     if powerMonitorName != None:
         devKey = devices.FindDev(powerMonitorName)
         if devKey != None:
             powerW = database.GetLatestLoggedItem(devKey, "PowerReadingW")
-            weatherDict["powerNow"] = str(powerW[0])
-            #energyWh = database.GetLatestLoggedItem(devKey, "EnergyConsumedWh")
-            #weatherDict["energyToday"] = str(energyWh[0])
+            reportDict["powerNow"] = str(powerW[0])
             energyWh = int(devices.clampWattSeconds / 3600)
-            weatherDict["energyToday"] = str(energyWh)
+            reportDict["energyToday"] = str(energyWh)
     tempMonitorName = config.Get("HouseTempDevice") # House temperature monitoring device
     if tempMonitorName != None:
         devKey = devices.FindDev(tempMonitorName)
         if devKey != None:
             houseTemp = database.GetLatestLoggedItem(devKey, "TemperatureCelsius")
-            weatherDict["houseTemp"] = str(houseTemp[0])
+            reportDict["houseTemp"] = str(houseTemp[0])
     heatingName = config.Get("HeatingDevice")
     if heatingName != None:
         devKey = devices.FindDev(heatingName)
         if devKey != None:
             boilerEvent = database.GetLatestEvent(devKey) # Hope this is scheduled temperature!
-            houseTarget = re.findall('\d+', boilerEvent)[0] # Just get temperature value
-            #if houseTarget.find("Scheduled ") > -1:
-            #    houseTarget = houseTarget[10:] # Skip over "Scheduled " to get to just the temperature
-            weatherDict["TargetTemp"] = str(houseTarget)
-    log.debug(str(weatherDict))
-    return (str(weatherDict))
+            houseTarget = "Unknown"
+            if boilerEvent != None:
+                try:
+                    houseTarget = str(re.findall('\d+', boilerEvent)[0]) # Just get temperature value
+                except:
+                    continue # And just say "Unknown"
+            else:
+            reportDict["TargetTemp"] = houseTarget
+    #log.debug("ReportDict for:" +id + "=" + str(reportDict)) # Already reported in WiFiServer.py
+    return (str(reportDict))
 

@@ -35,7 +35,7 @@ oldClampTime = None # Illegal time until we get our first reading
 clampWattSeconds = 0 # No energy consumed at the start
 
 def EventHandler(eventId, eventArg):
-    global ephemera, globalDevKey, pendingBinding, pendingBindingTimeoutS, pendingRptAttrId, msp_ota
+    global ephemera, globalDevKey, pendingBinding, pendingBindingTimeoutS, pendingRptAttrId, msp_ota, clampWattSeconds
     if eventId == events.ids.PREINIT:
         keyList = database.GetAllDevKeys()  # Get a list of all the device identifiers from the database
         for i in range(100): # Fudge to ensure we have enough pendingBinding entries
