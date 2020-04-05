@@ -92,8 +92,7 @@ def MakeText(id):
                     houseTarget = str(re.findall('\d+', boilerEvent)[0]) # Just get temperature value
                 except:
                     log.debug("Weird boilerEvent value") # And just say "Unknown"
-            else:
-                reportDict["TargetTemp"] = houseTarget
+            reportDict["TargetTemp"] = houseTarget
     #log.debug("ReportDict for:" +id + "=" + str(reportDict)) # Already reported in WiFiServer.py
     return (str(reportDict))
 
