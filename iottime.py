@@ -85,8 +85,6 @@ def GetDark():
     cloudCover = variables.Get("cloudCover")
     if cloudCover != None:
         extraTime = int(cloudCover)    # Just take percentage cloudiness as minutes
-        extraTime = extraTime + float(variables.Get("rain"))   # Any rain just makes it even darker (Measured in mm/3hr)
-        extraTime = extraTime + float(variables.Get("snow"))   # Any snow just makes it even darker (Measured in mm/3hr)
     else:
         extraTime = 0   # No weather, so assume cloudless and dry
     morning = sunrise + timedelta(minutes=extraTime)    # The more cloud, the later it gets light in the morning

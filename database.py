@@ -567,6 +567,14 @@ def GetVarTime(name):
         return rows[0]
     return None
 
+def GetOldestVar():
+    global curs
+    curs.execute("SELECT name FROM Variables ORDER BY timestamp ASC LIMIT 1")
+    rows = curs.fetchone()
+    if rows != None:
+        return rows[0]
+    return None
+
 def SetVar(name, val):
     global curs, flushDB
     if GetVarVal(name) == None:

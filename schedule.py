@@ -46,6 +46,7 @@ def EventHandler(eventId, eventArg):
                     # else: No scheduled target
                 # else: No HeatingSchedule
             # else: Despite having a name, there's no associated device
+            variables.Set("TargetTemp", str(currentTargetTemp))
         else: # Ignore schedules and overrides if no named heating device
             synopsis.problem("NoHeatingDevice", "No HeatingDevice entry in config, needed to resume after override")
 

@@ -9,6 +9,14 @@ import database
 
 def EventHandler(eventId, eventArg):
     global varList
+    if eventId == events.ids.NEWDAY:
+        oldest = database.GetOldestVar()
+        if oldest:
+            log.debug("Oldest variable is "+oldest)
+            log.debug(oldest+"'s date is "+GetTime(oldest))
+            if (datetime.now() - datetime.strptime(GetTime(oldest), "%Y-%m-%d %H:%M:%S")).days > 30:
+                log.debug("Removing "+oldest+" since it's more than 30 days old")
+                Del(oldest)
     if eventId == events.ids.SECONDS:
         away = database.GetAppState("away")
         if away == None:
@@ -33,7 +41,7 @@ def Set(name, value, force=False):
 
 def Del(name):
     database.DelVar(name)
-    
+
 def Get(name):  # Get value associated with name
     if name.lower() == "rand":
         return random.random() * 100    # Could return random.randrange(0,101) to give an integer percentage

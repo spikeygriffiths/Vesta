@@ -32,7 +32,6 @@ expRsp = [] # List of expected responses for each device
 expRspTimeoutS = array('f',[]) # Array of timeouts if we're expecting a response, one per device
 msp_ota = None  # Until filled in from config
 oldClampTime = None # Illegal time until we get our first reading
-clampWattSeconds = 0 # No energy consumed at the start
 
 def EventHandler(eventId, eventArg):
     global ephemera, globalDevKey, pendingBinding, pendingBindingTimeoutS, pendingRptAttrId, msp_ota, clampWattSeconds
@@ -47,8 +46,13 @@ def EventHandler(eventId, eventArg):
                 SetTempVal(devKey, "GetNextBatteryAfter", datetime.now())    # Ask for battery shortly after startup
     if eventId == events.ids.INIT:
         msp_ota = config.Get("MSP_OTA")
+        energyToday_kWh = variables.Get("EnergyToday_kWh")
+        if energyToday_kWh:
+            clampWattSeconds = float(energyToday_kWh) * 3600000  # Try and recover energy used - assumes we restart soon after stopping, and even then we'll lose the low-order values
     if eventId == events.ids.NEWDAY:
         # ToDo: Store each day's energy somewhere - export to a CSV file?
+        energyToday_kWh = '%.1f' % (clampWattSeconds / 3600000) # Get kWh used to 1 decimal place
+        variables.Set("energyYesterday_kWh", energyToday_kWh)
         clampWattSeconds = 0 # Every midnight, clear down previous day's energy use
     if eventId == events.ids.DEVICE_ANNOUNCE:
         if len(eventArg) >= 3:
@@ -362,7 +366,9 @@ def SetAttrVal(devKey, clstrId, attrId, value):
                 newClampTime = datetime.now() # Assumes only one clamp!
                 if oldClampTime: # Must be a global
                     elapsedClampTime = newClampTime - oldClampTime
-                    clampWattSeconds = clampWattSeconds + (elapsedClampTime.seconds * varVal) # Handy global for keeping track of clamp energy consumption 
+                    clampWattSeconds = clampWattSeconds + (elapsedClampTime.seconds * varVal) # Handy global for keeping track of clamp energy consumption
+                    energyToday_kWh = '%.1f' % (clampWattSeconds / 3600000) # Get kWh used to 1 decimal place
+                    variables.Set("energyToday_kWh", energyToday_kWh)
                 oldClampTime = newClampTime # Ready for next power reading
                 database.UpdateLoggedItem(devKey, "State", str(varVal)+"W") # So that we can access it from the rules later, or show it on the web
             database.UpdateLoggedItem(devKey, "PowerReadingW", varVal)  # Just store latest reading

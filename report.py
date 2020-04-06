@@ -9,6 +9,7 @@ import re # Regular Expression library for re.findall() to get targetTemp
 import config # So that we can read power monitor
 import devices # So that we can get devices.clampWattSeconds
 import database
+import variables
 import log
 
 def GetTimeInWords():
@@ -73,26 +74,18 @@ def MakeText(id):
         if devKey != None:
             powerW = database.GetLatestLoggedItem(devKey, "PowerReadingW")
             reportDict["powerNow"] = str(powerW[0])
-            energyWh = int(devices.clampWattSeconds / 3600)
-            reportDict["energyToday"] = str(energyWh)
+    energyToday = variables.Get("energyToday_kWh")
+    if energyToday:
+        reportDict["energyToday"] = energyToday
     tempMonitorName = config.Get("HouseTempDevice") # House temperature monitoring device
     if tempMonitorName != None:
         devKey = devices.FindDev(tempMonitorName)
         if devKey != None:
             houseTemp = database.GetLatestLoggedItem(devKey, "TemperatureCelsius")
-            reportDict["houseTemp"] = str(houseTemp[0])
-    heatingName = config.Get("HeatingDevice")
-    if heatingName != None:
-        devKey = devices.FindDev(heatingName)
-        if devKey != None:
-            boilerEvent = database.GetLatestEvent(devKey) # Hope this is scheduled temperature!
-            houseTarget = "Unknown"
-            if boilerEvent != None:
-                try:
-                    houseTarget = str(re.findall('\d+', boilerEvent)[0]) # Just get temperature value
-                except:
-                    log.debug("Weird boilerEvent value") # And just say "Unknown"
-            reportDict["TargetTemp"] = houseTarget
+            reportDict["houseTemp"] = '%.1f' % (houseTemp[0])
+    targetTemp = variables.Get("TargetTemp")
+    if targetTemp != None:
+        reportDict["TargetTemp"] = targetTemp
     #log.debug("ReportDict for:" +id + "=" + str(reportDict)) # Already reported in WiFiServer.py
     return (str(reportDict))
 
