@@ -29,6 +29,7 @@ import database
 import synopsis
 import heating
 import schedule
+import report
 
 sck = ""
 cliSck = ""
@@ -58,13 +59,13 @@ def EventHandler(eventId, eventArg):
             if s is sck:
                 cliSck, addr = sck.accept()
                 sckLst.append(cliSck)
-                #log.debug("New connection from web page!")
+                #log.debug("New connection from client")
             else:
                 try:
                     cmd = cliSck.recv(100)
                 except OSError as err:  # OSError: [Errno 9] Bad file descriptor"
-                    synopsis.problem("Web command failed with ", err.args[1])
-                    cmd = ""    # No command if there was a failure                
+                    synopsis.problem("Socket Client command failed with ", err.args[1])
+                    cmd = ""    # No command if there was a failure
                 if cmd:
                     cmd = cmd.decode()
                     log.debug("Got cmd \""+ cmd+"\" from web page")
@@ -83,7 +84,6 @@ def EventHandler(eventId, eventArg):
     # End of Command EventHandler
 
 class Commands(cmd.Cmd):
-    
     def do_info(self, line):
         """info
         Displays useful information"""
@@ -94,6 +94,14 @@ class Commands(cmd.Cmd):
         Restarts program execution"""
         os.execl(sys.executable, sys.executable, *sys.argv)
         #sys.exit()
+
+    def do_reqrpt(self, deviceId):
+        """reqrpt deviceId
+        Request report as dict with useful info for use with ESP32 display, etc.  Might also include device-specific command to eg dim the display"""
+        dictText = report.MakeText(deviceId) # Keep time, etc. up to date
+        if dictText:
+            #log.debug("reqrpt sending:" + dictText) # Cannot have any debugging in commands, since the log gets sent back to client!
+            print(dictText+"'\n") # Terminating \n looked by by ESP32 code to terminate the string
 
     def do_uptime(self, line):
         """uptime

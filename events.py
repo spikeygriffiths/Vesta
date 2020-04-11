@@ -48,7 +48,7 @@ def Issue(eventId, eventArg=0):
     iottime.EventHandler(eventId, eventArg)
     rules.EventHandler(eventId, eventArg)
     commands.EventHandler(eventId, eventArg)
-    wifiServer.EventHandler(eventId, eventArg)
+    #wifiServer.EventHandler(eventId, eventArg) # Not needed since we'll just use commands above
     weather.EventHandler(eventId, eventArg)
     presence.EventHandler(eventId, eventArg)
     schedule.EventHandler(eventId, eventArg)
