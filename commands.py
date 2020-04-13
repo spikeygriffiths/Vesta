@@ -71,11 +71,16 @@ def EventHandler(eventId, eventArg):
                     log.debug("Got cmd \""+ cmd+"\" from web page")
                     sys.stdout = open("cmdoutput.txt", "w") # Redirect stdout to file
                     Commands().onecmd(cmd)
-                    sys.stdout = sys.__stdout__ # Put stdout back to normal (will hopefully also close the file)
+                    sys.stdout.close()
+                    sys.stdout = sys.__stdout__ # Put stdout back to normal
                     f = open("cmdoutput.txt", "r")
                     cmdOut = f.read()
                     cliSck.send(str.encode(cmdOut))
-                    call("rm cmdoutput.txt", shell=True) # Remove cmd output after we've used it
+                    f.close()
+                    try:
+                        call("rm cmdoutput.txt", shell=True) # Remove cmd output after we've used it
+                    except:
+                        log.debug("Unable to remove cmdoutput.txt")
                 #else:
                     #log.debug("Closing socket")
                     #cliSck.close() # Can't do this, since server can't close the socket
