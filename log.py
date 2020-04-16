@@ -25,8 +25,10 @@ def fault(msg):
 
 def log(msg):
     timedMsg = "<" + str(datetime.now()) + ">"+ msg
-    open("log/today.log", "a").write(timedMsg+"\n")
-    print(timedMsg)
+    l = open("log/today.log", "a")
+    print(timedMsg, file=l)
+    l.close()
+    print(timedMsg) # Print same message to stdout
 
 def RollLogs(): # Called once/day
     os.replace("log/today.log","log/yesterday.log")
