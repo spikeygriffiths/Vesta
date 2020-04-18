@@ -8,7 +8,6 @@ import readline
 import os
 import sys
 import select
-import selectors # See realpyton.com/python-sockets
 import socket
 from pathlib import Path
 from pprint import pprint # Pretty print for devs list
@@ -33,21 +32,16 @@ import schedule
 import report
 
 sck = ""
-#cliSck = ""
-#sckLst = []
 
 def EventHandler(eventId, eventArg):
-    global sckLst, sck, cliSck
+    global sck
     if eventId == events.ids.INIT:
-        #sel = selectors.DefaultSelector()
         sck = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Create socket
         sck.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sck.setblocking(0) # accept() is no longer blocking
         port = 12345
         sck.bind(('', port))    # Listen on all available interfaces.  NB Double bracket is required!
         sck.listen(0)
-        #sckLst = [sck]
-        #sel.register(sck, selectors.EVENT_READ, data=None)
     if eventId == events.ids.SECONDS:
         if select.select([sys.stdin], [], [], 0)[0]: # Check to see if a line of text is waiting for us on from stdin
             cmd = sys.stdin.readline()    # Read from stdin (for working with the console)
@@ -61,36 +55,6 @@ def EventHandler(eventId, eventArg):
                     conn.sendall(SocketCommand(cmd))
             finally:
                 conn.close()
-
-        #events = sel.select(timeout=0)
-        #for key, mask in events:
-        #    if key.data is None:
-        #        accept_wrapper(key.fileobbj)
-        #    else:
-        #        service_connection(key, mask)
-    # End of Command EventHandler
-
-def accept_wrapper(sock): # From realpython.com/python-sockets/
-    conn, addr = sock.accept() # Should be ready to read
-    log.debug("New connection from ", addr)
-    conn.setBlocking(False) # Ensure socket is in non-blocking mode
-    events = selectors.EVENT_READ | selectors.EVENT_WRITE
-    sel.register(conn, events, data=data)
-
-def service_connection(key, mask):
-    sock = key.fileobj
-    data = key.data
-    if mask & selectors.EVENT_READ:
-        recv_data = sock.recv(100) # Should be ready to read
-        if recv_data:
-            data.outb += recv_data
-        else:
-            sel.unregister(sock)
-            sock.close()
-    if mask & selectors.EVENT_WRITE:
-        if data.outb:
-            sent = sock.send(data.outb) # Should be ready to write
-            data.outb = data_outb[sent:]
 
 def SocketCommand(cmd): # Returns output as a string
     cmd = cmd.decode() # Not sure if this is necessary?
