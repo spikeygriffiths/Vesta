@@ -8,6 +8,7 @@ import readline
 import os
 import sys
 import select
+import selectors # See realpyton.com/python-sockets
 import socket
 from pathlib import Path
 from pprint import pprint # Pretty print for devs list
@@ -32,61 +33,81 @@ import schedule
 import report
 
 sck = ""
-cliSck = ""
-sckLst = []
+#cliSck = ""
+#sckLst = []
 
 def EventHandler(eventId, eventArg):
     global sckLst, sck, cliSck
     if eventId == events.ids.INIT:
+        #sel = selectors.DefaultSelector()
         sck = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Create socket
         sck.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sck.setblocking(0) # accept() is no longer blocking
         port = 12345
-        try:
-            sck.bind(('', port))    # Listen on all available interfaces
-        except OSError as err: # "OSError: [Errno 98] Address already in use"
-            database.NewEvent(0, "Socket bind failed with " + err.args[1]) # 0 is always hub
-            vesta.Reboot()
+        sck.bind(('', port))    # Listen on all available interfaces.  NB Double bracket is required!
         sck.listen(0)
-        sckLst = [sck]
+        #sckLst = [sck]
+        #sel.register(sck, selectors.EVENT_READ, data=None)
     if eventId == events.ids.SECONDS:
-        if select.select([sys.stdin], [], [], 0)[0]:    # Read from stdin (for working with the console)
-            cmd = sys.stdin.readline()
-            if cmd:
-                Commands().onecmd(cmd)
-        rd, wr, er = select.select(sckLst, [], [], 0)   # Read from remote socket (for working with web pages)
-        for s in rd:
-            if s is sck:
-                cliSck, addr = sck.accept()
-                sckLst.append(cliSck)
-                #log.debug("New connection from client")
-            else:
-                try:
-                    cmd = cliSck.recv(100)
-                except OSError as err:  # OSError: [Errno 9] Bad file descriptor"
-                    synopsis.problem("Socket Client command failed with ", err.args[1])
-                    cmd = ""    # No command if there was a failure
+        if select.select([sys.stdin], [], [], 0)[0]: # Check to see if a line of text is waiting for us on from stdin
+            cmd = sys.stdin.readline()    # Read from stdin (for working with the console)
+            if cmd: # Ignore blank lines
+                Commands().onecmd(cmd) # Execute command from the console (all responses are printed back to the console)
+        if select.select([sck], [], [], 0)[0]:
+            conn, addr = sck.accept() # Select should have ensured there's something waiting for us
+            try:
+                cmd = conn.recv(100)
                 if cmd:
-                    cmd = cmd.decode()
-                    log.debug("Got cmd \""+ cmd+"\" from web page")
-                    sys.stdout = open("cmdoutput.txt", "w") # Redirect stdout to file
-                    Commands().onecmd(cmd)
-                    sys.stdout.close()
-                    sys.stdout = sys.__stdout__ # Put stdout back to normal
-                    f = open("cmdoutput.txt", "r")
-                    cmdOut = f.read()
-                    cliSck.send(str.encode(cmdOut))
-                    f.close()
-                    try:
-                        call("rm cmdoutput.txt", shell=True) # Remove cmd output after we've used it
-                    except:
-                        log.debug("Unable to remove cmdoutput.txt")
-                #else:
-                    #log.debug("Closing socket")
-                    #cliSck.close() # Can't do this, since server can't close the socket
-                    #if cliSck in sckLst:
-                    #    sckLst.remove(cliSck)
+                    conn.sendall(SocketCommand(cmd))
+            finally:
+                conn.close()
+
+        #events = sel.select(timeout=0)
+        #for key, mask in events:
+        #    if key.data is None:
+        #        accept_wrapper(key.fileobbj)
+        #    else:
+        #        service_connection(key, mask)
     # End of Command EventHandler
+
+def accept_wrapper(sock): # From realpython.com/python-sockets/
+    conn, addr = sock.accept() # Should be ready to read
+    log.debug("New connection from ", addr)
+    conn.setBlocking(False) # Ensure socket is in non-blocking mode
+    events = selectors.EVENT_READ | selectors.EVENT_WRITE
+    sel.register(conn, events, data=data)
+
+def service_connection(key, mask):
+    sock = key.fileobj
+    data = key.data
+    if mask & selectors.EVENT_READ:
+        recv_data = sock.recv(100) # Should be ready to read
+        if recv_data:
+            data.outb += recv_data
+        else:
+            sel.unregister(sock)
+            sock.close()
+    if mask & selectors.EVENT_WRITE:
+        if data.outb:
+            sent = sock.send(data.outb) # Should be ready to write
+            data.outb = data_outb[sent:]
+
+def SocketCommand(cmd): # Returns output as a string
+    cmd = cmd.decode() # Not sure if this is necessary?
+    log.debug("Got cmd \""+ cmd+"\" from socket")
+    sys.stdout = open("cmdoutput.txt", "w") # Redirect stdout to file
+    Commands().onecmd(cmd)
+    sys.stdout.close()
+    sys.stdout = sys.__stdout__ # Put stdout back to normal
+    f = open("cmdoutput.txt", "r")
+    cmdOut = str.encode(f.read())
+    #cliSck.send(cmdOut)
+    f.close()
+    try:
+        call("rm cmdoutput.txt", shell=True) # Remove cmd output after we've used it
+    except:
+        log.debug("Unable to remove cmdoutput.txt")
+    return cmdOut # Return results of command as a (possibly multi-line) string
 
 class Commands(cmd.Cmd):
     def do_info(self, line):
