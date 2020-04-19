@@ -59,18 +59,13 @@ def EventHandler(eventId, eventArg):
 def SocketCommand(cmd): # Returns output as a string
     cmd = cmd.decode() # Not sure if this is necessary?
     log.debug("Got cmd \""+ cmd+"\" from socket")
-    sys.stdout = open("cmdoutput.txt", "w") # Redirect stdout to file
+    sys.stdout = open("ramdisk/cmdoutput.txt", "w") # Redirect stdout to temporary file in the ramdisk
     Commands().onecmd(cmd)
     sys.stdout.close()
     sys.stdout = sys.__stdout__ # Put stdout back to normal
-    f = open("cmdoutput.txt", "r")
+    f = open("ramdisk/cmdoutput.txt", "r")
     cmdOut = str.encode(f.read())
-    #cliSck.send(cmdOut)
     f.close()
-    try:
-        call("rm cmdoutput.txt", shell=True) # Remove cmd output after we've used it
-    except:
-        log.debug("Unable to remove cmdoutput.txt")
     return cmdOut # Return results of command as a (possibly multi-line) string
 
 class Commands(cmd.Cmd):

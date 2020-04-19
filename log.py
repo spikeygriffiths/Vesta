@@ -9,7 +9,7 @@ def Init(msg):
     try:
         debug(msg)
     except:
-        os.remove("log/today.log") # Remove unusable log if necessary (we may be recovering from a power cut in the middle of writing the log?)
+        os.remove("ramdisk/today.log") # Remove unusable log if necessary (we may be recovering from a power cut in the middle of writing the log?)
     oldErr = "olderr.log"
     if os.path.isfile(oldErr):
         if os.path.getsize(oldErr) > 0:
@@ -25,11 +25,11 @@ def fault(msg):
 
 def log(msg):
     timedMsg = "<" + str(datetime.now()) + ">"+ msg
-    l = open("log/today.log", "a")
+    l = open("ramdisk/today.log", "a")
     print(timedMsg, file=l)
     l.close()
     print(timedMsg) # Print same message to stdout
 
 def RollLogs(): # Called once/day
-    os.replace("log/today.log","log/yesterday.log")
+    os.replace("ramdisk/today.log","ramdisk/yesterday.log")
 
