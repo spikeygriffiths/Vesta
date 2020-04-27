@@ -147,6 +147,7 @@ function ShowDeviceInfo($db, $devKey, $username)
     ShowEvent($devKey, $db);
     ShowDevItem("manufName", "Manufacturer", $devKey, $db);
     ShowDevItem("modelName", "Model", $devKey, $db);
+    ShowDevItem("protocol", "Protocol", $devKey, $db);
     ShowDevItem("eui64", "EUI", $devKey, $db);
     ShowDevItem("nwkId", "Network Id", $devKey, $db);
     ShowDevItem("devType", "Device Type", $devKey, $db);

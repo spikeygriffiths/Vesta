@@ -76,6 +76,8 @@ def InitCore(db, curs):
     longPollInterval TEXT,
     targetTempReporting TEXT)""")
     # Check that we have new entries to Devices above
+    if TableHasColumn(curs, "Devices", "protocol") == False:
+        curs.execute("ALTER TABLE Devices ADD COLUMN protocol TEXT")    # Protocol entry added to allow for non-ZigbeeHA devices
     if TableHasColumn(curs, "Devices", "batteryReporting") == False:
         curs.execute("ALTER TABLE Devices ADD COLUMN batteryReporting TEXT")    # Format of all xxxReporting is <minS>,<maxS>,<delta>
     if TableHasColumn(curs, "Devices", "temperatureReporting") == False:
@@ -486,6 +488,7 @@ def NewDevice(nwkId, eui64, devType):
     SetDeviceItem(devKey, "Username", "(New) "+nwkId)   # Default username of network ID, since that's unique
     SetDeviceItem(devKey, "devType",devType)    # SED, FFD or ZED
     SetDeviceItem(devKey, "eui64",eui64)
+    SetDeviceItem(devKey, "protocol", "ZigbeeHA")
     SetDeviceItem(devKey, "binding", "[]")
     db.commit() # Flush db to disk immediately
     return devKey    # Return new devKey for newly added device

@@ -43,6 +43,8 @@ def EventHandler(eventId, eventArg):
         for devKey in keyList:  # Hub and devices
             Init(devKey) # Initialise dictionary and associated ephemera
             if database.GetDeviceItem(devKey, "nwkId") != "0000":  # Ignore hub
+                if database.GetDeviceItem(devKey, "protocol") != None:
+                    database.SetDeviceItem(devKey, "protocol", "ZigbeeHA") # Ensure all unknown devices are ZigbeeHA
                 SetTempVal(devKey, "GetNextBatteryAfter", datetime.now())    # Ask for battery shortly after startup
     if eventId == events.ids.INIT:
         msp_ota = config.Get("MSP_OTA")
