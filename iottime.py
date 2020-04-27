@@ -87,6 +87,8 @@ def GetDark():
         extraTime = int(cloudCover)    # Just take percentage cloudiness as minutes
     else:
         extraTime = 0   # No weather, so assume cloudless and dry
+    if extraTime < 30:
+        extraTime = 30 # Minimum of half an hour of evening before sunset
     morning = sunrise + timedelta(minutes=extraTime)    # The more cloud, the later it gets light in the morning
     evening = sunset - timedelta(minutes=extraTime) # The more cloud, the earlier it gets dark in the evening
     oldMorning = variables.Get("morning")  # if time is between variables.Get("morning") and newly calculated morning, then rules.Run("time==morning")
