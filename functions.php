@@ -3,6 +3,8 @@
 //include "database.php";
 include "AppCmd.php";   # Not allowed to include same file more than once, so if including this "functions.php", must remove any previous include "AppCmd.php"
 
+error_reporting(E_ALL ^ E_WARNING); // Suppress Notices and other messages
+
 function PageHeader($title, $right = Null)
 {
     $db = DatabaseInit();

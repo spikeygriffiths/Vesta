@@ -12,6 +12,7 @@ import database
 import log
 
 def main():
+    log.Init("Starting Vesta")
     events.Issue(events.ids.PREINIT)
     events.Issue(events.ids.INIT)
     sleepDelayS = 0.1
@@ -19,10 +20,10 @@ def main():
         time.sleep(sleepDelayS)
         events.Issue(events.ids.SECONDS, sleepDelayS)
     # end mainloop
-     
+
 def EventHandler(eventId, eventArg):
     if eventId == events.ids.INIT:
-        log.Init     ("   *********************************")
+        log.debug("   *********************************")
         log.debug("   *** Starting Vesta, v" +GetVersion() + " ***", )
         log.debug("   *********************************")
     # end event handler

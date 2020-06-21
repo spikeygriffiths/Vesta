@@ -1,9 +1,9 @@
 <?php
+$devKey=$_GET['devKey'];
+include "database.php";
+include "functions.php";
 $url1 = $_SERVER['REQUEST_URI'];
 header("Refresh: 10;  URL=$url1");
-$devKey=$_GET['devKey'];
-include "functions.php";
-include "database.php";
 include "header.php";   # Has other includes as well as log-out detection, and favicon.  NB Has "<html><head>" for favicon link!
 echo "<style>table {font-family:arial, sans-serif;border-collapse: collapse;width: 100 % }";
 echo "td, th {border: 2px solid #dddddd;text-align: left;padding: 2px }";
@@ -131,7 +131,7 @@ function ShowEvent($devKey, $db)
 
 function ShowDeviceInfo($db, $devKey, $username)
 {
-    $nwkId = GetDevItem("nwkId", $devkey, $db);
+    $nwkId = GetDevItem("nwkId", $devKey, $db);
     echo "<table>";
     ShowDevStatus("Presence", "Presence", "", 300, $devKey, $db);
     ShowDevStatus("State", "State", "", 300, $devKey, $db);

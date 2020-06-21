@@ -1,5 +1,5 @@
-<?php 
-session_start();    // start the session, always needed, and must be before any HTML tags
+<?php
+if (PHP_SESSION_ACTIVE != session_status()) session_start();
 error_reporting(E_ALL);
 include "database.php";
 
@@ -19,7 +19,7 @@ class OneFileLoginApplication
             echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta/vesta.php\"/>"; # Automatically go to home page if there are no registered users
         } else {
             $this->PerformUserLoginAction($db);            // check for possible user interactions (login with session/post data or logout)
-            if ($_SESSION['user_is_logged_in'] == true) {
+            if (isset($_SESSION['user_is_logged_in']) && $_SESSION['user_is_logged_in'] == true) {
                 $event = $_SESSION['user_name']." Logged in";
                 NewEvent(0, $event, $db);
                 echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta/vesta.php\"/>"; # Automatically go to home page once we're logged in
@@ -77,10 +77,10 @@ class OneFileLoginApplication
     }
 }
 
-if ($_SESSION['user_is_logged_in'] == true) {
+if (isset($_SESSION['user_is_logged_in']) && $_SESSION['user_is_logged_in'] == true) {
     echo "<meta http-equiv=\"refresh\" content=\"0;url=/vesta/vesta.php\"/>"; # Automatically go to main page if we're logged in
 } else {
-    $user = $_SESSION['user_name'];
+    //$user = $_SESSION['user_name'];
     /*if (strlen($user) == 0) {   # Check if PHP's garbage collector has logged us out
         $event = "Last user Timed out"; # Only works when page is refreshed, and always writes two entries, so is not much use
         $db = DatabaseInit();

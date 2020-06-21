@@ -1,25 +1,24 @@
 <?php
 // database.php
-session_start();
+if (PHP_SESSION_ACTIVE != session_status()) session_start();
+//session_start();
 
 function GetDbFileName()
 {
-    return "/home/pi/Vesta/vesta.db";
+    return "vesta.db";
 }
 
 function DatabaseInit()
 {
-    if (file_exists(GetDbFileName())) {
-        $dir = "sqlite:".GetDbFileName();
+    if ((file_exists(GetDbFileName())) || (readlink(GetDbFileName()))) {
         try {
-            $db = new PDO($dir);
+            $db = new PDO("sqlite:".GetDbFileName());
         } catch (PDOException $e) {
-            echo 'Connection to \'',$dir,'\' failed with ' . $e->getMessage();
+            die("Can't open ".GetDbFileName()." (".$e->getMessage().")");
         }
         return $db;
-    }
-    echo "Can't find database at ", GetDbFileName(), "<br>Ensure permissions on holding directory are chmod 755<br>";
-    die("No database");
+    } else echo GetDbFileName()," doesn't exist!<br>";
+    die("Can't find database at ".GetDbFileName());
 }
 
 function GetDbFileSize()

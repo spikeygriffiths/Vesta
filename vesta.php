@@ -1,4 +1,5 @@
 <?php
+if (PHP_SESSION_ACTIVE != session_status()) session_start();
 include "functions.php";
 include "database.php";
 include "header.php";   # Has other includes as well as log-out detection, and favicon.  NB Has "<html><head>" for favicon link!

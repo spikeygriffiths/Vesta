@@ -36,6 +36,8 @@ sck = ""
 def EventHandler(eventId, eventArg):
     global sck
     if eventId == events.ids.INIT:
+        os.system("sudo touch ramdisk/cmdoutput.txt")
+        os.system("sudo chmod 777 ramdisk/cmdoutput.txt")
         sck = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Create socket
         sck.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sck.setblocking(0) # accept() is no longer blocking

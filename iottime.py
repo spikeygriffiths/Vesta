@@ -4,7 +4,9 @@ from datetime import datetime
 from datetime import timedelta
 from datetime import date
 import calendar
-from astral import Astral
+#import astral
+from astral.sun import sun
+from astral import LocationInfo
 import time
 # App-specific modules
 import events
@@ -115,14 +117,12 @@ def SetDayInfo():
 def SetSunTimes():
     cityName = config.Get("cityName")
     if cityName != None:
-        a = Astral()
-        a.solar_depression= "civil"
-        city = a[cityName]
-        sun = city.sun(date=datetime.now(), local=True)
-        variables.Set("dawn", str(sun['dawn'].strftime("%H:%M")), True)
-        variables.Set("sunrise", str(sun['sunrise'].strftime("%H:%M")), True)
-        variables.Set("sunset", str(sun['sunset'].strftime("%H:%M")), True)
-        variables.Set("dusk", str(sun['dusk'].strftime("%H:%M")), True)
+        city = LocationInfo(cityName)
+        s = sun(city.observer, date=datetime.now())
+        variables.Set("dawn", str(s['dawn'].strftime("%H:%M")), True)
+        variables.Set("sunrise", str(s['sunrise'].strftime("%H:%M")), True)
+        variables.Set("sunset", str(s['sunset'].strftime("%H:%M")), True)
+        variables.Set("dusk", str(s['dusk'].strftime("%H:%M")), True)
 
 def Get(item):
     if ":" not in item: # If named item rather than HH:MM timestamp

@@ -250,6 +250,7 @@ def copy_table(tab_name, src_cursor, dst_cursor):
 
 # === Miscellaneous ===
 def GetFileSize():
+    global dbdir
     return os.stat("vesta.db").st_size
 
 def Defragment():

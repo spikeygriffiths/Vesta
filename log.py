@@ -6,10 +6,12 @@ import os
 # App-specific Python modules
 
 def Init(msg):
+    global logdir
+    logdir = "logs" # Might be a symlink to a directory on an SSD/HDD
     try:
         debug(msg)
     except:
-        os.remove("ramdisk/today.log") # Remove unusable log if necessary (we may be recovering from a power cut in the middle of writing the log?)
+        os.remove(logdir+"/today.log") # Remove unusable log if necessary (we may be recovering from a power cut in the middle of writing the log?)
     oldErr = "olderr.log"
     if os.path.isfile(oldErr):
         if os.path.getsize(oldErr) > 0:
@@ -24,12 +26,14 @@ def fault(msg):
     log("FAULT:" + msg)
 
 def log(msg):
+    global logdir
     timedMsg = "<" + str(datetime.now()) + ">"+ msg
-    l = open("ramdisk/today.log", "a")
+    l = open(logdir+"/today.log", "a")
     print(timedMsg, file=l)
     l.close()
     print(timedMsg) # Print same message to stdout
 
 def RollLogs(): # Called once/day
-    os.replace("ramdisk/today.log","ramdisk/yesterday.log")
+    global logdir
+    os.replace(logdir+"/today.log",logdir+"/yesterday.log")
 
