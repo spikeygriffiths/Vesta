@@ -192,20 +192,13 @@ def EventHandler(eventId, eventArg):
         elif eventArg[0] == "DFTREP":
             devKey = GetKey(eventArg[1])
             NoteMsgDetails(devKey, eventArg)
-        #else:   # Unrecognised message, but we still want to extract OOB info
-        #    if len(eventArg) >= 2:
-        #        devKey = GetKey(eventArg[1])    # Assume this is sensible
-        #        if devKey != None:
-        #            NoteMsgDetails(devKey, eventArg)
-    #if eventId == events.ids.BUTTON:
-    #    devKey = GetKey(eventArg[1]) # Lookup device from network address in eventArg[1]
-    #    NoteMsgDetails(devKey, eventArg)
     if eventId == events.ids.RXERROR:
         globalDevKey = None # We've finished with this global if we get an error
     if eventId == events.ids.SECONDS:
         for devKey in devDict:  # Go through devDict, pulling out each entry
             if devDict[devKey] >= 0:    # Make sure device hasn't been deleted
-                if IsListening(devKey):  # True if FFD, ZED or Polling
+                protocol = database.GetDeviceItem(devKey, "Protocol")
+                if protocol == "ZigbeeHA" and IsListening(devKey):  # True if FFD, ZED or Polling
                     devIndex = GetIndexFromKey(devKey)
                     if expRsp[devIndex] == None:  # We don't have a message in flight
                         if queue.IsEmpty(devKey):
@@ -489,6 +482,8 @@ def isnumeric(item, base=10):
 def Check(devKey):
     global pendingBinding, msp_ota
     if devKey == 0: return  # We don't need anything from the hub
+    protocol = database.GetDeciceItem(devKey, "Protocol")
+    if protocol != "ZigbeeHA": return	# Only interested in ZigbeeHA devices here
     nwkId = database.GetDeviceItem(devKey, "nwkId")
     if None == nwkId: return  # Make sure it's a real device before continuing (it may have just been deleted)
     ep = database.GetDeviceItem(devKey, "endPoints")
@@ -557,7 +552,8 @@ def Check(devKey):
 
 def IsListening(devKey):
     type = database.GetDeviceItem(devKey, "devType")
-    if type == "SED":
+    protocol = database.GetDeviceItem(devKey, "Protocol")
+    if protocol == "ZigbeeHA" and type == "SED":
         pollFreq = database.GetDeviceItem(devKey, "longPollInterval")   # See if the device is a fast poller
         if pollFreq != None:
             if float(pollFreq) < 7.6:
