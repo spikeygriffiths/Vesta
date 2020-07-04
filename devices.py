@@ -482,7 +482,7 @@ def isnumeric(item, base=10):
 def Check(devKey):
     global pendingBinding, msp_ota
     if devKey == 0: return  # We don't need anything from the hub
-    protocol = database.GetDeciceItem(devKey, "Protocol")
+    protocol = database.GetDeviceItem(devKey, "Protocol")
     if protocol != "ZigbeeHA": return	# Only interested in ZigbeeHA devices here
     nwkId = database.GetDeviceItem(devKey, "nwkId")
     if None == nwkId: return  # Make sure it's a real device before continuing (it may have just been deleted)
