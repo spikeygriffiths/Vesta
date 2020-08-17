@@ -73,7 +73,7 @@ def MakeText(id):
         devKey = devices.FindDev(powerMonitorName)
         if devKey != None:
             powerW = database.GetLatestLoggedItem(devKey, "PowerReadingW")
-            if powerw != None:
+            if powerW != None:
                 reportDict["powerNow"] = str(powerW[0])
     energyToday = variables.Get("energyToday_kWh")
     if energyToday:
