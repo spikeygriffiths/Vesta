@@ -1,6 +1,6 @@
 <?php
-include "functions.php";
 include "database.php";
+include "functions.php";
 $url1 = $_SERVER['REQUEST_URI'];
 header("Refresh: 2;  URL=$url1");
 include "header.php";   # Has other includes as well as log-out detection, and favicon.  NB Has "<html><head>" for favicon link!
