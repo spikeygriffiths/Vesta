@@ -7,14 +7,19 @@ echo "td, th {border: 2px solid #dddddd;text-align: left;padding: 2px }";
 echo "</style></head>";
 echo "<body>";
 $db = DatabaseInit();
-$dbTime = $_GET['dbTime'];
-$titleTime = $_GET['titleTime'];
-if (empty($titleTime) || empty($dbTime)) {
+if (isset($_GET['dbTime']))
+    $dbTime = $_GET['dbTime'];
+else
     $dbTime = "date('now', 'start of day')";
+if (isset($_GET['titleTime']))
+    $titleTime = $_GET['titleTime'];
+else
     $titleTime = "Today";
-}
-$devKey = $_GET['devKey'];
-if ($devKey==-1) {
+if (isset($_GET['devKey']))
+    $devKey = $_GET['devKey'];
+else
+    $devkey = -1;
+if ($devKey == -1) {
     $title = "All activity from ".$titleTime;
 } else {
     $userName = GetDevItem("userName", $devKey, $db);
