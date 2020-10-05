@@ -138,6 +138,7 @@ class Commands(cmd.Cmd):
     def do_open(self, line):
         """open
         Opens network (for 60s) to allow new device to join"""
+        log.debug("----- Got open command - sending AT+PJOIN ------")
         queue.EnqueueCmd(0, ["AT+PJOIN", "OK"])
 
     def do_identify(self, line):

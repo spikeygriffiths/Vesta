@@ -18,7 +18,7 @@ function AppCmd($cmd, $expRsp) // Takes a command for the app and returns any st
         socket_write($appSck, $cmd, strlen($cmd));
         if ($expRsp) {
             $ans = socket_read($appSck, 1024);
-        } else $ans = "";   # Was "Cmd worked!"; for debugging
+        } else $ans = "";    // $cmd." worked!"; // for debugging
         socket_close($appSck);
         return $ans;
     } else return "Socket  connection failed!<br>";
