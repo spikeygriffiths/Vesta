@@ -18,6 +18,7 @@ if (isset($_GET['expRsp'])) {
     AppCmd($cmd, false);
 }
 
-header('location:'.$_SERVER['HTTP_REFERER']);
+$caller = $_SERVER['HTTP_REFERER'];
+echo '<meta http-equiv="refresh" content="1;URL='.$caller.'">';
 ?>
 
