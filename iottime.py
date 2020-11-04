@@ -37,7 +37,7 @@ def EventHandler(eventId, eventArg):
         rules.Run("trigger==appstart")
         database.NewEvent(0, "App started") # 0 is always hub
         telegesis.SetTime() # Set time up for HA devices to synchronise to
-        queue.EnqueueCmd(0, ["AT+SETATR:000A,0001,03", "OK"])
+        queue.EnqueueCmd(0, ["AT+SETATR:000A,0001,05", "OK"]) # Set Master clock and timezone bits on CICIE
         queue.EnqueueCmd(0, ["AT+TIMERD", "OK"]) # Set CICIE as time server
     elif eventId == events.ids.SECONDS:
         now = datetime.now()
