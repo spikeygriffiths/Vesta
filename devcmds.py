@@ -1,5 +1,7 @@
 # devcmds.py
 
+from datetime import datetime
+import time
 # App-specific modules
 import devices
 import devcmds
@@ -7,6 +9,7 @@ import queue
 import database
 import telegesis
 import zcl
+import iottime
 import log
 
 def Prod(devKey):    # Ask device a question, just to provoke a response
@@ -89,4 +92,14 @@ def Sat(devKey, satPercentage):
     if protocol == "ZigbeeHA" and nwkId != None and ep != None:
         satStr = format(int(float(satPercentage/100) * 254), 'X').zfill(2)
         queue.EnqueueCmd(devKey, ["AT+CCMVTOSAT:"+nwkId+","+ep+",0,"+satStr+",0001", "DFTREP"]) # Fade over 100ms (in sec/10)
+
+def SetTime(devKey):
+    protocol = database.GetDeviceItem(devKey, "protocol")
+    timeVal = datetime.now()
+    timeVal = time.mktime(timeVal.timetuple())
+    zbTime = iottime.ToZigbee(timeVal)
+    timeStr = format(int(zbTime), 'X').zfill(8)
+    if protocol == "ZigbeeHA":
+        telegesis.TxWriteAttr(devKey, zcl.Cluster.Time, zcl.Attribute.Time, zcl.AttributeTypes.UtcTime, timeStr)
+
 

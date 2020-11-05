@@ -304,6 +304,13 @@ class Commands(cmd.Cmd):
             if devKey != None:
                 heating.RptTemp(devKey, temp)
 
+    def do_setTime(self, devId):
+        """setTime id
+        Sets the time on the device from Linux time"""
+        devKey = devices.FindDev(devId)
+        if devKey != None:
+            devcmds.SetTime(devKey)
+
     def do_getTime(self, devId):
         """getTime id
         Gets the time from the device using the time cluster"""

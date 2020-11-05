@@ -209,6 +209,7 @@ function ShowDeviceInfo($db, $devKey, $username)
         }
         if (strpos($inClusters, "000A") !== false) { // Time cluster
             #echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=getTime ",$username,"'\">Get time</button>&nbsp&nbsp&nbsp";
+            echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=setTime ",$username,"'\">Set time</button>&nbsp&nbsp&nbsp";
             AppCmd("getTime ".$username, false);
         }
     }
