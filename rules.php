@@ -2,7 +2,9 @@
 include "database.php";
 include "functions.php";
 $item = $_GET['item'];
-$type = $_GET['type'];
+if (isset($_GET['type'])) {
+    $type = $_GET['type'];
+} else $type = "";
 include "header.php";   # Has other includes as well as log-out detection, and favicon.  NB Has "<html><head>" for favicon link!
 echo "</head><body>";
 if ($item == "All") {
