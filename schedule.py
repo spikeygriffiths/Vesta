@@ -63,7 +63,7 @@ def GetTarget(scheduleName):
     dayOfWeek = iottime.GetDow(date.today().isoweekday() % 7) # So that Sun=0, Mon=1, etc.
     scheduleStr = database.GetSchedule(scheduleName, dayOfWeek) # Get schedule for today
     if scheduleStr == None:
-        log.fault("No schedule found for "+scheduleType+" on "+str(dayOfWeek))
+        log.fault("No schedule found on "+str(dayOfWeek))
         return None
     log.debug("Resuming using schedule for today("+str(dayOfWeek)+") is "+scheduleStr)
     try:

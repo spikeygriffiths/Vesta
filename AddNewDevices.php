@@ -1,9 +1,8 @@
 <?php
 include "database.php";
 include "functions.php";
-$url1 = $_SERVER['REQUEST_URI'];
-header("Refresh: 10;  URL=$url1");
 include "header.php";   # Has other includes as well as log-out detection, and favicon.  NB Has "<html><head>" for favicon link!
+echo "<meta http-equiv=\"refresh\" content=\"10\">";
 echo "</head><body>";
 PageHeader("Add New Devices");
 echo "Now: ", date('Y-m-d H:i:s'), "<br>"; // Show page refreshing
