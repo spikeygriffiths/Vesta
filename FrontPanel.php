@@ -1,12 +1,11 @@
 <?php
-$url1 = $_SERVER['REQUEST_URI'];
-header("Refresh: 10;  URL=$url1");
 include "functions.php";
 include "database.php";
 error_reporting(E_ALL);
 echo "<html><head>";    // NB This header file also starts the html head tag (but doesn't end it, to allow pages to extend the head)
 echo "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">";  # So it works on mobile phones as well as laptops
 echo "<link rel=\"stylesheet\" type=\"text/css\" href=\"/vesta/vesta.css\">";
+echo "<meta http-equiv=\"refresh\" content=\"10\">";
 echo "</head><body>";
 $db = DatabaseInit();
 echo "<title>","Vesta Panel","</title>"; # For browser tab

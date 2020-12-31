@@ -356,6 +356,9 @@ def SetAttrVal(devKey, clstrId, attrId, value):
     if clstrId == zcl.Cluster.SimpleMetering and attrId == zcl.Attribute.InstantaneousDemand:
         if isnumeric(value, 16):
             varVal = int(value, 16) # Arrives in Watts, so store it in the same way
+            if varVal > 8000000: # Means that it is a signed value, so generated rather than consumed (eg solar power, etc.)
+                varVal = 0-(16777216 - varVal) # 0-() to make the value negative
+                # Could store the value in PowerGeneratedW
             inClstr = database.GetDeviceItem(devKey, "inClusters") # Assume we have a list of clusters if we get this far
             if zcl.Cluster.OnOff not in inClstr:    # Thus device is powerclamp (has simplemetering but no OnOff)
                 newClampTime = datetime.now() # Assumes only one clamp!
