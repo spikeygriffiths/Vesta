@@ -49,9 +49,7 @@ function ShowDevEnergy($item, $name, $units, $devKey, $db)
             $startVal = $row['value'];
             $dbTime = $row['timestamp'];    # Get actual time of first energy report
             $val = $nowVal - $startVal; # Energy used so far today
-            $time = ElapsedTime($dbTime);   # Convert timestamp to elapsed time
             echo "<tr><td>",$name,"</td><td>",$val,$units,"<div style=\"float:right;width:50%;\">(Since midnight)</div></td></tr>";
-            #echo "<tr><td>",$name,"</td><td>",$val,$units,"<div style=\"float:right;width:50%;\">(last ",$time,")</div></td></tr>";
         }
     }
 }
@@ -139,9 +137,9 @@ function ShowDeviceInfo($db, $devKey, $username)
     ShowDevStatus("TemperatureCelsius", "Temperature", "'C", 600, $devKey, $db);
     ShowDevStatus("SourceCelsius", "Source Temperature", "'C", 900, $devKey, $db);
     ShowDevStatus("TargetCelsius", "Target Temperature", "'C", 900, $devKey, $db);
-    ShowDevStatus("PowerReadingW", "Power", "W", 60, $devKey, $db);
-    ShowDevEnergy("EnergyConsumedWh", "Energy consumed", "Wh", $devKey, $db);
-    ShowDevEnergy("EnergyGeneratedWh", "Energy generated", "Wh", $devKey, $db);
+    ShowDevStatus("PowerReadingW", "Power Now", "W", 60, $devKey, $db);
+    ShowDevEnergy("EnergyConsumedWh", "Energy Today", "Wh", $devKey, $db);
+    //ShowDevEnergy("EnergyGeneratedWh", "Energy generated", "Wh", $devKey, $db);
     ShowDevStatus("Time", "Time", "", 60, $devKey, $db);
     ShowEvent($devKey, $db);
     ShowDevItem("manufName", "Manufacturer", $devKey, $db);
@@ -156,7 +154,7 @@ function ShowDeviceInfo($db, $devKey, $username)
         ShowClusters("inClusters", "In Clusters", $devKey, $db);
         ShowClusters("outClusters", "Out Clusters", $devKey, $db);
         ShowClusters("binding", "Binding", $devKey, $db);
-        #ShowDevItem("reporting", "Reporting", $devKey, $db);
+        //ShowDevItem("reporting", "Reporting", $devKey, $db);
         ShowDevItem("iasZoneType", "IAS Zone Type", $devKey, $db);
         ShowDevItem("longPollInterval", "Long Poll Interval (S)", $devKey, $db);
     } else {    // Is Vesta coordinator

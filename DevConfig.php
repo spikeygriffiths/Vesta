@@ -9,12 +9,12 @@ echo "td, th {border: 2px solid #dddddd;text-align: left;padding: 2px }";
 echo "</style>";
 echo "</head><body>";
 $db = DatabaseInit();
-$username = GetDevItem("userName", $devKey,$db);
+$devname = GetDevItem("userName", $devKey,$db);
 echo "<center>";
-$title = "Configuration for ".$username;
+$title = "Configuration for ".$devname;
 PageHeader($title);
-ShowDeviceConfig($db, $devKey, $username);
-echo "<br><br><button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/ShowOneDevice.php/?devKey=",$devKey,"'\">",$username,"</button>";
+ShowDeviceConfig($db, $devKey);
+echo "<br><br><button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/ShowOneDevice.php/?devKey=",$devKey,"'\">",$devname,"</button>";
 echo "<br><br><button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/ShowAllDevices.php'\">All Devices</button><br><br>";
 PageFooter();
 echo "</body></html>";
@@ -40,7 +40,20 @@ function ShowItemConfig($name, $field, $notes, $default, $devKey, $db)
     echo "</tr>";
 }
 
-function ShowDeviceConfig($db, $devKey, $username)
+function RecordingEnergy($db, $devKey)
+{
+    $recordEnergyMins = GetDevItem("recordEnergyMins", $devKey, $db);
+    $notes = "in minutes";
+    echo "<tr><td>Energy recording frequency</td>";
+    echo "<form action=\"/vesta/recordingChange.php/?devKey=", $devKey, "\" method=\"post\">";
+    echo "<td><input type=\"number\" min=\"-1\" max=\"1440\", name=\"minutes\" value=\"", $recordEnergyMins, "\"></td>";
+    echo "<td><input type=\"submit\" value=\"Update\"></td>";
+    echo "<td>",$notes,"</td>";
+    echo "</form>";
+    echo "</tr>";
+}
+
+function ShowDeviceConfig($db, $devKey)
 {
    $val = GetDevItem("inClusters", $devKey,$db);
     if ($val != null) {
@@ -53,10 +66,11 @@ function ShowDeviceConfig($db, $devKey, $username)
         if (strpos($val, "0402") !== false) {   # Found Temperature
             ShowItemConfig("Temperature", "temperatureReporting", "in 0.01'C units", "300,3600,100", $devKey, $db);
         }
-        if (strpos($val, "0702") !== false) {   # Found SimpleMetering - need three items here
+        if (strpos($val, "0702") !== false) {   # Found SimpleMetering
             ShowItemConfig("Power", "powerReporting", "in Watts", "-1,-1,10", $devKey, $db);
-            ShowItemConfig("EnergyConsumed", "energyConsumedReporting", "in WattHours", "-1,-1,100", $devKey, $db);
-            ShowItemConfig("EnergyGenerated", "energyGeneratedReporting", "in WattHours", "-1,-1,100", $devKey,$db);
+            RecordingEnergy($db, $devKey);
+            //ShowItemConfig("EnergyConsumed", "energyConsumedReporting", "in WattHours", "-1,-1,100", $devKey, $db); // This is broken on AlertMe clamp, so ignore
+            //ShowItemConfig("EnergyGenerated", "energyGeneratedReporting", "in WattHours", "-1,-1,100", $devKey,$db);
         }
         echo "</table>";
         if (strpos($val, "0020") != false) {   # Found PollCtrl

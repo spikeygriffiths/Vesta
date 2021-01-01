@@ -66,6 +66,8 @@ def InitCore(db, curs):
     iasZoneType TEXT,
     Unused INTEGER,
     firmwareVersion TEXT,
+    recordEnergyMins TEXT,
+    protocol TEXT,
     batteryReporting TEXT,
     temperatureReporting TEXT,
     powerReporting TEXT,
@@ -74,8 +76,11 @@ def InitCore(db, curs):
     checkInFrequency TEXT,
     pirSensitivity TEXT,
     longPollInterval TEXT,
-    targetTempReporting TEXT)""")
+    targetTempReporting TEXT
+    dimLevel INTEGER)""")
     # Check that we have new entries to Devices above
+    if TableHasColumn(curs, "Devices", "recordEnergyMins") == False:
+        curs.execute("ALTER TABLE Devices ADD COLUMN recordEnergyMins TEXT") # To allow energy to be recorded in file "<userName>_kwh.csv"
     if TableHasColumn(curs, "Devices", "protocol") == False:
         curs.execute("ALTER TABLE Devices ADD COLUMN protocol TEXT")    # Protocol entry added to allow for non-ZigbeeHA devices
     if TableHasColumn(curs, "Devices", "batteryReporting") == False:

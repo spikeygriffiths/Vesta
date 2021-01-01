@@ -31,10 +31,9 @@ ephemera = [] # Don't bother saving this
 expRsp = [] # List of expected responses for each device
 expRspTimeoutS = array('f',[]) # Array of timeouts if we're expecting a response, one per device
 msp_ota = None  # Until filled in from config
-oldClampTime = None # Illegal time until we get our first reading
 
 def EventHandler(eventId, eventArg):
-    global ephemera, globalDevKey, pendingBinding, pendingBindingTimeoutS, pendingRptAttrId, msp_ota, clampWattSeconds
+    global ephemera, globalDevKey, pendingBinding, pendingBindingTimeoutS, pendingRptAttrId, msp_ota
     if eventId == events.ids.PREINIT:
         keyList = database.GetAllDevKeys()  # Get a list of all the device identifiers from the database
         for i in range(100): # Fudge to ensure we have enough pendingBinding entries
@@ -48,14 +47,34 @@ def EventHandler(eventId, eventArg):
                 SetTempVal(devKey, "GetNextBatteryAfter", datetime.now())    # Ask for battery shortly after startup
     if eventId == events.ids.INIT:
         msp_ota = config.Get("MSP_OTA")
-        energyToday_kWh = variables.Get("EnergyToday_kWh")
-        if energyToday_kWh:
-            clampWattSeconds = float(energyToday_kWh) * 3600000  # Try and recover energy used - assumes we restart soon after stopping, and even then we'll lose the low-order values
     if eventId == events.ids.NEWDAY:
-        # ToDo: Store each day's energy somewhere - export to a CSV file?
-        energyToday_kWh = '%.1f' % (clampWattSeconds / 3600000) # Get kWh used to 1 decimal place
-        variables.Set("energyYesterday_kWh", energyToday_kWh)
-        clampWattSeconds = 0 # Every midnight, clear down previous day's energy use
+        keyList = database.GetAllDevKeys()  # Get a list of all the device identifiers from the database
+        for devKey in keyList:  # Hub and devices
+            if GetTempVal(devKey, "wattSeconds"):
+                SetTempVal(devKey, "wattSeconds", 0) # Clear down any accumulated energy at midnight
+                SetTempVal(devKey, "lastRecorded_ws", 0)
+        energytoday_kWh = variables.Get("energyToday_kWh") # Get today's energy consumed according to PowerClamp
+        variables.Set("energyYesterday_kWh", energyToday_kWh) # Copy Today's energy into Yesterday's for comparison
+        variables.Set("energyToday_kWh", 0) # Every midnight, clear down previous day's energy use
+    if eventId == events.ids.MINUTES:
+        keyList = database.GetAllDevKeys()  # Get a list of all the device identifiers from the database
+        for devKey in keyList:  # Hub and devices
+            recordEnergyMins = database.GetDeviceItem(devKey, "recordEnergyMins")
+            if recordEnergyMins:
+                minsSinceEnergy = GetTempVal(devKey, "minsSinceEnergy")
+                if minsSinceEnergy == None: minsSinceEnergy = 0
+                minsSinceEnergy += 1
+                wattSeconds = GetTempVal(devKey, "wattSeconds")
+                if minsSinceEnergy >= int(recordEnergyMins) and wattSeconds: # Make a recording of energy now, if we have any
+                    minsSinceEnergy = 0
+                    lastRecorded_ws = GetTempVal(devKey, "lastRecorded_ws")
+                    if lastRecorded_ws == None: lastRecorded_ws = 0
+                    energy_kWh = '%.3f' % ((wattSeconds - lastRecorded_ws) / 3600000) # Get kWh to 3 decimal places
+                    devName = database.GetDeviceItem(devKey, "userName")
+                    with open(log.logdir+'/'+devName+'_kWh.csv', 'a') as fh:
+                        fh.write(str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))+','+energy_kWh+'\n') # Append a line to the end of the csv file
+                    SetTempVal(devKey, "lastRecorded_ws", wattSeconds) # Make a note of last wattSeconds, so we can calculate energy next time
+                SetTempVal(devKey, "minsSinceEnergy", minsSinceEnergy)
     if eventId == events.ids.DEVICE_ANNOUNCE:
         if len(eventArg) >= 3:
             eui64 = eventArg[1]
@@ -247,12 +266,12 @@ def EnsureReporting(devKey, clstrId, attrId, attrVal): # Check when this attr la
     if clstrId == zcl.Cluster.SimpleMetering and attrId == zcl.Attribute.InstantaneousDemand:
         prevItem = database.GetLatestLoggedItem(devKey, "PowerReadingW")  # Check when we got last reading
         field = "powerReporting"
-    elif clstrId == zcl.Cluster.SimpleMetering and attrId == zcl.Attribute.CurrentSummationDelivered:
-        prevItem = database.GetLatestLoggedItem(devKey, "EnergyConsumedWh")
-        field = "energyConsumedReporting"
-    elif clstrId == zcl.Cluster.SimpleMetering and attrId == zcl.Attribute.CurrentSummationReceived:
-        prevItem = database.GetLatestLoggedItem(devKey, "EnergyGeneratedWh")
-        field = "energyGeneratedReporting"
+    #elif clstrId == zcl.Cluster.SimpleMetering and attrId == zcl.Attribute.CurrentSummationDelivered:  # These energy* fields don't work, so interpolate power over time
+    #    prevItem = database.GetLatestLoggedItem(devKey, "EnergyConsumedWh")
+    #    field = "energyConsumedReporting"
+    #elif clstrId == zcl.Cluster.SimpleMetering and attrId == zcl.Attribute.CurrentSummationReceived:
+    #    prevItem = database.GetLatestLoggedItem(devKey, "EnergyGeneratedWh")
+    #    field = "energyGeneratedReporting"
     else: # Don't know how often it should report.  Could add temperature and battery
         return
     if prevItem != None:
@@ -304,7 +323,7 @@ def FindDev(nwkId):
     return GetKey(nwkId)   # Try nwkId if no name match
 
 def SetAttrVal(devKey, clstrId, attrId, value):
-    global msp_ota, oldClampTime, clampWattSeconds
+    global msp_ota
     if clstrId == zcl.Cluster.PowerConfig and attrId == zcl.Attribute.Batt_Percentage:
         SetTempVal(devKey, "GetNextBatteryAfter", datetime.now()+timedelta(seconds=86400))    # Ask for battery every day
         if value != "FF":
@@ -348,32 +367,36 @@ def SetAttrVal(devKey, clstrId, attrId, value):
                     DelTempVal(devKey, "ExpectOnOff")
     if clstrId == zcl.Cluster.Time and attrId == zcl.Attribute.LocalTime:
         if isnumeric(value, 16):
-            varVal = int(value, 16) # Arrives in Watts, so store it in the same way
-            log.debug("Raw time:"+str(varVal))
-            timeStr = iottime.FromZigbee(varVal)
+            zbTime = int(value, 16)
+            log.debug("Raw time:"+str(zbTime))
+            timeStr = iottime.FromZigbee(zbTime)
             log.debug("Human time:"+timeStr)
             database.UpdateLoggedItem(devKey, "Time", timeStr)  # Just store latest time string
     if clstrId == zcl.Cluster.SimpleMetering and attrId == zcl.Attribute.InstantaneousDemand:
         if isnumeric(value, 16):
-            varVal = int(value, 16) # Arrives in Watts, so store it in the same way
-            if varVal > 8000000: # Means that it is a signed value, so generated rather than consumed (eg solar power, etc.)
-                varVal = 0-(16777216 - varVal) # 0-() to make the value negative
-                # Could store the value in PowerGeneratedW
-            inClstr = database.GetDeviceItem(devKey, "inClusters") # Assume we have a list of clusters if we get this far
-            if zcl.Cluster.OnOff not in inClstr:    # Thus device is powerclamp (has simplemetering but no OnOff)
-                newClampTime = datetime.now() # Assumes only one clamp!
-                if oldClampTime: # Must be a global
-                    elapsedClampTime = newClampTime - oldClampTime
-                    clampWattSeconds = clampWattSeconds + (elapsedClampTime.seconds * varVal) # Handy global for keeping track of clamp energy consumption
-                    energyToday_kWh = '%.1f' % (clampWattSeconds / 3600000) # Get kWh used to 1 decimal place
+            watts = int(value, 16) # Arrives in Watts, so store it in the same way
+            if watts > 8000000: # Means that it is a 24-bit signed value, so generated rather than consumed (eg solar power, etc.)
+                watts = 0-(16777216 - watts) # 0-() to make the value negative so it's clear it's generated power
+            newPowerTime = datetime.now()
+            oldPowerTime = GetTempVal(devKey, "oldPowerTime")
+            if oldPowerTime:
+                elapsedPowerTime = newPowerTime - oldPowerTime
+                wattSeconds = GetTempVal(devKey, "wattSeconds")
+                if wattSeconds == None: wattSeconds = 0
+                wattSeconds += elapsedPowerTime.seconds * watts
+                SetTempVal(devKey, "wattSeconds", wattSeconds)
+                database.LogItem(devKey, "EnergyConsumedWh", wattSeconds / 3600)
+                inClstr = database.GetDeviceItem(devKey, "inClusters") # Assume we have a list of clusters if we get this far
+                if zcl.Cluster.OnOff not in inClstr:    # Thus device is powerclamp (has simplemetering but no OnOff)
+                    energyToday_kWh = '%.1f' % (wattSeconds / 3600000) # Get kWh used to 1 decimal place
                     variables.Set("energyToday_kWh", energyToday_kWh)
-                oldClampTime = newClampTime # Ready for next power reading
-                database.UpdateLoggedItem(devKey, "State", str(varVal)+"W") # So that we can access it from the rules later, or show it on the web
-            database.UpdateLoggedItem(devKey, "PowerReadingW", varVal)  # Just store latest reading
-    if clstrId == zcl.Cluster.SimpleMetering and attrId == zcl.Attribute.CurrentSummationDelivered:
-        if isnumeric(value, 16):
-            varVal = int(value, 16) # Arrives in accumulated WattHours, so store it in the same way
-            database.LogItem(devKey, "EnergyConsumedWh", varVal)
+                    database.UpdateLoggedItem(devKey, "State", str(watts)+"W") # So that we can access it from the rules later, or show it on the web
+            SetTempVal(devKey, "oldPowerTime", newPowerTime) # Ready for next power reading
+            database.UpdateLoggedItem(devKey, "PowerReadingW", watts)  # Just store latest reading
+    #if clstrId == zcl.Cluster.SimpleMetering and attrId == zcl.Attribute.CurrentSummationDelivered:
+    #    if isnumeric(value, 16):
+    #        varVal = int(value, 16) # Arrives in accumulated WattHours, so store it in the same way
+    #        database.LogItem(devKey, "EnergyConsumedWh", varVal)
     if clstrId == zcl.Cluster.IAS_Zone and attrId == zcl.Attribute.Zone_Type:
         database.SetDeviceItem(devKey, "iasZoneType", value)
     if clstrId == zcl.Cluster.Basic:
@@ -574,7 +597,7 @@ def SetBinding(devKey, cluster, ourEp):
     nwkId = database.GetDeviceItem(devKey, "nwkId")
     ep = database.GetDeviceItem(devKey, "endPoints")
     eui = database.GetDeviceItem(devKey, "eui64")
-    if None != ep and None != eui: 
+    if None != ep and None != eui:
         pendingBinding[devKey] = cluster
         pollFreq = float(database.GetDeviceItem(devKey, "longPollInterval", 0))   # See if the device is a fast poller
         pendingBindingTimeoutS[devKey] = pollFreq+10 # Allow LongPollInterval and add 10 seconds to that.  Or just 10 seconds if an FFD
