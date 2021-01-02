@@ -49,7 +49,8 @@ function ShowDevEnergy($item, $name, $units, $devKey, $db)
             $startVal = $row['value'];
             $dbTime = $row['timestamp'];    # Get actual time of first energy report
             $val = $nowVal - $startVal; # Energy used so far today
-            echo "<tr><td>",$name,"</td><td>",$val,$units,"<div style=\"float:right;width:50%;\">(Since midnight)</div></td></tr>";
+            $val = $val / 1000; // Show as kWh, despite being in Wh
+            echo "<tr><td>",$name,"</td><td>",round($val, 3),$units,"<div style=\"float:right;width:50%;\">(Since midnight)</div></td></tr>";
         }
     }
 }
@@ -138,7 +139,7 @@ function ShowDeviceInfo($db, $devKey, $username)
     ShowDevStatus("SourceCelsius", "Source Temperature", "'C", 900, $devKey, $db);
     ShowDevStatus("TargetCelsius", "Target Temperature", "'C", 900, $devKey, $db);
     ShowDevStatus("PowerReadingW", "Power Now", "W", 60, $devKey, $db);
-    ShowDevEnergy("EnergyConsumedWh", "Energy Today", "Wh", $devKey, $db);
+    ShowDevEnergy("EnergyConsumedWh", "Energy Today", "kWh", $devKey, $db);
     //ShowDevEnergy("EnergyGeneratedWh", "Energy generated", "Wh", $devKey, $db);
     ShowDevStatus("Time", "Time", "", 60, $devKey, $db);
     ShowEvent($devKey, $db);
