@@ -42,16 +42,9 @@ function ShowDevEnergy($item, $name, $units, $devKey, $db)
 {
     $row = GetLatestLoggedItem($item, $devKey,$db); # Get energy now
     if ($row != null) {
-        $nowVal = $row['value'];
-        $dbTime = "date('now', 'start of day')";
-        $row = GetTimedLoggedItem($item, $devKey,$dbTime,$db);    # Get first Energy today
-        if ($row != null) {
-            $startVal = $row['value'];
-            $dbTime = $row['timestamp'];    # Get actual time of first energy report
-            $val = $nowVal - $startVal; # Energy used so far today
-            $val = $val / 1000; // Show as kWh, despite being in Wh
-            echo "<tr><td>",$name,"</td><td>",round($val, 3),$units,"<div style=\"float:right;width:50%;\">(Since midnight)</div></td></tr>";
-        }
+        $val = $row['value'];
+        $val = $val / 1000; // Show as kWh, despite being in Wh
+        echo "<tr><td>",$name,"</td><td>",round($val, 3),$units,"<div style=\"float:right;width:50%;\">(Since midnight)</div></td></tr>";
     }
 }
 

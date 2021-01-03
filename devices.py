@@ -53,9 +53,9 @@ def EventHandler(eventId, eventArg):
             if GetTempVal(devKey, "wattSeconds"):
                 SetTempVal(devKey, "wattSeconds", 0) # Clear down any accumulated energy at midnight
                 SetTempVal(devKey, "lastRecorded_ws", 0)
-        energytoday_kWh = variables.Get("energyToday_kWh") # Get today's energy consumed according to PowerClamp
+        energyToday_kWh = variables.Get("energyToday_kWh") # Get today's energy consumed according to PowerClamp
         variables.Set("energyYesterday_kWh", energyToday_kWh) # Copy Today's energy into Yesterday's for comparison
-        variables.Set("energyToday_kWh", 0) # Every midnight, clear down previous day's energy use
+        variables.Set("energyToday_kWh", "0") # Every midnight, clear down previous day's energy use
     if eventId == events.ids.MINUTES:
         keyList = database.GetAllDevKeys()  # Get a list of all the device identifiers from the database
         for devKey in keyList:  # Hub and devices
