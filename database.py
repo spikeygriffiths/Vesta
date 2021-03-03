@@ -367,8 +367,8 @@ def FlushOldLoggedItems():
     curs.execute("DELETE FROM SignalPercentage WHERE timestamp <= datetime('now', '-3 days')")  # Signal strength is only a worry for a while
     curs.execute("DELETE FROM Presence WHERE timestamp <= datetime('now', '-3 days')")  # Don't care about presence after a while
     curs.execute("DELETE FROM PowerReadingW WHERE timestamp <= datetime('now', '-3 days')") # We have the energy readings for long-term comparisons
-    curs.execute("DELETE FROM EnergyGeneratedWh WHERE timestamp <= datetime('now', '-1 year')")
-    curs.execute("DELETE FROM EnergyConsumedWh WHERE timestamp <= datetime('now', '-1 year')")
+    curs.execute("DELETE FROM EnergyGeneratedWh WHERE timestamp <= datetime('now', '-3 days')")
+    curs.execute("DELETE FROM EnergyConsumedWh WHERE timestamp <= datetime('now', '-2 days')") # Takes too much storage to keep values every 10 seconds
     flushDB = True # Batch up the commits
 
 # === Events ===
