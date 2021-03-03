@@ -385,7 +385,7 @@ def SetAttrVal(devKey, clstrId, attrId, value):
                 if wattSeconds == None: wattSeconds = 0
                 wattSeconds += elapsedPowerTime.seconds * watts
                 SetTempVal(devKey, "wattSeconds", wattSeconds)
-                database.LogItem(devKey, "EnergyConsumedWh", wattSeconds / 3600)
+                #database.LogItem(devKey, "EnergyConsumedWh", wattSeconds / 3600) # Fills database too fast!
                 inClstr = database.GetDeviceItem(devKey, "inClusters") # Assume we have a list of clusters if we get this far
                 if zcl.Cluster.OnOff not in inClstr:    # Thus device is powerclamp (has simplemetering but no OnOff)
                     energyToday_kWh = '%.1f' % (wattSeconds / 3600000) # Get kWh used to 1 decimal place

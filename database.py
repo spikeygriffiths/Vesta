@@ -29,7 +29,7 @@ def EventHandler(eventId, eventArg):
                 flushDB = False
             except:
                 log.fault("Database couldn't commit")
-    if eventId == events.ids.NEWDAY:
+    if eventId == events.ids.NEWDAY or eventId == events.ids.INIT:
         Backup()
         FlushOldEvents()    # Flush old events to avoid database getting too big and slow
         FlushOldLoggedItems()
