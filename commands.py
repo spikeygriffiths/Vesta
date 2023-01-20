@@ -17,7 +17,7 @@ from subprocess import call
 # App-specific Python modules
 import devices
 import devcmds
-import queue
+import myqueue
 import events
 import telegesis
 import variables
@@ -30,6 +30,7 @@ import synopsis
 import heating
 import schedule
 import report
+import sendmail
 
 sck = ""
 
@@ -139,7 +140,7 @@ class Commands(cmd.Cmd):
         """open
         Opens network (for 60s) to allow new device to join"""
         log.debug("----- Got open command - sending AT+PJOIN ------")
-        queue.EnqueueCmd(0, ["AT+PJOIN", "OK"])
+        myqueue.EnqueueCmd(0, ["AT+PJOIN", "OK"])
 
     def do_identify(self, line):
         """identify name seconds
@@ -219,7 +220,7 @@ class Commands(cmd.Cmd):
     def do_at(self, line):
         """at cmd
         Sends AT command to Telegesis stick"""
-        queue.EnqueueCmd(0, ["AT"+line, "OK"])
+        myqueue.EnqueueCmd(0, ["AT"+line, "OK"])
 
     def do_devat(self, line):
         """devat name cmd
@@ -229,7 +230,7 @@ class Commands(cmd.Cmd):
             cmd = argList[1]
             devKey = devices.FindDev(argList[0])
             if devKey != None:
-                queue.EnqueueCmd(devKey, ["AT"+cmd, "OK"])
+                myqueue.EnqueueCmd(devKey, ["AT"+cmd, "OK"])
 
     def do_getAttr(self, line):
         """getAttr name clstr attr
@@ -240,7 +241,7 @@ class Commands(cmd.Cmd):
             clstr = argList[1]
             attr = argList[2]
             if devKey != None:
-                telegesis.TxReadDevAttr(devKey, clstr, attr) # WOrk out details and send command via queue
+                telegesis.TxReadDevAttr(devKey, clstr, attr) # Work out details and send command via queue
 
     def do_newSchedule(self, name):
         """newSchedule name
@@ -347,3 +348,7 @@ class Commands(cmd.Cmd):
         else:
             log.fault("Insufficient Args")
 
+    def do_sendMail(self, line):
+        """sendMail
+        Sends test email to configured address"""
+        sendmail.email("Test", "This is a simple test mail", None)

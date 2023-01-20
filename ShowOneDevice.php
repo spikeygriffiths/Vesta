@@ -204,6 +204,9 @@ function ShowDeviceInfo($db, $devKey, $username)
             AppCmd("getTime ".$username, false);
         }
     }
+    else {  // Is Vesta co-ordinator
+        echo "<button class=\"button\" type=\"button\" onclick=\"window.location.href='/vesta/Command.php/?cmd=sendMail ",$username,"'\">Send test email</button>&nbsp&nbsp&nbsp";
+    }
 }
 ?>
 

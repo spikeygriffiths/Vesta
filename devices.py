@@ -16,7 +16,7 @@ import database
 import presence
 import config
 import devcmds
-import queue
+import myqueue
 import synopsis
 import heating
 
@@ -107,12 +107,12 @@ def EventHandler(eventId, eventArg):
                 cmdRsp = Check(devKey)   # Check to see if we want to know anything about the device
                 if cmdRsp != None:
                     log.debug("Keep awake for 10 secs so we can send "+cmdRsp[0])
-                    queue.Jump(devKey, ["AT+RAWZCL:"+nwkId+","+endPoint+",0020,11"+seq+"00012800", "DFTREP"]) # Tell device to enter Fast Poll for 40qs (==10s)
+                    myqueue.Jump(devKey, ["AT+RAWZCL:"+nwkId+","+endPoint+",0020,11"+seq+"00012800", "DFTREP"]) # Tell device to enter Fast Poll for 40qs (==10s)
                     SetTempVal(devKey,"PollingUntil", datetime.now()+timedelta(seconds=10))
-                    queue.EnqueueCmd(devKey, cmdRsp)  # This will go out after the Fast Poll Set
+                    myqueue.EnqueueCmd(devKey, cmdRsp)  # This will go out after the Fast Poll Set
                 else:
                     SetTempVal(devKey,"PollingUntil", datetime.now()+timedelta(seconds=2))  # Say that it's polling for a short while, so that we can tell it to stop(!)
-                    queue.EnqueueCmd(devKey, ["AT+RAWZCL:"+nwkId+","+endPoint+",0020,11"+seq+"00000100", "DFTREP"]) # Tell device to stop Poll
+                    myqueue.EnqueueCmd(devKey, ["AT+RAWZCL:"+nwkId+","+endPoint+",0020,11"+seq+"00000100", "DFTREP"]) # Tell device to stop Poll
             else: # Unknown device, so assume it's been deleted from our database
                 telegesis.Leave(eventArg[1])    # Tell device to leave the network, since we don't know anything about it
     if eventId == events.ids.TRIGGER or eventId == events.ids.BUTTON:
@@ -220,11 +220,11 @@ def EventHandler(eventId, eventArg):
                 if protocol == "ZigbeeHA" and IsListening(devKey):  # True if FFD, ZED or Polling
                     devIndex = GetIndexFromKey(devKey)
                     if expRsp[devIndex] == None:  # We don't have a message in flight
-                        if queue.IsEmpty(devKey):
+                        if myqueue.IsEmpty(devKey):
                             cmdRsp = Check(devKey)
                             if cmdRsp:
-                                queue.EnqueueCmd(devKey, cmdRsp)   # Queue up anything we ought to know
-                        cmdRsp = queue.DequeueCmd(devKey) # Pull first item from queue
+                                myqueue.EnqueueCmd(devKey, cmdRsp)   # Queue up anything we ought to know
+                        cmdRsp = myqueue.DequeueCmd(devKey) # Pull first item from queue
                         if cmdRsp != None:
                             log.debug("Sending "+str(cmdRsp))
                             expRsp[devIndex] = cmdRsp[1]  # Note response
@@ -683,7 +683,7 @@ def Init(devKey):
     devDict[devKey] = index # Add new item
     #log.debug("Added new item to devDict, which now is "+str(devDict))
     ephemera.append([]) # Add parallel ephemeral device list
-    queue.Init(devKey)
+    myqueue.Init(devKey)
     expRsp.append("")
     expRspTimeoutS.append(0)
     pendingBinding.append("")

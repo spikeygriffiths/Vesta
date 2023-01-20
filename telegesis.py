@@ -8,7 +8,7 @@ from collections import deque
 # App-specific Python modules
 import vesta
 import devices
-import queue
+import myqueue
 import iottime
 import log
 import events
@@ -49,11 +49,11 @@ def EventHandler(eventId, eventArg):
         ser.flushInput()
         if database.GetDevicesCount()==0: # If we have no devices yet, then...
             devices.Add("0000", "N/A", "COO") # ...make sure we add this device as the first item before we try to use it!
-        queue.EnqueueCmd(0, ["ATS63=0007", "OK"]) # Request RSSI & LQI on every received message, also disable automatic checkIn responses
-        queue.EnqueueCmd(0, ["ATS0F=0400", "OK"]) # Use 0600 to set bit 9 (bit 10 already set) to get rawzcl responses so we can see schedule responses from thermostat
+        myqueue.EnqueueCmd(0, ["ATS63=0007", "OK"]) # Request RSSI & LQI on every received message, also disable automatic checkIn responses
+        myqueue.EnqueueCmd(0, ["ATS0F=0400", "OK"]) # Use 0600 to set bit 9 (bit 10 already set) to get rawzcl responses so we can see schedule responses from thermostat
         if database.GetDeviceItem(0, "modelName") == None:
-            queue.EnqueueCmd(0, ["ATI", "OK"]) # Request our EUI, as well as our Telegesis version
-        queue.EnqueueCmd(0, ["AT+N", "OK"]) # Get network information, to see whether to start new network or use existing one
+            myqueue.EnqueueCmd(0, ["ATI", "OK"]) # Request our EUI, as well as our Telegesis version
+        myqueue.EnqueueCmd(0, ["AT+N", "OK"]) # Get network information, to see whether to start new network or use existing one
     elif eventId == events.ids.SECONDS:
         HandleSerial(ser)
         while len(rxBuf):
@@ -106,7 +106,7 @@ def Parse(atLine):
         ourPan = atList[3]
         ourExtPan = atList[4]
     elif atList[0] == "+N=NoPAN": # No PAN means we need to set up the network and add ourselves
-        queue.EnqueueCmd(0, ["AT+EN", "OK"]) # Start new network
+        myqueue.EnqueueCmd(0, ["AT+EN", "OK"]) # Start new network
     elif atList[0] == "JPAN":  # After Establish Network (AT+EN) has finished
         ourChannel = atList[1]
         ourPan = atList[2]
@@ -138,7 +138,7 @@ def SetTime(): # Set time up for HA devices to synchronise to
     timeVal = datetime.now()
     timeVal = time.mktime(timeVal.timetuple())
     zigBeeTime = iottime.ToZigbee(timeVal)   # Get local time in Unix epoch (1/Jan/1970) and convert it to Zigbee standard
-    queue.EnqueueCmd(0, ["AT+SETTIME:{:08X}".format(int(zigBeeTime)), "OK"]) #  Set time in CICIE ready for setting up time server
+    myqueue.EnqueueCmd(0, ["AT+SETTIME:{:08X}".format(int(zigBeeTime)), "OK"]) #  Set time in CICIE ready for setting up time server
 
 def TxReadDevAttr(devKey, clstrId, attrId):
     nwkId = database.GetDeviceItem(devKey, "nwkId")
@@ -146,7 +146,7 @@ def TxReadDevAttr(devKey, clstrId, attrId):
         return # Make sure it's a real device before continuing (it may have just been deleted)
     ep = database.GetDeviceItem(devKey, "endPoints")
     cmdRsp = ReadAttr(nwkId, ep, clstrId, attrId)
-    queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
+    myqueue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
 
 def TxWriteAttr(devKey, clstrId, attrId, attrType, attrVal):
     nwkId = database.GetDeviceItem(devKey, "nwkId")
@@ -154,7 +154,7 @@ def TxWriteAttr(devKey, clstrId, attrId, attrType, attrVal):
         return # Make sure it's a real device before continuing (it may have just been deleted)
     ep = database.GetDeviceItem(devKey, "endPoints")
     cmdRsp = WriteAttr(nwkId, ep, clstrId, attrId, attrType, attrVal)
-    queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
+    myqueue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
 
 def TxReportAttr(devKey, clstrId, attrId, attrType, attrVal):
     nwkId = database.GetDeviceItem(devKey, "nwkId")
@@ -162,7 +162,7 @@ def TxReportAttr(devKey, clstrId, attrId, attrType, attrVal):
         return # Make sure it's a real device before continuing (it may have just been deleted)
     ep = database.GetDeviceItem(devKey, "endPoints")
     cmdRsp = ReportAttr(nwkId, ep, clstrId, attrId, attrType, attrVal)
-    queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
+    myqueue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
 
 def TxReadAttrRsp(devKey, clstrId, attrId, attrType, attrVal):
     nwkId = database.GetDeviceItem(devKey, "nwkId")
@@ -170,7 +170,7 @@ def TxReadAttrRsp(devKey, clstrId, attrId, attrType, attrVal):
         return # Make sure it's a real device before continuing (it may have just been deleted)
     ep = database.GetDeviceItem(devKey, "endPoints")
     cmdRsp = ReadAttrRsp(nwkId, ep, clstrId, attrId, attrType, attrVal)
-    queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
+    myqueue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
 
 def ReadAttr(nwkId, ep, clstrId, attrId): # NB All args as hex strings
     return ("AT+READATR:"+nwkId+","+ep+",0,"+clstrId+","+attrId, "RESPATTR")

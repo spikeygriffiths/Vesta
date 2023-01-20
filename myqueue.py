@@ -1,4 +1,4 @@
-# queue.py
+# myqueue.py
 
 # App-specific modules
 import devices

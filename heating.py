@@ -7,7 +7,7 @@ import math
 import zcl
 import database
 import devices
-import queue
+import myqueue
 import events
 import log
 import iottime
@@ -74,7 +74,7 @@ def GetDaySchedule(devKey, dayOfWeek="Sun"):  # Ask Thermostat/Boiler device for
     dayOfWeekIndex = iottime.GetDowIndex(dayOfWeek)
     dayBit = 2 ** dayOfWeekIndex # ** is "raise to the power".  Assumes dayOfWeek is a int where 0=Sunday, 1=Monday, etc.
     cmdRsp = ("AT+RAWZCL:"+nwkId+","+ep+","+zcl.Cluster.Thermostat+","+frameCtl+seqId+zcl.Commands.GetSchedule+"{:02X}".format(dayBit)+"01", "CWSCHEDULE") #  Get heating(01) schedule
-    queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
+    myqueue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
 
 def SetSchedule(devKey, scheduleType="Heating"): # Tell Thermostat/boiler device about this schedule
     global thermoDevKey
@@ -111,7 +111,7 @@ def SetDaySchedule(devKey, scheduleType="Heating", dayOfWeek="Sun"):
         scheduleStr = scheduleStr + "{:04X}".format(htonMins)
         scheduleStr = scheduleStr + "{:04X}".format(htonTemp)
     cmdRsp = ("AT+RAWZCL:"+nwkId+","+ep+","+zcl.Cluster.Thermostat+","+frameCtl+seqId+zcl.Commands.SetSchedule+"{:02X}".format(numSetpoints)+"{:02X}".format(dayBit)+"01"+scheduleStr, "CWSCHEDULE") #  Set heating(01) schedule
-    queue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
+    myqueue.EnqueueCmd(devKey, cmdRsp)   # Queue up command for sending via devices.py
 
 def CheckThermostat(devKey):
     nwkId = database.GetDeviceItem(devKey, "nwkId")

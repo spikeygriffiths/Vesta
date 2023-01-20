@@ -36,6 +36,7 @@ def EventHandler(eventId, eventArg):
 
 def Set(name, value, force=False):
     if force==True or Get(name) != value:  # Only update value if it has changed, unless forced
+        if value == None: value = "0"
         log.debug("Variable \""+name+"\" gets "+value)
         database.SetVar(name, value)
 
