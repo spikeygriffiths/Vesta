@@ -4,9 +4,10 @@
 # Standard Python modules
 import time
 from urllib import request, parse
-import xml.etree.ElementTree as ET
+import json
 from enum import Enum, auto
 from datetime import datetime
+import pprint
 # App-specific Python modules
 import log
 import events
@@ -19,7 +20,6 @@ dayStart = datetime.strptime("08:00:00", "%H:%M:%S")
 dayEnd = datetime.strptime("16:00:00", "%H:%M:%S")
 eveStart = dayEnd  #datetime.strptime("16:00:00", "%H:%M:%S")
 eveEnd = datetime.strptime("23:00:00", "%H:%M:%S")
-
 def EventHandler(eventId, eventArg):
     global updateWeather, forecastPeriod
     if events.ids.INIT == eventId:
@@ -34,37 +34,28 @@ def EventHandler(eventId, eventArg):
 def GetWeatherNow():
     variables.Set("cloudCover", "30", True) # Default to 30% cloudcover to give half an hour either side of sunrise & sunset for dark=true
     owmApiKey = config.Get("owmApiKey")
-    owmLocation =  config.Get("owmLocation")
-    if (owmApiKey != None and owmLocation != None):
-        url = "https://api.openweathermap.org/data/2.5/weather?q="+owmLocation+"&mode=xml&appid="+owmApiKey
+    owmLat = config.Get("owmLat")
+    owmLong = config.Get("owmLong")
+    if (owmApiKey != None and owmLat != None and owmLong != None):
+        #url = "https://api.openweathermap.org/data/2.5/weather?q="+owmLocation+"&mode=xml&appid="+owmApiKey
+        url = "https://api.openweathermap.org/data/3.0/onecall?lat="+owmLat+"&lon="+owmLong+"&units=metric&exclude=minutely,hourly,daily,alerts&appid="+owmApiKey
         log.debug("Getting weather using:"+url)
         req = request.Request(url)
         try:
             response = request.urlopen(req)
             rawWeather = response.read()
             log.debug("Weather now==" + rawWeather.decode("utf-8"))
-            root = ET.fromstring(rawWeather.decode("utf-8"))
-            for child in root:
-                log.debug("Found child:"+str(child.tag)+" in XML")
-                if child.tag=="temperature":
-                    outsideTemp = round((float(child.attrib["value"]) - 273.15), 2) # Convert Kelvin to Celsius to 2 decimal places
-                    variables.Set("outsideTemperature", str(outsideTemp), True)
-                if child.tag == "clouds":
-                    cloudCover = child.attrib["value"] # Percentage cloud cover
-                    variables.Set("cloudCover", str(cloudCover), True)
-                    database.NewEvent(0, "Weather now "+str(cloudCover)+"% cloudy")
-                for detail in child:
-                    #log.debug("Found detail:"+str(detail.tag)+" in XML")
-                    if child.tag == "wind" and detail.tag == "speed":
-                        windSpeed = round((float(detail.attrib["value"]) * 3.6),2) # Windspeed in m/s to kph to 2 decimal places
-                        variables.Set("windSpeed", str(windSpeed), True)
-                        #if detail.tag == "main":
-                        #    if detail.attribute == "drizzle":
-                        #rain = 0    # No rain
-                        #variables.Set("rain", str(rain), True)
+            jw = json.loads(rawWeather)
+            outsideTemp = round(float(jw["current"]["temp"]), 2)
+            cloudCover = round(float(jw["clouds"]["all"]), 2)
+            windSpeed = round(float(jw["wind"]["speed"]) * 3.6, 2) # Windspeed in m/s to kph to 2 decimal places
+            variables.Set("cloudCover", str(cloudCover), True)
+            database.NewEvent(0, "Weather now "+str(cloudCover)+"% cloudy")
+            variables.Set("outsideTemperature", str(outsideTemp), True)
+            variables.Set("windSpeed", str(windSpeed), True)
             events.Issue(events.ids.WEATHER)    # Tell system that we have a new weather report
-        except Exception:
-            synopsis.problem("Weather", "Feed failed @ " + str(datetime.now()))
+        except Exception as e:
+            synopsis.problem("Weather", "Feed failed @ " + str(datetime.now()) + " with exception " + str(e))
             database.NewEvent(0, "Weather Feed failed")
 
 class Sym(Enum):
@@ -104,126 +95,44 @@ def owmToSym(symbolVar):
         }
     return sym.get(symbolVar, Sym.Unknown)
 
-def GetWorstWeather(detail):
-    global cloudText, symSym, severestGroup, severestSub
-    global maxTemp, minTemp
-    global maxWind, windText, windDir
-    if detail.tag == "symbol":
-        symbolText = detail.attrib["name"] # eg "Broken clouds"
-        symbolNumber = int(detail.attrib["number"]) # Group 2xx=Thunderstorm, 3xx=Drizzle, 5xx=Rain, 6xx=Snow, 7xx=Atmosphere, 800=Clear, 8xx=Clouds
-        symbolVar = detail.attrib["var"]
-        log.debug("("+str(symbolNumber)+")"+symbolText+","+str(symbolVar)+"=="+str(owmToSym(symbolVar)))
-        symbolGroup = int(symbolNumber/100)
-        symbolSub = symbolNumber % 100
-        if symbolGroup==severestGroup:
-            if symbolSub>severestSub:
-                severestSub=symbolSub
-                symSym=owmToSym(symbolVar)
-                cloudText=symbolText
-        else:
-            if symbolGroup==2: # Thunderstorms
-                severestGroup=symbolGroup # Nothing beats thunderstorms!
-                severestSub=symbolSub
-                symSym=owmToSym(symbolVar)
-                cloudText=symbolText
-            elif symbolGroup==3: # Drizzle
-                if severestGroup==8: # Drizzle beats clouds
-                    severestGroup=symbolGroup
-                    severestSub=symbolSub
-                    symSym=owmToSym(symbolVar)
-                    cloudText=symbolText
-            elif symbolGroup==5: # Rain
-                if severestGroup==8 or severestGroup==2: # Rain beats clouds & drizzle
-                    severestGroup=symbolGroup
-                    severestSub=symbolSub
-                    symSym=owmToSym(symbolVar)
-                    cloudText=symbolText
-            elif symbolGroup==6:
-                if severestGroup==8 or severestGroup==2 or severestGroup==5: # Snow beats clouds, drizzle or rain
-                    severestGroup=symbolGroup
-                    severestSub=symbolSub
-                    symSym=owmToSym(symbolVar)
-                    cloudText=symbolText
-    if detail.tag == "temperature":
-        low = float(detail.attrib["min"]) - 273.15 # Convert Kelvin to Celsius
-        high = float(detail.attrib["max"]) - 273.15
-        log.debug("low temp {0:.1f}".format(low)+" high {0:.1f}".format(high))
-        if low < minTemp:
-            minTemp = low
-        if high > maxTemp:
-            maxTemp = high
-    if detail.tag == "windSpeed":
-        speed = float(detail.attrib["mps"]) * 3.6 # Convert mps to kph
-        if speed > maxWind:
-            maxWind = speed
-            windText = detail.attrib["name"]
-    if detail.tag == "windDirection":
-        dir = round(float(detail.attrib["deg"]))
-        windDir = dir # Might want to try averaging wind direction, rather than just getting last one?
-
-def SetDefaultForecast():
-    global cloudText, symSym, severestSymbol, severestGroup, severestSub
-    global maxTemp, minTemp
-    global maxWind, windText, windDir
-    severestSymbol = 800 # 800, Clear sky by default
-    severestGroup = int(severestSymbol/100)
-    severestSub = severestSymbol % 100
-    cloudText = "Clear sky"
-    symSym = owmToSym("01d") # Assume clear day sky
-    minTemp = 50.0 # Silly low temp
-    maxTemp = -20.0 # Silly high temp
-    maxWind = 0
-
 def SetUnknownForecast():
-    global cloudText, symSym, severestSymbol, severestGroup, severestSub
+    global cloudText, symSym
     global maxTemp, minTemp
-    global maxWind, windText, windDir
-    severestSymbol = 800 # 800, Clear sky by default
-    severestGroup = int(severestSymbol/100)
-    severestSub = severestSymbol % 100
-    cloudText = "N/A"
+    global maxWind, windDir
+    cloudText = ""
     symSym = Sym.Unknown
     minTemp = 50.0 # Silly low temp
     maxTemp = -20.0 # Silly high temp
     maxWind = 0
-    windText = "N/A"
     windDir = 0
-
-def GetForecastSlot(forecastSlot):
-    for detail in forecastSlot:
-        GetWorstWeather(detail) # Need to compare symbolNumber vs previous one to get most extreme weather
-    # Now use severestGroup & severestSub to make a Sym
 
 def GetWeatherForecast():
     global forecastPeriod
-    global cloudText, symSym, severestSymbol, severestGroup, severestSub
+    global cloudText, symSym
     global maxTemp, minTemp
-    global maxWind, windText, windDir
+    global maxWind, windDir
     forecastPeriod = "N/A"
-    SetDefaultForecast()
     owmApiKey = config.Get("owmApiKey")
-    owmLocation =  config.Get("owmLocation")
-    req = request.Request("https://api.openweathermap.org/data/2.5/forecast?q="+owmLocation+"&mode=xml&appid="+owmApiKey)
+    owmLat = config.Get("owmLat")
+    owmLong = config.Get("owmLong")
+    #req = request.Request("https://api.openweathermap.org/data/2.5/forecast?q="+owmLocation+"&mode=xml&appid="+owmApiKey)
+    req = request.Request("https://api.openweathermap.org/data/3.0/onecall?lat="+owmLat+"&lon="+owmLong+"&units=metric&exclude=current,minutely,hourly,alerts&appid="+owmApiKey) # Just use daily
     try:
         response = request.urlopen(req)
-        root = ET.fromstring(response.read())
-        for child in root:
-            if child.tag == "forecast":
-                for forecastSlot in child:
-                    #print(startTime.attrib["from"])
-                    start = (datetime.strptime(forecastSlot.attrib["from"],"%Y-%m-%dT%H:%M:%S"))
-                    if start.date()==datetime.now().date():
-                        if datetime.now().time() < dayEnd.time():
-                            if start.time() > dayStart.time() and start.time() < dayEnd.time():
-                                forecastPeriod = "Day"
-                                GetForecastSlot(forecastSlot)
-                        else:
-                            if start.time() > eveStart.time() and start.time() < eveEnd.time():
-                                forecastPeriod = "Eve"
-                                GetForecastSlot(forecastSlot)
-    except:
+        jw = json.loads(response.read())
+        log.debug("Daily weather:" + pprint.pformat(jw))
+        maxTemp = round(float(jw["daily"][0]["temp"]["max"]), 2)
+        minTemp = round(float(jw["daily"][0]["temp"]["min"]), 2)
+        log.debug("maxTemp = " + str(maxTemp))
+        cloudText = jw["daily"][0]["weather"][0]["description"]
+        symSym = owmToSym(jw["daily"][0]["weather"][0]["icon"])
+        log.debug("CloudText = " + str(cloudText))
+        maxWind = round(float(jw["daily"][0]["wind_speed"] * 3.6), 2)  # Convert from m/s to km/h
+        windDir = round(float(jw["daily"][0]["wind_deg"]), 2)
+        log.debug("maxWind = " + str(maxWind))
+        forecastPeriod = "Day"
+    except Exception as e:
+        synopsis.problem("Weather", "Problem @ " + str(datetime.now()) + " with exception " + str(e))
         SetUnknownForecast()
-    if forecastPeriod!="N/A":
-        severestSymbol = severestGroup * 100 + severestSub
 
 

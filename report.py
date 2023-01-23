@@ -61,7 +61,6 @@ def MakeText(id):
     reportDict["minTemp"] = str(round(weather.minTemp))+"C"
     reportDict["windSpeed"] = str(round(weather.maxWind))
     reportDict["windDir"] = str(weather.windDir)
-    reportDict["windText"] = weather.windText
     now = datetime.now()
     reportDict["timeDigits"] = str(now.strftime("%H:%M"))
     reportDict["timeText"] = GetTimeInWords()
