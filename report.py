@@ -46,7 +46,6 @@ def GetTimeInWords():
     return "Can't get here!"
 
 def MakeText(id):
-    if weather.forecastPeriod=="": return None;
     reportDict = dict()
     reportDict["target"] = id
     minutes = datetime.now().minute
@@ -61,6 +60,7 @@ def MakeText(id):
     reportDict["minTemp"] = str(round(weather.minTemp))+"C"
     reportDict["windSpeed"] = str(round(weather.maxWind))
     reportDict["windDir"] = str(weather.windDir)
+    reportDict["windText"] = weather.windText
     now = datetime.now()
     reportDict["timeDigits"] = str(now.strftime("%H:%M"))
     reportDict["timeText"] = GetTimeInWords()

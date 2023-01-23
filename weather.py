@@ -16,46 +16,48 @@ import config
 import synopsis
 import database
 
-dayStart = datetime.strptime("08:00:00", "%H:%M:%S")
-dayEnd = datetime.strptime("16:00:00", "%H:%M:%S")
-eveStart = dayEnd  #datetime.strptime("16:00:00", "%H:%M:%S")
-eveEnd = datetime.strptime("23:00:00", "%H:%M:%S")
 def EventHandler(eventId, eventArg):
-    global updateWeather, forecastPeriod
     if events.ids.INIT == eventId:
-        forecastPeriod = "" # Until we know better
-        updateWeather = time.time() # Update weather immediately after start
-    if events.ids.SECONDS == eventId:
-        if time.time() >= updateWeather:
-            GetWeatherNow()
-            GetWeatherForecast()
-            updateWeather = time.time() + 600 # Only get weather forecast every 10 mins
+        GetWeather() # Update weather immediately after start
+    if events.ids.HOURS == eventId:
+        GetWeather() # And every hour thereafter so that we only call OWM 24 times per day.  We're allowed up to 1000 for free if we want
 
-def GetWeatherNow():
-    variables.Set("cloudCover", "30", True) # Default to 30% cloudcover to give half an hour either side of sunrise & sunset for dark=true
+def GetWeather():
+    global forecastPeriod
+    global cloudText, symSym
+    global maxTemp, minTemp
+    global maxWind, windDir
+    SetUnknownWeather()
     owmApiKey = config.Get("owmApiKey")
     owmLat = config.Get("owmLat")
     owmLong = config.Get("owmLong")
     if (owmApiKey != None and owmLat != None and owmLong != None):
-        #url = "https://api.openweathermap.org/data/2.5/weather?q="+owmLocation+"&mode=xml&appid="+owmApiKey
-        url = "https://api.openweathermap.org/data/3.0/onecall?lat="+owmLat+"&lon="+owmLong+"&units=metric&exclude=minutely,hourly,daily,alerts&appid="+owmApiKey
-        log.debug("Getting weather using:"+url)
-        req = request.Request(url)
+        req = request.Request("https://api.openweathermap.org/data/3.0/onecall?lat="+owmLat+"&lon="+owmLong+"&units=metric&exclude=minutely,hourly,alerts&appid="+owmApiKey) # Just use current and daily
         try:
             response = request.urlopen(req)
-            rawWeather = response.read()
-            log.debug("Weather now==" + rawWeather.decode("utf-8"))
-            jw = json.loads(rawWeather)
+            jw = json.loads(response.read())
+            log.debug("Weather:" + pprint.pformat(jw))
+            # Get current weather
             outsideTemp = round(float(jw["current"]["temp"]), 2)
             cloudCover = round(float(jw["clouds"]["all"]), 2)
             windSpeed = round(float(jw["wind"]["speed"]) * 3.6, 2) # Windspeed in m/s to kph to 2 decimal places
-            variables.Set("cloudCover", str(cloudCover), True)
+            variables.Set("cloudCover_%", str(cloudCover), True)
             database.NewEvent(0, "Weather now "+str(cloudCover)+"% cloudy")
             variables.Set("outsideTemperature", str(outsideTemp), True)
-            variables.Set("windSpeed", str(windSpeed), True)
+            variables.Set("windSpeed_kph", str(windSpeed), True)
+            # Get weather for whole day
+            maxTemp = round(float(jw["daily"][0]["temp"]["max"]), 2)
+            minTemp = round(float(jw["daily"][0]["temp"]["min"]), 2)
+            cloudText = jw["daily"][0]["weather"][0]["description"]
+            symSym = owmToSym(jw["daily"][0]["weather"][0]["icon"])
+            maxWind = round(float(jw["daily"][0]["wind_speed"] * 3.6), 2)  # Convert from m/s to km/h
+            windDir = round(float(jw["daily"][0]["wind_deg"]), 2)
+            log.debug("maxTemp = " + str(maxTemp) + ", CloudText = " + str(cloudText) + ", maxWind = " + str(maxWind))
+            forecastPeriod = "Day"
             events.Issue(events.ids.WEATHER)    # Tell system that we have a new weather report
         except Exception as e:
-            synopsis.problem("Weather", "Feed failed @ " + str(datetime.now()) + " with exception " + str(e))
+            synopsis.problem("Weather", "Problem @ " + str(datetime.now()) + " with exception " + str(e))
+            SetUnknownWeather()
             database.NewEvent(0, "Weather Feed failed")
 
 class Sym(Enum):
@@ -95,44 +97,19 @@ def owmToSym(symbolVar):
         }
     return sym.get(symbolVar, Sym.Unknown)
 
-def SetUnknownForecast():
+def SetUnknownWeather():
+    global forecastPeriod
     global cloudText, symSym
     global maxTemp, minTemp
-    global maxWind, windDir
+    global maxWind, windDir, windText
     cloudText = ""
+    forecastPeriod = "N/A"
     symSym = Sym.Unknown
     minTemp = 50.0 # Silly low temp
     maxTemp = -20.0 # Silly high temp
     maxWind = 0
     windDir = 0
+    windText = ""
 
-def GetWeatherForecast():
-    global forecastPeriod
-    global cloudText, symSym
-    global maxTemp, minTemp
-    global maxWind, windDir
-    forecastPeriod = "N/A"
-    owmApiKey = config.Get("owmApiKey")
-    owmLat = config.Get("owmLat")
-    owmLong = config.Get("owmLong")
-    #req = request.Request("https://api.openweathermap.org/data/2.5/forecast?q="+owmLocation+"&mode=xml&appid="+owmApiKey)
-    req = request.Request("https://api.openweathermap.org/data/3.0/onecall?lat="+owmLat+"&lon="+owmLong+"&units=metric&exclude=current,minutely,hourly,alerts&appid="+owmApiKey) # Just use daily
-    try:
-        response = request.urlopen(req)
-        jw = json.loads(response.read())
-        log.debug("Daily weather:" + pprint.pformat(jw))
-        maxTemp = round(float(jw["daily"][0]["temp"]["max"]), 2)
-        minTemp = round(float(jw["daily"][0]["temp"]["min"]), 2)
-        log.debug("maxTemp = " + str(maxTemp))
-        cloudText = jw["daily"][0]["weather"][0]["description"]
-        symSym = owmToSym(jw["daily"][0]["weather"][0]["icon"])
-        log.debug("CloudText = " + str(cloudText))
-        maxWind = round(float(jw["daily"][0]["wind_speed"] * 3.6), 2)  # Convert from m/s to km/h
-        windDir = round(float(jw["daily"][0]["wind_deg"]), 2)
-        log.debug("maxWind = " + str(maxWind))
-        forecastPeriod = "Day"
-    except Exception as e:
-        synopsis.problem("Weather", "Problem @ " + str(datetime.now()) + " with exception " + str(e))
-        SetUnknownForecast()
 
 
