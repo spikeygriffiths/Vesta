@@ -39,8 +39,8 @@ def GetWeather():
             log.debug("Weather:" + pprint.pformat(jw))
             # Get current weather
             outsideTemp = round(float(jw["current"]["temp"]), 2)
-            cloudCover = round(float(jw["clouds"]["all"]), 2)
-            windSpeed = round(float(jw["wind"]["speed"]) * 3.6, 2) # Windspeed in m/s to kph to 2 decimal places
+            cloudCover = round(float(jw["current"]["clouds"]), 2)
+            windSpeed = round(float(jw["current"]["wind_speed"]) * 3.6, 2) # Windspeed in m/s to kph to 2 decimal places
             variables.Set("cloudCover_%", str(cloudCover), True)
             database.NewEvent(0, "Weather now "+str(cloudCover)+"% cloudy")
             variables.Set("outsideTemperature", str(outsideTemp), True)
@@ -56,7 +56,7 @@ def GetWeather():
             forecastPeriod = "Day"
             events.Issue(events.ids.WEATHER)    # Tell system that we have a new weather report
         except Exception as e:
-            synopsis.problem("Weather", "Problem @ " + str(datetime.now()) + " with exception " + str(e))
+            synopsis.problem("Weather", "Weather feed problem @ " + str(datetime.now()) + " with exception " + str(e))
             SetUnknownWeather()
             database.NewEvent(0, "Weather Feed failed")
 

@@ -233,7 +233,7 @@ def Action(actList, ruleId):
             with open("synopsis.html", "r") as fh:    # HTML of email
                 emailHtml = fh.readlines()
             html = ''.join(emailHtml)
-            sendmail.email("Vesta Status", text, html) # See sendmail.py
+            sendmail.email("[Vesta Status]", text, html) # See sendmail.py
         else:
             synopsis.problem("NoEmail", "No emailAddress entry in config, needed to send synopsis")
     elif action == "email": # All args are body of the text.  Fixed subject and email address
@@ -244,7 +244,7 @@ def Action(actList, ruleId):
                 emailBody.append(item)
             plainText = " ".join(emailBody)
             log.debug("Sending email with '"+plainText+"'")
-            result = sendmail.email("Vesta Alert!", plainText, None)
+            result = sendmail.email("[Vesta Alert!]", plainText, None)
             if result != 0:
                synopsis.problem("Email", "sendmail.email() failed with code "+str(result)+" when trying to send:"+plainText)
         else:

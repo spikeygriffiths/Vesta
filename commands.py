@@ -351,4 +351,4 @@ class Commands(cmd.Cmd):
     def do_sendMail(self, line):
         """sendMail
         Sends test email to configured address"""
-        sendmail.email("Test", "This is a simple test mail", None)
+        sendmail.email("[Vesta Test]", "This is a simple test mail", None)
