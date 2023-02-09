@@ -7,6 +7,7 @@ echo "</head><body>";
 PageHeader("Add New Devices");
 echo "Now: ", date('Y-m-d H:i:s'), "<br>"; // Show page refreshing
 echo AppCmd("open", False);
+echo "<br><h3>Make sure that the new devices to be added are in direct range of the Vesta Pi</h3>";
 echo "<br><h3>Top tip - Make sure the new devices are all different types so you can distinguish them later!</h3><br><br>";
 ShowNewDevices();
 echo "<br><br><br><br>";
