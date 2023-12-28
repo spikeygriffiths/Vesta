@@ -17,8 +17,7 @@ flushDB = False
 def EventHandler(eventId, eventArg):
     global db, curs, flushDB
     if eventId == events.ids.PREINIT:
-        db = sqlite3.connect("vesta.db")    # This will create a new database for us if it didn't previously exist
-        curs = db.cursor()
+        ConnectDb()
         InitAll(db, curs)   # Add any new entries to database here
         Backup()
         flushDB = True # Batch up the commits
@@ -47,6 +46,11 @@ def EventHandler(eventId, eventArg):
     if eventId == events.ids.SHUTDOWN:
         db.commit() # Flush events to disk prior to shutdown
 # end of EventHandler
+
+def ConnectDb():
+    global db, curs
+    db = sqlite3.connect("vesta.db")    # This will create a new database for us if it didn't previously exist
+    curs = db.cursor()
 
 def InitCore(db, curs):
     curs.execute("""

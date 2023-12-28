@@ -5,6 +5,8 @@ from subprocess import call
 import os
 # App-specific Python modules
 
+logdir = None
+
 def Init(msg):
     global logdir
     logdir = "logs" # Might be a symlink to a directory on an SSD/HDD
@@ -28,9 +30,10 @@ def fault(msg):
 def log(msg):
     global logdir
     timedMsg = "<" + str(datetime.now()) + ">"+ msg
-    l = open(logdir+"/today.log", "a")
-    print(timedMsg, file=l)
-    l.close()
+    if logdir:
+        l = open(logdir+"/today.log", "a")
+        print(timedMsg, file=l)
+        l.close()
     print(timedMsg) # Print same message to stdout
 
 def RollLogs(): # Called once/day

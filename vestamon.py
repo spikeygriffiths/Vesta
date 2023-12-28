@@ -1,4 +1,6 @@
 import subprocess
+import database
+import sendmail
 
 result = subprocess.run(['ps', 'ax'], stdout=subprocess.PIPE)
 res = result.stdout.decode().splitlines()
@@ -11,3 +13,7 @@ if vesta_running:
 else:
     print("Vesta stopped!")
 
+database.ConnectDb()
+result = subprocess.run(['tail', 'logs/today.log'], stdout=subprocess.PIPE)
+text = result.stdout.decode().splitlines()
+sendmail.email("VestaLog", text, "")
